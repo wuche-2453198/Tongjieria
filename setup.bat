@@ -16,19 +16,15 @@ if %errorlevel% neq 0 (
 )
 
 REM 检查是否安装了 Visual Studio 2022
-set VS2022_PATH=
-for %%i in (Community Professional Enterprise) do (
-    if exist "C:\Program Files\Microsoft Visual Studio\2022\%%i\Common7\IDE\devenv.exe" (
-        set VS2022_PATH=C:\Program Files\Microsoft Visual Studio\2022\%%i
-        goto :found_vs
-    )
-)
-
-:found_vs
-if "%VS2022_PATH%"=="" (
-    echo [警告] 未检测到 Visual Studio 2022，请确保已安装
+REM 通过检查 CMake 能否找到 VS2022 来判断（更可靠）
+echo [检测] 正在检测 Visual Studio 2022...
+cmake -G "Visual Studio 17 2022" --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [检测成功] Visual Studio 2022 已安装并可用
+) else (
+    echo [警告] 未检测到 Visual Studio 2022 或版本不匹配
+    echo 提示: 如果已安装，CMake 会自动找到编译器
     echo 下载地址: https://visualstudio.microsoft.com/
-    pause
 )
 
 echo.
@@ -51,7 +47,7 @@ echo 清理完成！
 
 echo.
 echo [步骤 2/3] 使用 CMake 生成 Visual Studio 2022 项目...
-cmake -G "Visual Studio 17 2022" -A x64 .
+cmake -G "Visual Studio 17 2022" -A Win32 .
 if %errorlevel% neq 0 (
     echo [错误] CMake 生成项目失败！
     pause
