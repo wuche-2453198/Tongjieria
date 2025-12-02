@@ -15,4 +15,4 @@ git clone "https://github.com/wuche-2453198/Tongjieria"
 
 ## 目前进度 ##
 2025.12.1 实现了开场动画和开场音乐 commit by 2453198 \
-2025.12.2 正式搭建仓库并写好配置文件Setup.bat commit by2453198
+2025.12.2 正式搭建仓库并写好配置文件setup.bat commit by 2453198
