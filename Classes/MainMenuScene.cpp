@@ -25,8 +25,28 @@ bool MainMenuScene::init()
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     // 创建背景
-    auto background = LayerColor::create(Color4B(50, 100, 150, 255));
+    auto background = Sprite::create("bg/World refference/Forest/Forest_background_1.png");
     this->addChild(background, 0);
+
+    if (background == nullptr)
+    {
+        problemLoading("bg/World refference/Forest/Forest_background_1.png");
+        return false;
+    }
+
+    else
+    {
+        // 将图片放在屏幕中心
+        background->setPosition(Vec2(visibleSize.width / 2 + origin.x,
+            visibleSize.height / 2 + origin.y));
+
+        // 根据屏幕大小调整图片缩放比例，使其填满屏幕
+        float scaleX = visibleSize.width / background->getContentSize().width;
+        float scaleY = visibleSize.height / background->getContentSize().height;
+        float scale = MAX(scaleX, scaleY);
+        background->setScale(scale);
+    }
+
 
     // 添加标题
     auto titleLabel = Label::createWithTTF("Terraria Clone - Main Menu", "fonts/Marker Felt.ttf", 32);
