@@ -26,7 +26,7 @@ bool SplashScene::init()
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     // 开始播放背景音乐（循环播放）
-    AudioEngine::play2d("music/Scott Lloyd Shelly - Title Screen.mp3", true, 0.5f);
+    AudioEngine::play2d("music/Scott Lloyd Shelly - Title Screen.mp3", true, 0.3f);
 
     // 创建黑色背景
     auto blackBg = LayerColor::create(Color4B(0, 0, 0, 255));

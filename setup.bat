@@ -61,7 +61,7 @@ echo.
 echo ========================================
 echo 现在你可以：
 echo 1. 双击打开 Mygame.sln 开始开发
-echo 2. 或者运行: start Mygame.sln
+echo 2. 或在命令行运行 start Mygame.sln
 echo ========================================
 echo.
 
