@@ -1,93 +1,95 @@
 #include "MainMenuScene.h"
+#include "GameScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
 
-Scene* MainMenuScene::createScene()
-{
-    return MainMenuScene::create();
+Scene *MainMenuScene::createScene() { return MainMenuScene::create(); }
+
+// ´íÎó´¦Àí¸¨Öúº¯Êý
+static void problemLoading(const char *filename) {
+  printf("Error while loading: %s\n", filename);
 }
 
-// é”™è¯¯å¤„ç†è¾…åŠ©å‡½æ•°
-static void problemLoading(const char* filename)
-{
-    printf("Error while loading: %s\n", filename);
+bool MainMenuScene::init() {
+  if (!Scene::init()) {
+    return false;
+  }
+
+  auto visibleSize = Director::getInstance()->getVisibleSize();
+  Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+  // ´´½¨±³¾°
+  auto background =
+      Sprite::create("bg/World refference/Forest/Forest_background_1.png");
+  this->addChild(background, 0);
+
+  if (background == nullptr) {
+    problemLoading("bg/World refference/Forest/Forest_background_1.png");
+    return false;
+  }
+
+  else {
+    // ½«Í¼Æ¬·ÅÔÚÆÁÄ»ÖÐÐÄ
+    background->setPosition(Vec2(visibleSize.width / 2 + origin.x,
+                                 visibleSize.height / 2 + origin.y));
+
+    // ¸ù¾ÝÆÁÄ»´óÐ¡µ÷ÕûÍ¼Æ¬Ëõ·Å±ÈÀý£¬Ê¹ÆäÌîÂúÆÁÄ»
+    float scaleX = visibleSize.width / background->getContentSize().width;
+    float scaleY = visibleSize.height / background->getContentSize().height;
+    float scale = MAX(scaleX, scaleY);
+    background->setScale(scale);
+  }
+
+  // Ìí¼Ó±êÌâ
+  auto titleLabel =
+      Label::createWithTTF("Terraria", "fonts/Marker Felt.ttf", 32);
+  if (titleLabel != nullptr) {
+    titleLabel->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                 origin.y + visibleSize.height -
+                                     titleLabel->getContentSize().height - 20));
+    this->addChild(titleLabel, 1);
+  }
+
+  // Ìí¼ÓÊ·À³Ä·Àà²âÊÔ°´Å¥
+  auto singlePlayerLabel = Label::createWithTTF(
+      "Slime Test", "fonts/Marker Felt.ttf", 28); // Ê¹ÓÃÓ¢ÎÄ±ÜÃâ±àÂëÎÊÌâ
+  auto singlePlayerItem = MenuItemLabel::create(
+      singlePlayerLabel,
+      CC_CALLBACK_1(MainMenuScene::menuSinglePlayerCallback, this));
+
+  if (singlePlayerItem != nullptr) {
+    singlePlayerItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                       origin.y + visibleSize.height / 2 + 50));
+  }
+
+  // Ìí¼Ó¹Ø±Õ°´Å¥
+  auto closeItem = MenuItemImage::create(
+      "CloseNormal.png", "CloseSelected.png",
+      CC_CALLBACK_1(MainMenuScene::menuCloseCallback, this));
+
+  if (closeItem != nullptr) {
+    float x =
+        origin.x + visibleSize.width - closeItem->getContentSize().width / 2;
+    float y = origin.y + closeItem->getContentSize().height / 2;
+    closeItem->setPosition(Vec2(x, y));
+
+    auto menu = Menu::create(singlePlayerItem, closeItem, nullptr);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 1);
+  }
+
+  return true;
 }
 
-bool MainMenuScene::init()
-{
-    if (!Scene::init())
-    {
-        return false;
-    }
-
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-    // åˆ›å»ºèƒŒæ™¯
-    auto background = Sprite::create("bg/World refference/Forest/Forest_background_1.png");
-    this->addChild(background, 0);
-
-    if (background == nullptr)
-    {
-        problemLoading("bg/World refference/Forest/Forest_background_1.png");
-        return false;
-    }
-
-    else
-    {
-        // å°†å›¾ç‰‡æ”¾åœ¨å±å¹•ä¸­å¿ƒ
-        background->setPosition(Vec2(visibleSize.width / 2 + origin.x,
-            visibleSize.height / 2 + origin.y));
-
-        // æ ¹æ®å±å¹•å¤§å°è°ƒæ•´å›¾ç‰‡ç¼©æ”¾æ¯”ä¾‹ï¼Œä½¿å…¶å¡«æ»¡å±å¹•
-        float scaleX = visibleSize.width / background->getContentSize().width;
-        float scaleY = visibleSize.height / background->getContentSize().height;
-        float scale = MAX(scaleX, scaleY);
-        background->setScale(scale);
-    }
-
-
-    // æ·»åŠ æ ‡é¢˜
-    auto titleLabel = Label::createWithTTF("Terraria Clone - Main Menu", "fonts/Marker Felt.ttf", 32);
-    if (titleLabel != nullptr)
-    {
-        titleLabel->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                     origin.y + visibleSize.height - titleLabel->getContentSize().height - 20));
-        this->addChild(titleLabel, 1);
-    }
-
-    // æ·»åŠ æç¤ºæ–‡æœ¬
-    auto hintLabel = Label::createWithTTF("Main Menu (To be implemented)", "fonts/Marker Felt.ttf", 24);
-    if (hintLabel != nullptr)
-    {
-        hintLabel->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                    origin.y + visibleSize.height / 2));
-        this->addChild(hintLabel, 1);
-    }
-
-    // æ·»åŠ å…³é—­æŒ‰é’®
-    auto closeItem = MenuItemImage::create(
-                                           "CloseNormal.png",
-                                           "CloseSelected.png",
-                                           CC_CALLBACK_1(MainMenuScene::menuCloseCallback, this));
-
-    if (closeItem != nullptr)
-    {
-        float x = origin.x + visibleSize.width - closeItem->getContentSize().width / 2;
-        float y = origin.y + closeItem->getContentSize().height / 2;
-        closeItem->setPosition(Vec2(x, y));
-
-        auto menu = Menu::create(closeItem, nullptr);
-        menu->setPosition(Vec2::ZERO);
-        this->addChild(menu, 1);
-    }
-
-    return true;
+void MainMenuScene::menuCloseCallback(Ref *pSender) {
+  // ¹Ø±ÕÓÎÏ·
+  Director::getInstance()->end();
 }
 
-void MainMenuScene::menuCloseCallback(Ref* pSender)
-{
-    // å…³é—­æ¸¸æˆ
-    Director::getInstance()->end();
+void MainMenuScene::menuSinglePlayerCallback(Ref *pSender) {
+  // ½øÈëµ¥ÈËÓÎÏ·³¡¾°
+  auto gameScene = GameScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, gameScene));
 }

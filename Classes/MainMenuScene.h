@@ -3,18 +3,20 @@
 
 #include "cocos2d.h"
 
-class MainMenuScene : public cocos2d::Scene
-{
+class MainMenuScene : public cocos2d::Scene {
 public:
-    static cocos2d::Scene* createScene();
+  static cocos2d::Scene *createScene();
 
-    virtual bool init();
-    
-    // 关闭按钮回调
-    void menuCloseCallback(cocos2d::Ref* pSender);
-    
-    // implement the "static create()" method manually
-    CREATE_FUNC(MainMenuScene);
+  virtual bool init();
+
+  // 关闭按钮回调
+  void menuCloseCallback(cocos2d::Ref *pSender);
+
+  // 单人游戏按钮回调
+  void menuSinglePlayerCallback(cocos2d::Ref *pSender);
+
+  // implement the "static create()" method manually
+  CREATE_FUNC(MainMenuScene);
 };
 
 #endif // __MAIN_MENU_SCENE_H__

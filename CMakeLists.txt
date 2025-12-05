@@ -35,11 +35,23 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
+     Classes/GameScene.cpp
+     Classes/Enemy.cpp
+     Classes/SlimeEnemy.cpp
+     Classes/GreenSlime.cpp
+     Classes/BlueSlime.cpp
+     Classes/YellowSlime.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/SplashScene.h
      Classes/MainMenuScene.h
+     Classes/GameScene.h
+     Classes/Enemy.h
+     Classes/SlimeEnemy.h
+     Classes/GreenSlime.h
+     Classes/BlueSlime.h
+     Classes/YellowSlime.h
      )
 
 if(ANDROID)
