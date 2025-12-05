@@ -12,7 +12,8 @@ public:
     
     // 关闭按钮回调
     void menuCloseCallback(cocos2d::Ref* pSender);
-    
+    void menuNewGameCallback(cocos2d::Ref* pSender); // 新增开始游戏回调
+    void menuLoadCallback(Ref* pSender);//新增读档游戏回调
     // implement the "static create()" method manually
     CREATE_FUNC(MainMenuScene);
 };
