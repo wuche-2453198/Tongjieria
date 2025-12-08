@@ -12,8 +12,8 @@ public:
   // 关闭按钮回调
   void menuCloseCallback(cocos2d::Ref *pSender);
 
-  // 单人游戏按钮回调
-  void menuSinglePlayerCallback(cocos2d::Ref *pSender);
+  // ECS测试场景按钮回调
+  void menuEcsTestCallback(cocos2d::Ref *pSender);
 
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);

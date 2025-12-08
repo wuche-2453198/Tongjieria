@@ -5,6 +5,10 @@ set(APP_NAME Mygame)
 
 project(${APP_NAME})
 
+# Enable C++17 for ECS framework features
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if(XCODE)
     if(NOT DEFINED CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET)
         SET (CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 8.0)
@@ -35,23 +39,24 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
-     Classes/GameScene.cpp
-     Classes/Enemy.cpp
-     Classes/SlimeEnemy.cpp
-     Classes/GreenSlime.cpp
-     Classes/BlueSlime.cpp
-     Classes/YellowSlime.cpp
+     Classes/EcsTestScene.cpp
+     Classes/MonsterFactory.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/SplashScene.h
      Classes/MainMenuScene.h
-     Classes/GameScene.h
-     Classes/Enemy.h
-     Classes/SlimeEnemy.h
-     Classes/GreenSlime.h
-     Classes/BlueSlime.h
-     Classes/YellowSlime.h
+     Classes/EcsTestScene.h
+     Classes/MonsterFactory.h
+     Classes/ecs/ECS.h
+     Classes/ecs/Entity.h
+     Classes/ecs/EntityHandle.h
+     Classes/ecs/Component.h
+     Classes/ecs/System.h
+     Classes/ecs/World.h
+     Classes/ecs/Components.h
+     Classes/ecs/SpriteComponent.h
+     Classes/ecs/Systems.h
      )
 
 if(ANDROID)
@@ -120,6 +125,11 @@ else()
 endif()
 
 target_link_libraries(${APP_NAME} cocos2d)
+
+# Set C++17 standard for the game target (required for ECS framework)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/

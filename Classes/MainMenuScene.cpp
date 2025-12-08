@@ -1,12 +1,12 @@
 #include "MainMenuScene.h"
-#include "GameScene.h"
+#include "EcsTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
 
 Scene *MainMenuScene::createScene() { return MainMenuScene::create(); }
 
-// ´íÎó´¦Àí¸¨Öúº¯Êý
+// é”™è¯¯å¤„ç†è¾…åŠ©å‡½æ•°
 static void problemLoading(const char *filename) {
   printf("Error while loading: %s\n", filename);
 }
@@ -19,7 +19,7 @@ bool MainMenuScene::init() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // ´´½¨±³¾°
+  // åˆ›å»ºèƒŒæ™¯
   auto background =
       Sprite::create("bg/World refference/Forest/Forest_background_1.png");
   this->addChild(background, 0);
@@ -30,18 +30,18 @@ bool MainMenuScene::init() {
   }
 
   else {
-    // ½«Í¼Æ¬·ÅÔÚÆÁÄ»ÖÐÐÄ
+    // å°†å›¾ç‰‡æ”¾åœ¨å±å¹•ä¸­å¿ƒ
     background->setPosition(Vec2(visibleSize.width / 2 + origin.x,
                                  visibleSize.height / 2 + origin.y));
 
-    // ¸ù¾ÝÆÁÄ»´óÐ¡µ÷ÕûÍ¼Æ¬Ëõ·Å±ÈÀý£¬Ê¹ÆäÌîÂúÆÁÄ»
+    // æ ¹æ®å±å¹•å¤§å°è°ƒæ•´å›¾ç‰‡ç¼©æ”¾æ¯”ä¾‹ï¼Œä½¿å…¶å¡«æ»¡å±å¹•
     float scaleX = visibleSize.width / background->getContentSize().width;
     float scaleY = visibleSize.height / background->getContentSize().height;
     float scale = MAX(scaleX, scaleY);
     background->setScale(scale);
   }
 
-  // Ìí¼Ó±êÌâ
+  // æ·»åŠ æ ‡é¢˜
   auto titleLabel =
       Label::createWithTTF("Terraria", "fonts/Marker Felt.ttf", 32);
   if (titleLabel != nullptr) {
@@ -51,19 +51,18 @@ bool MainMenuScene::init() {
     this->addChild(titleLabel, 1);
   }
 
-  // Ìí¼ÓÊ·À³Ä·Àà²âÊÔ°´Å¥
-  auto singlePlayerLabel = Label::createWithTTF(
-      "Slime Test", "fonts/Marker Felt.ttf", 28); // Ê¹ÓÃÓ¢ÎÄ±ÜÃâ±àÂëÎÊÌâ
-  auto singlePlayerItem = MenuItemLabel::create(
-      singlePlayerLabel,
-      CC_CALLBACK_1(MainMenuScene::menuSinglePlayerCallback, this));
+  // æ·»åŠ ECSæµ‹è¯•æŒ‰é’®
+  auto ecsTestLabel =
+      Label::createWithTTF("ECS Test", "fonts/Marker Felt.ttf", 28);
+  auto ecsTestItem = MenuItemLabel::create(
+      ecsTestLabel, CC_CALLBACK_1(MainMenuScene::menuEcsTestCallback, this));
 
-  if (singlePlayerItem != nullptr) {
-    singlePlayerItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                       origin.y + visibleSize.height / 2 + 50));
+  if (ecsTestItem != nullptr) {
+    ecsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                  origin.y + visibleSize.height / 2));
   }
 
-  // Ìí¼Ó¹Ø±Õ°´Å¥
+  // æ·»åŠ å…³é—­æŒ‰é’®
   auto closeItem = MenuItemImage::create(
       "CloseNormal.png", "CloseSelected.png",
       CC_CALLBACK_1(MainMenuScene::menuCloseCallback, this));
@@ -74,7 +73,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(singlePlayerItem, closeItem, nullptr);
+    auto menu = Menu::create(ecsTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -83,13 +82,13 @@ bool MainMenuScene::init() {
 }
 
 void MainMenuScene::menuCloseCallback(Ref *pSender) {
-  // ¹Ø±ÕÓÎÏ·
+  // å…³é—­æ¸¸æˆ
   Director::getInstance()->end();
 }
 
-void MainMenuScene::menuSinglePlayerCallback(Ref *pSender) {
-  // ½øÈëµ¥ÈËÓÎÏ·³¡¾°
-  auto gameScene = GameScene::createScene();
+void MainMenuScene::menuEcsTestCallback(Ref *pSender) {
+  // è¿›å…¥ECSæµ‹è¯•åœºæ™¯
+  auto ecsTestScene = EcsTestScene::createScene();
   Director::getInstance()->replaceScene(
-      TransitionFade::create(0.5f, gameScene));
+      TransitionFade::create(0.5f, ecsTestScene));
 }

@@ -1,0 +1,77 @@
+{
+  "id": "SpikedIceSlime",
+  "type": "Slime",
+  "description": "冰雪尖刺史莱姆，发射冰雪尖刺造成冷冻和冰冻减益",
+  
+  "display": {
+    "spriteFolder": "Minor monster/Spiked_IceSlime",
+    "spritePrefix": "Spiked_Ice_Slime",
+    "frameCount": 2,
+    "frameTime": 0.2,
+    "scale": 1.0
+  },
+  
+  "physics": {
+    "bodyWidth": 40.0,
+    "bodyHeight": 30.0,
+    "bodyHeightOffset": -5.0,
+    "mass": 1.3,
+    "friction": 0.8,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.5,
+    "horizontalImpulse": 250.0,
+    "verticalImpulse": 450.0,
+    "patrolImpulseRatio": 0.4,
+    "directionChangeChance": 0.25
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 400.0,
+    "deaggroRange": 500.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 100.0,
+    "attackDamage": 15.0,
+    "attackRange": 200.0,
+    "attackCooldown": 0.8,
+    "defense": 3.0
+  },
+  
+  "projectile": {
+    "spritePath": "Projectile/Ice_Spike.png",
+    "spriteWidth": 10.0,
+    "spriteHeight": 20.0,
+    "count": 4,
+    "damage": 8.0,
+    "speed": 300.0,
+    "lifetime": 3.0,
+    "fireInterval": 0.8,
+    "fireRange": 200.0,
+    "horizontalSpread": 80.0,
+    "verticalImpulse": 350.0,
+    "useGravity": true
+  },
+  
+  "debuff": {
+    "chillChance": 1.0,
+    "chillDuration": 8.0,
+    "chillSpeedReduction": 0.4,
+    "freezeChance": 0.15,
+    "freezeDuration": 2.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 2, "maxCount": 5, "dropChance": 0.9},
+    {"itemId": "coin", "minCount": 12, "maxCount": 30, "dropChance": 0.7},
+    {"itemId": "ice_spike", "minCount": 1, "maxCount": 3, "dropChance": 0.25},
+    {"itemId": "ice_crystal", "minCount": 1, "maxCount": 2, "dropChance": 0.15}
+  ]
+}
