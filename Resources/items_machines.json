@@ -1,0 +1,101 @@
+[
+    {
+        "id": 3001,
+        "name": "Workbench",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/workbench.png",
+        "value": 50,
+        "tags": [1]
+    },
+    {
+        "id": 3002,
+        "name": "Furnace",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/furnace.png",
+        "value": 80,
+        "tags": [2]
+    },
+    {
+        "id": 3003,
+        "name": "Wooden Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/wooden_chest.png",
+        "value": 20,
+        "tags": []
+    },
+    {
+        "id": 3004,
+        "name": "Stone Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/stone_chest.png",
+        "value": 25,
+        "tags": []
+    },
+    {
+        "id": 3005,
+        "name": "Copper Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/copper_chest.png",
+        "value": 30,
+        "tags": []
+    },
+    {
+        "id": 3006,
+        "name": "Iron Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/iron_chest.png",
+        "value": 35,
+        "tags": []
+    },
+    {
+        "id": 3007,
+        "name": "Silver Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/silver_chest.png",
+        "value": 40,
+        "tags": []
+    },
+    {
+        "id": 3008,
+        "name": "Gold Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/gold_chest.png",
+        "value": 45,
+        "tags": []
+    },
+    {
+        "id": 3009,
+        "name": "Zinc Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/zinc_chest.png",
+        "value": 45,
+        "tags": []
+    },
+    {
+        "id": 3010,
+        "name": "Obdurite Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/obdurite_chest.png",
+        "value": 50,
+        "tags": []
+    },
+    {
+        "id": 3011,
+        "name": "Rhymestone Chest",
+        "type": 5,
+        "maxStack": 99,
+        "icon": "items/machines/rhymestone_chest.png",
+        "value": 50,
+        "tags": []
+    }
+]

@@ -1,0 +1,146 @@
+[
+    {
+        "id": 1001,
+        "name": "Wood",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/wood.png",
+        "value": 5,
+        "tags": [5]
+    },
+    {
+        "id": 1002,
+        "name": "Varnished Wood",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/varnished_wood.png",
+        "value": 6,
+        "tags": [5]
+    },
+    {
+        "id": 1003,
+        "name": "Stone",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/stone.png",
+        "value": 3,
+        "tags": []
+    },
+    {
+        "id": 1004,
+        "name": "Cobblestone",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/cobblestone.png",
+        "value": 3,
+        "tags": []
+    },
+    {
+        "id": 1005,
+        "name": "Chiseled Stone",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/chiseled_stone.png",
+        "value": 4,
+        "tags": []
+    },
+    {
+        "id": 1006,
+        "name": "Chiseled Cobblestone",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/chiseled_cobblestone.png",
+        "value": 4,
+        "tags": []
+    },
+    {
+        "id": 1007,
+        "name": "Stone Bricks",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/stone_bricks.png",
+        "value": 4,
+        "tags": []
+    },
+    {
+        "id": 1008,
+        "name": "Clay",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/clay.png",
+        "value": 2,
+        "tags": []
+    },
+    {
+        "id": 1009,
+        "name": "Clay Bricks",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/clay_bricks.png",
+        "value": 3,
+        "tags": []
+    },
+    {
+        "id": 1010,
+        "name": "Glass",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/glass.png",
+        "value": 2,
+        "tags": []
+    },
+    {
+        "id": 1011,
+        "name": "Dirt",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/dirt.png",
+        "value": 1,
+        "tags": []
+    },
+    {
+        "id": 1012,
+        "name": "Mud",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/mud.png",
+        "value": 1,
+        "tags": []
+    },
+    {
+        "id": 1013,
+        "name": "Sand",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/sand.png",
+        "value": 1,
+        "tags": []
+    },
+    {
+        "id": 1014,
+        "name": "Sandstone",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/sandstone.png",
+        "value": 2,
+        "tags": []
+    },
+    {
+        "id": 1015,
+        "name": "Snow",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/snow.png",
+        "value": 1,
+        "tags": []
+    },
+    {
+        "id": 1016,
+        "name": "Zythium Lamp",
+        "type": 5,
+        "maxStack": 999,
+        "icon": "items/blocks/zythium_lamp.png",
+        "value": 8,
+        "tags": []
+    }
+]

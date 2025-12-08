@@ -1,7 +1,10 @@
 #include "SplashScene.h"
 #include "MainMenuScene.h"
 #include "audio/include/AudioEngine.h"
-
+#include "items/ItemManager.h"
+#include "items/InventoryLayer.h"                                                                                                              
+#include "items/Inventory.h" 
+#include "test.h" 
 USING_NS_CC;
 
 Scene* SplashScene::createScene()
@@ -60,8 +63,13 @@ bool SplashScene::init()
     }
 
     // 开始淡入淡出动画
-    this->fadeInAndOut();
-
+      this->fadeInAndOut();
+      
+    //测试部分//测试ing
+    DebugItemManager();
+    DebugInventoryBasic();
+    DebugInventoryMoveSwap();
+    DebugInventoryEvent();
     return true;
 }
 

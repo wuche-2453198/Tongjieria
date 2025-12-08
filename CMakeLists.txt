@@ -26,22 +26,29 @@ set(GAME_HEADER)
 set(GAME_RES_FOLDER
     "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
     )
-if(APPLE OR WINDOWS)
+if(APPLE OR WIN32)
     cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
 
 # add cross-platforms source files and header files 
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
-     Classes/HelloWorldScene.cpp
+     
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
+     Classes/items/ItemManager.cpp
+     Classes/items/Inventory.cpp
+     Classes/items/InventoryLayer.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
-     Classes/HelloWorldScene.h
+     
      Classes/SplashScene.h
      Classes/MainMenuScene.h
+     Classes/items/InventoryDef.h
+     Classes/items/ItemManager.h
+     Classes/items/Inventory.h
+     Classes/items/InventoryLayer.h
      )
 
 if(ANDROID)
@@ -54,7 +61,7 @@ elseif(LINUX)
     list(APPEND GAME_SOURCE
          proj.linux/main.cpp
          )
-elseif(WINDOWS)
+elseif(WIN32)
     list(APPEND GAME_HEADER
          proj.win32/main.h
          proj.win32/resource.h
@@ -129,11 +136,11 @@ if(APPLE)
 
     # For code-signing, set the DEVELOPMENT_TEAM:
     #set_xcode_property(${APP_NAME} DEVELOPMENT_TEAM "GRLXXXX2K9")
-elseif(WINDOWS)
+elseif(WIN32)
     cocos_copy_target_dll(${APP_NAME})
 endif()
 
-if(LINUX OR WINDOWS)
+if(LINUX OR WIN32)
     cocos_get_resource_path(APP_RES_DIR ${APP_NAME})
     cocos_copy_target_res(${APP_NAME} LINK_TO ${APP_RES_DIR} FOLDERS ${GAME_RES_FOLDER})
 endif()

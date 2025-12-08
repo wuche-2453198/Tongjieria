@@ -84,3 +84,6 @@ engine/
 *.backup
 DocumentLayout.json
 DocumentLayout.backup.json
+
+# 忽略整个 build 目录
+/build/
