@@ -21,12 +21,14 @@ namespace ecs {
 // ==================== System优先级（保持不变） ====================
 
 namespace SystemPriority {
-    constexpr int INPUT = 0;
-    constexpr int AI = 100;
-    constexpr int MOVEMENT = 200;
-    constexpr int PHYSICS = 300;
-    constexpr int COLLISION = 400;
-    constexpr int RENDERING = 500;
+    constexpr int INPUT = -1000;   // 输入处理
+    constexpr int AI = -500;       // AI决策
+    constexpr int PHYSICS = 0;     // 物理模拟
+    constexpr int MOVEMENT = 100;  // 移动
+    constexpr int COLLISION = 200; // 碰撞处理
+    constexpr int ANIMATION = 500; // 动画更新
+    constexpr int RENDER = 1000;   // 渲染
+    constexpr int UI = 2000;       // UI更新
 }
 
 // ==================== EnTT System基类 ====================
@@ -149,6 +151,118 @@ public:
         for (auto entity : toDestroy) {
             _registry->destroy(entity);
         }
+    }
+};
+
+// ==================== 怪物动画系统（EnTT版本） ====================
+
+/**
+ * @brief 怪物精灵动画系统 - 更新MonsterSpriteComponent的帧动画
+ */
+class MonsterAnimationSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "MonsterAnimationSystem"; }
+    int getPriority() const override { return SystemPriority::ANIMATION; }
+
+    void update(float delta) override {
+        auto view = _registry->view<MonsterSpriteComponent>();
+        
+        view.each([delta](auto entity, MonsterSpriteComponent& sprite) {
+            sprite.updateAnimation(delta);
+        });
+    }
+};
+
+// ==================== 史莱姆渲染系统（EnTT版本） ====================
+
+/**
+ * @brief 史莱姆渲染系统 - 同步Transform到SlimeSprite
+ */
+class SlimeRenderSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "SlimeRenderSystem"; }
+    int getPriority() const override { return SystemPriority::RENDER; }
+
+    void update(float delta) override {
+        auto view = _registry->view<TransformComponent, SlimeSpriteComponent>();
+        
+        view.each([](auto entity, TransformComponent& transform, 
+                     SlimeSpriteComponent& slimeSprite) {
+            if (!slimeSprite.sprite)
+                return;
+
+            // 注意：不要手动同步位置！物理引擎会自动更新精灵位置
+            // 只从精灵读取位置到transform供其他系统使用
+            if (auto* body = slimeSprite.sprite->getPhysicsBody()) {
+                transform.position = slimeSprite.sprite->getPosition();
+            }
+
+            // 同步显示属性
+            slimeSprite.sprite->setRotation(transform.rotation);
+            slimeSprite.sprite->setVisible(slimeSprite.visible);
+            slimeSprite.sprite->setColor(slimeSprite.color);
+            slimeSprite.sprite->setOpacity(slimeSprite.opacity);
+        });
+    }
+};
+
+// ==================== 减益系统（EnTT版本） ====================
+
+/**
+ * @brief 减益效果系统 - 处理冷冻、冰冻和中毒减益的计时
+ */
+class DebuffSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "DebuffSystem"; }
+    int getPriority() const override { return SystemPriority::AI - 5; }
+
+    void update(float delta) override {
+        auto view = _registry->view<DebuffComponent>();
+        
+        view.each([delta, this](auto entity, DebuffComponent& debuff) {
+            // 更新冷冻计时器
+            if (debuff.hasChillDebuff) {
+                debuff.chillTimer += delta;
+                if (debuff.chillTimer >= debuff.chillDuration) {
+                    debuff.hasChillDebuff = false;
+                    CCLOG("Entity %u: Chill debuff expired", entt::to_integral(entity));
+                }
+            }
+            
+            // 更新冰冻计时器
+            if (debuff.hasFreezeDebuff) {
+                debuff.freezeTimer += delta;
+                if (debuff.freezeTimer >= debuff.freezeDuration) {
+                    debuff.hasFreezeDebuff = false;
+                    CCLOG("Entity %u: Freeze debuff expired", entt::to_integral(entity));
+                }
+            }
+            
+            // 更新中毒计时器和伤害
+            if (debuff.hasPoisonDebuff) {
+                debuff.poisonTimer += delta;
+                debuff.poisonTickTimer += delta;
+                
+                // 每秒造成一次伤害
+                if (debuff.poisonTickTimer >= 1.0f) {
+                    debuff.poisonTickTimer -= 1.0f;
+                    
+                    // 对实体造成毒素伤害
+                    if (auto* health = _registry->try_get<HealthComponent>(entity)) {
+                        health->takeDamage(debuff.poisonDamagePerSecond);
+                        CCLOG("Entity %u: Poison tick %.1f damage (%.1fs remaining)", 
+                              entt::to_integral(entity), 
+                              debuff.poisonDamagePerSecond,
+                              debuff.poisonDuration - debuff.poisonTimer);
+                    }
+                }
+                
+                if (debuff.poisonTimer >= debuff.poisonDuration) {
+                    debuff.hasPoisonDebuff = false;
+                    CCLOG("Entity %u: Poison debuff expired", entt::to_integral(entity));
+                }
+            }
+        });
     }
 };
 
