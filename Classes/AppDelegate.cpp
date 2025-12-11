@@ -1,5 +1,6 @@
 #include "AppDelegate.h"
 #include "SplashScene.h"
+#include "EnttTest.h"  // EnTT安装验证
 
 #define USE_AUDIO_ENGINE 1
 
@@ -81,6 +82,18 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
 
     register_all_packages();
+
+    // ========== EnTT安装验证测试 ==========
+    CCLOG("========== Starting EnTT Installation Test ==========");
+    if (EnttTest::runBasicTest()) {
+        CCLOG("✓ EnTT is installed correctly!");
+        // 性能测试（可选，注释掉以加快启动速度）
+        // EnttTest::runPerformanceTest(10000);
+    } else {
+        CCLOG("✗ EnTT test failed! Please check installation.");
+    }
+    CCLOG("========== EnTT Test Complete ==========");
+    // ==========================================
 
     // create a scene. it's an autorelease object
     auto scene = SplashScene::createScene();
