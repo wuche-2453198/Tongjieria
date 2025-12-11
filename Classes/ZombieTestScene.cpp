@@ -545,9 +545,22 @@ void ZombieTestScene::updateFakePlayerPosition(float delta)
     _playerLabel->setPosition(Vec2(_fakePlayer->getPositionX(), _fakePlayer->getPositionY() + 40));
   }
   
+  // 同步玩家位置到ECS TransformComponent
   if (_fakePlayerEntity != ecs::INVALID_ENTITY) {
-    auto *transform = _world.getComponent<ecs::TransformComponent>(_fakePlayerEntity);
-    if (transform) transform->position = _fakePlayer->getPosition();
+    if (_useEnttSystems) {
+      // EnTT版本：更新registry中的Transform
+      auto playerEntity = static_cast<entt::entity>(_fakePlayerEntity);
+      if (_registry.valid(playerEntity)) {
+        auto* transform = _registry.try_get<ecs::TransformComponent>(playerEntity);
+        if (transform) {
+          transform->position = _fakePlayer->getPosition();
+        }
+      }
+    } else {
+      // 旧版ECS
+      auto *transform = _world.getComponent<ecs::TransformComponent>(_fakePlayerEntity);
+      if (transform) transform->position = _fakePlayer->getPosition();
+    }
   }
 }
 
