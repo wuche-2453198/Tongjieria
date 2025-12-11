@@ -505,6 +505,246 @@ private:
     }
 };
 
+// ==================== 跳跃移动系统（EnTT版本） ====================
+
+/**
+ * @brief 跳跃移动系统 - 管理跳跃冷却和执行跳跃
+ */
+class JumpMovementSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "JumpMovementSystem"; }
+    int getPriority() const override { return SystemPriority::MOVEMENT - 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<JumpMovementComponent, GroundDetectorComponent,
+                                     AggroComponent, SlimeSpriteComponent, TransformComponent>();
+        
+        view.each([delta, this](auto entity, JumpMovementComponent& jump,
+                               GroundDetectorComponent& ground, AggroComponent& aggro,
+                               SlimeSpriteComponent& sprite, TransformComponent& transform) {
+            // 只要在地面就计时冷却
+            if (ground.isOnGround) {
+                jump.jumpTimer += delta;
+                if (jump.jumpTimer >= jump.jumpCooldown) {
+                    jump.readyToJump = true;
+                }
+            }
+
+            // 执行跳跃
+            if (jump.readyToJump && ground.isOnGround) {
+                cocos2d::Vec2 impulse;
+
+                // 更新追踪状态
+                jump.isChasing = aggro.hasAggro;
+
+                if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+                    // 有仇恨目标：智能追踪跳跃
+                    auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
+                    auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
+                    if (targetTransform) {
+                        float heightDiff = targetTransform->position.y - transform.position.y;
+                        impulse = jump.calculateChaseImpulse(aggro.directionToTarget.x,
+                                                            heightDiff,
+                                                            aggro.distanceToTarget);
+
+                        // 更新朝向
+                        sprite.setFacing(aggro.directionToTarget.x > 0);
+                    }
+                } else {
+                    // 无仇恨目标：随机巡逻跳跃
+                    impulse = jump.calculateRandomImpulse();
+                    sprite.setFacing(jump.randomDirection > 0);
+                }
+
+                // 应用冲量
+                sprite.applyImpulse(impulse);
+                jump.lastJumpImpulse = impulse;
+
+                // 播放跳跃动画
+                sprite.playJumpAnimation();
+
+                // 重置状态
+                jump.readyToJump = false;
+                jump.jumpTimer = 0.0f;
+                ground.isOnGround = false;
+
+                CCLOG("Entity %u: Jump (%.1f, %.1f) %s", entt::to_integral(entity), 
+                      impulse.x, impulse.y, jump.isChasing ? "CHASE" : "PATROL");
+            }
+        });
+    }
+};
+
+// ==================== 行走移动系统（EnTT版本） ====================
+
+/**
+ * @brief 行走移动系统 - 管理僵尸等行走类怪物的移动逻辑
+ */
+class WalkMovementSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "WalkMovementSystem"; }
+    int getPriority() const override { return SystemPriority::MOVEMENT; }
+
+    void update(float delta) override {
+        auto view = _registry->view<WalkMovementComponent, GroundDetectorComponent,
+                                     AggroComponent, MonsterSpriteComponent, TransformComponent>();
+        
+        view.each([delta, this](auto entity, WalkMovementComponent& walk,
+                               GroundDetectorComponent& ground, AggroComponent& aggro,
+                               MonsterSpriteComponent& sprite, TransformComponent& transform) {
+            
+            // 检测落地
+            if (ground.isOnGround && walk.isJumping) {
+                walk.onLand();
+            }
+            
+            // 更新跳跃冷却
+            if (ground.isOnGround) {
+                walk.updateJumpCooldown(delta);
+            }
+            
+            // 更新障碍物跳跃冷却
+            if (ground.isOnGround && walk.obstacleJumpTimer > 0) {
+                walk.obstacleJumpTimer -= delta;
+            }
+            
+            cocos2d::Vec2 currentVelocity = sprite.getVelocity();
+            bool shouldJump = false;
+            float targetHeightDiff = 0.0f;
+            float horizontalDistToTarget = 9999.0f;
+            
+            // 计算与目标的水平距离
+            if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+                auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
+                auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
+                if (targetTransform) {
+                    horizontalDistToTarget = std::abs(targetTransform->position.x - transform.position.x);
+                }
+            }
+            
+            // 更新反应跳跃计时器
+            if (walk.pendingReactionJump) {
+                walk.targetJumpReactionTimer += delta;
+                if (walk.targetJumpReactionTimer >= walk.targetJumpReactionTime) {
+                    walk.pendingReactionJump = false;
+                    walk.targetJumpReactionTimer = 0.0f;
+                    if (ground.isOnGround && walk.canJump() && 
+                        horizontalDistToTarget < walk.jumpDetectionRange) {
+                        executeJump(walk, sprite, ground);
+                        CCLOG("Entity %u: Reaction jump (target jumped)", entt::to_integral(entity));
+                    }
+                }
+            }
+            
+            // 确定移动方向和目标
+            if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+                auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
+                auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
+                if (targetTransform) {
+                    
+                    // 设置移动方向
+                    float dirX = targetTransform->position.x - transform.position.x;
+                    if (std::abs(dirX) > 5.0f) {
+                        walk.currentDirection = dirX > 0 ? 1 : -1;
+                    }
+                    
+                    // 计算高度差
+                    targetHeightDiff = targetTransform->position.y - transform.position.y;
+                    
+                    // 检测目标是否刚跳起来
+                    if (walk.targetJumpEnabled && !walk.pendingReactionJump &&
+                        horizontalDistToTarget < walk.jumpDetectionRange) {
+                        float targetCurrentY = targetTransform->position.y;
+                        float targetYDelta = targetCurrentY - walk.targetLastY;
+                        
+                        if (targetYDelta > 20.0f && walk.targetLastY > 0) {
+                            walk.pendingReactionJump = true;
+                            walk.targetJumpReactionTimer = 0.0f;
+                            CCLOG("Entity %u: Detected target jump, will react in %.1fs", 
+                                  entt::to_integral(entity), walk.targetJumpReactionTime);
+                        }
+                    }
+                    walk.targetLastY = targetTransform->position.y;
+                    
+                    // 目标在高处，需要跳跃追击
+                    if (targetHeightDiff > walk.targetHeightThreshold && 
+                        ground.isOnGround && walk.canJump() &&
+                        horizontalDistToTarget < walk.jumpDetectionRange) {
+                        shouldJump = true;
+                    }
+                }
+            } else {
+                // 无仇恨目标：巡逻模式
+                walk.patrolTimer += delta;
+                if (walk.patrolTimer >= walk.patrolDirectionChangeInterval) {
+                    walk.patrolTimer = 0.0f;
+                    if ((float)rand() / RAND_MAX < walk.patrolDirectionChangeChance) {
+                        walk.patrolDirection *= -1;
+                    }
+                }
+                walk.currentDirection = walk.patrolDirection;
+                sprite.setFacing(walk.currentDirection > 0);
+                
+                walk.targetLastY = 0.0f;
+                walk.pendingReactionJump = false;
+            }
+            
+            // 检测障碍物卡住
+            if (walk.shouldObstacleJump(transform.position, delta) && ground.isOnGround) {
+                shouldJump = true;
+                CCLOG("Entity %u: Obstacle detected (stuck), jumping", entt::to_integral(entity));
+            }
+            
+            // 即时障碍物检测
+            if (walk.useInstantObstacleDetection && ground.isOnGround && 
+                walk.initialized && walk.canJump() && !shouldJump) {
+                float actualVelX = std::abs(currentVelocity.x);
+                float expectedVelX = walk.walkSpeed;
+                
+                if (walk.isWalking && expectedVelX > 10.0f && 
+                    actualVelX < expectedVelX * walk.actualSpeedRatio) {
+                    shouldJump = true;
+                    CCLOG("Entity %u: Obstacle detected (speed diff), jumping", entt::to_integral(entity));
+                }
+            }
+            
+            // 执行跳跃
+            if (shouldJump && ground.isOnGround && walk.canJump()) {
+                executeJump(walk, sprite, ground);
+            }
+            
+            // 应用水平移动和朝向
+            if (ground.isOnGround) {
+                walk.expectedSpeed = walk.walkSpeed;
+                currentVelocity.x = walk.walkSpeed * walk.currentDirection;
+                sprite.setVelocity(currentVelocity);
+                walk.isWalking = true;
+                if (std::abs(currentVelocity.x) > 1.0f) {
+                    bool movingRight = currentVelocity.x > 0;
+                    sprite.setFacing(!movingRight);
+                }
+            }
+            
+            // 更新跳跃状态
+            walk.isJumping = !ground.isOnGround;
+        });
+    }
+
+private:
+    void executeJump(WalkMovementComponent& walk, MonsterSpriteComponent& sprite,
+                    GroundDetectorComponent& ground) {
+        cocos2d::Vec2 currentVel = sprite.getVelocity();
+        cocos2d::Vec2 jumpVel(currentVel.x, walk.jumpForce);
+        sprite.setVelocity(jumpVel);
+        
+        walk.onJump();
+        walk.obstacleJumpTimer = walk.obstacleJumpCooldown;
+        walk.stuckTime = 0.0f;
+        ground.isOnGround = false;
+        walk.isJumping = true;
+    }
+};
+
 // ==================== System管理器（EnTT版本） ====================
 
 /**
