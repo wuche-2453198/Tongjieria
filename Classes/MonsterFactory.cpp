@@ -554,6 +554,9 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
     }
     
     // ==================== 特殊史莱姆：添加特殊组件 ====================
+    CCLOG("MonsterFactory: Checking special components for '%s' (type='%s')", 
+          monsterId.c_str(), cfg.type.c_str());
+    
     if (cfg.type == "Slime") {
       // 伞史莱姆：缓降能力
       if (monsterId.find("Umbrella") != std::string::npos) {
