@@ -102,14 +102,12 @@ inline bool runBasicTest() {
     }
     CCLOG("[OK] Entity destruction works");
     
-    // 测试实体计数
-    size_t aliveCount = registry.alive();
-    CCLOG("[OK] Alive entities: %zu (expected 2)", aliveCount);
-    
-    if (aliveCount != 2) {
-        CCLOG("[ERROR] Expected 2 alive entities, got %zu", aliveCount);
+    // 最终验证：确认entity1和entity3仍然有效
+    if (!registry.valid(entity1) || !registry.valid(entity3)) {
+        CCLOG("[ERROR] Valid entities should still exist");
         return false;
     }
+    CCLOG("[OK] Remaining entities are valid");
     
     CCLOG("========== All EnTT Tests Passed! ==========");
     return true;

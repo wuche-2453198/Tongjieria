@@ -135,7 +135,7 @@ set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/entt/src
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt/single_include
 )
 
 # mark app resources
