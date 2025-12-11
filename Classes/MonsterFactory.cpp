@@ -432,9 +432,9 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
     parentNode->addChild(sprite, 1);
     
     // ==================== 通用：设置物理体 ====================
-    // 史莱姆需要更高的摩擦力来防止滑行
+    // 史莱姆需要更高的摩擦力来防止滑行，完全无弹力
     float friction = (cfg.type == "Slime") ? 0.9f : cfg.physics.friction;
-    float restitution = (cfg.type == "Slime") ? 0.1f : cfg.physics.restitution;
+    float restitution = (cfg.type == "Slime") ? 0.0f : cfg.physics.restitution;  // 完全无弹力
     
     PhysicsMaterial material(cfg.physics.mass, friction, restitution);
     auto body = PhysicsBody::createBox(Size(cfg.physics.bodyWidth, cfg.physics.bodyHeight), material);
@@ -551,6 +551,44 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       jump.patrolImpulseRatio = cfg.movement.patrolImpulseRatio;
       jump.randomDirectionChangeChance = cfg.movement.directionChangeChance;
       jump.jumpTimer = cfg.movement.jumpCooldown;  // 初始化为冷却完成
+    }
+    
+    // ==================== 特殊史莱姆：添加特殊组件 ====================
+    if (cfg.type == "Slime") {
+      // 伞史莱姆：缓降能力
+      if (monsterId.find("Umbrella") != std::string::npos) {
+        auto &slowFall = registry.emplace<ecs::SlowFallComponent>(entity);
+        slowFall.maxFallSpeed = 80.0f;
+        slowFall.fallDamping = 0.7f;
+        slowFall.horizontalDamping = 0.98f;
+        CCLOG("  Added SlowFallComponent for UmbrellaSlime");
+      }
+      
+      // 尖刺史莱姆：投射物攻击能力
+      if (monsterId.find("Spiked") != std::string::npos) {
+        auto &projectileAttack = registry.emplace<ecs::ProjectileAttackComponent>(entity);
+        projectileAttack.fireInterval = 3.0f;
+        projectileAttack.fireRange = 300.0f;
+        projectileAttack.projectileSpeed = 200.0f;
+        projectileAttack.projectileDamage = 10.0f;
+        
+        // 冰刺史莱姆有冰冻效果
+        if (monsterId.find("Ice") != std::string::npos) {
+          projectileAttack.chillChance = 0.5f;
+          projectileAttack.chillDuration = 2.0f;
+          projectileAttack.chillSpeedReduction = 0.5f;
+          CCLOG("  Added ProjectileAttackComponent with chill for SpikedIceSlime");
+        }
+        // 丛林尖刺史莱姆有毒效果
+        else if (monsterId.find("Jungle") != std::string::npos) {
+          projectileAttack.poisonChance1 = 0.6f;
+          projectileAttack.poisonDuration1 = 3.0f;
+          projectileAttack.poisonDamage1 = 5.0f;
+          CCLOG("  Added ProjectileAttackComponent with poison for SpikedJungleSlime");
+        } else {
+          CCLOG("  Added ProjectileAttackComponent for SpikedSlime");
+        }
+      }
     }
     
     // 注册到NodeEntityMap
