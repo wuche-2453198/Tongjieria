@@ -441,10 +441,10 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       body->setRotationEnable(false);
       body->setGravityEnable(cfg.physics.useGravity);
       body->setVelocityLimit(500.0f);
-      body->setContactTestBitmask(0xFFFFFFFF);
-      body->setCollisionBitmask(0xFFFF);
-      body->setCategoryBitmask(0x0002);
-      body->setGroup(cfg.physics.collisionGroup);
+      body->setCategoryBitmask(0x0002);        // 敌人类别
+      body->setContactTestBitmask(0xFFFFFFFF); // 检测所有接触
+      body->setCollisionBitmask(0xFFFFFFFB);   // 与所有碰撞，排除玩家(0x0004)
+      body->setGroup(cfg.physics.collisionGroup); // 负数组：同组不碰撞
       sprite->setPhysicsBody(body);
       
       // 添加MonsterSpriteComponent
@@ -474,6 +474,7 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       
       // 添加GroundDetectorComponent
       auto &ground = registry.emplace<ecs::GroundDetectorComponent>(entity);
+      ground.isOnGround = true;  // 初始化为在地面上
       
       // 添加WalkMovementComponent
       if (cfg.movement.type == "walk") {
@@ -484,6 +485,7 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
         walk.targetJumpEnabled = cfg.movement.targetJumpEnabled;
         walk.targetJumpReactionTime = cfg.movement.targetJumpReactionTime;
         walk.patrolDirectionChangeInterval = cfg.movement.patrolDirectionChangeInterval;
+        walk.initialized = true;  // 标记已初始化
       }
       
       // 注册到NodeEntityMap
