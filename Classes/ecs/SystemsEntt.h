@@ -266,6 +266,162 @@ public:
     }
 };
 
+// ==================== 史莱姆同步系统（EnTT版本） ====================
+
+/**
+ * @brief 史莱姆同步系统 - 从精灵读取位置到Transform（物理引擎驱动精灵位置）
+ */
+class SlimeSyncSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "SlimeSyncSystem"; }
+    int getPriority() const override { return SystemPriority::RENDER - 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<TransformComponent, SlimeSpriteComponent>();
+        
+        view.each([delta](auto entity, TransformComponent& transform,
+                         SlimeSpriteComponent& sprite) {
+            if (!sprite.sprite)
+                return;
+
+            // 物理引擎自动更新精灵位置，我们只需要读取它
+            transform.position = sprite.sprite->getPosition();
+        });
+    }
+};
+
+// ==================== 怪物同步系统（EnTT版本） ====================
+
+/**
+ * @brief 怪物同步系统 - 同步Transform位置到精灵（从物理体读取）
+ */
+class MonsterSyncSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "MonsterSyncSystem"; }
+    int getPriority() const override { return SystemPriority::RENDER - 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<TransformComponent, MonsterSpriteComponent>();
+        
+        view.each([this, delta](auto entity, TransformComponent& transform,
+                               MonsterSpriteComponent& sprite) {
+            if (!sprite.sprite)
+                return;
+
+            auto* body = sprite.getPhysicsBody();
+            if (!body)
+                return;
+
+            // performRaycastCorrection(body, delta); // 原版中已禁用
+            // 从精灵位置同步到Transform（物理体驱动）
+            transform.position = body->getPosition();
+        });
+    }
+};
+
+// ==================== 地面检测系统（EnTT版本） ====================
+
+/**
+ * @brief 地面检测系统 - 根据物理体速度判断地面和静止状态
+ */
+class GroundDetectorSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "GroundDetectorSystem"; }
+    int getPriority() const override { return SystemPriority::PHYSICS + 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<GroundDetectorComponent, SlimeSpriteComponent>();
+        
+        view.each([](auto entity, GroundDetectorComponent& ground,
+                    SlimeSpriteComponent& sprite) {
+            cocos2d::Vec2 velocity = sprite.getVelocity();
+
+            // 判断是否静止
+            ground.isStill = std::abs(velocity.x) < ground.stillThreshold &&
+                           std::abs(velocity.y) < ground.stillThreshold;
+        });
+    }
+};
+
+// ==================== 怪物地面检测系统（EnTT版本） ====================
+
+/**
+ * @brief 怪物地面检测系统 - 根据物理体速度判断MonsterSpriteComponent的地面状态
+ */
+class MonsterGroundDetectorSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "MonsterGroundDetectorSystem"; }
+    int getPriority() const override { return SystemPriority::PHYSICS + 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<GroundDetectorComponent, MonsterSpriteComponent>();
+        
+        view.each([](auto entity, GroundDetectorComponent& ground,
+                    MonsterSpriteComponent& sprite) {
+            cocos2d::Vec2 velocity = sprite.getVelocity();
+
+            // 判断是否静止
+            ground.isStill = std::abs(velocity.x) < ground.stillThreshold &&
+                           std::abs(velocity.y) < ground.stillThreshold;
+        });
+    }
+};
+
+// ==================== 缓降系统（EnTT版本） ====================
+
+/**
+ * @brief 缓降系统 - 处理伞史莱姆等下落时的空气阻力
+ * 
+ * 当实体下落时，限制其最大下落速度，模拟撑伞的效果
+ */
+class SlowFallSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "SlowFallSystem"; }
+    int getPriority() const override { return SystemPriority::PHYSICS + 1; }
+
+    void update(float delta) override {
+        auto view = _registry->view<SlowFallComponent, SlimeSpriteComponent>();
+        
+        view.each([](auto entity, SlowFallComponent& slowFall, 
+                    SlimeSpriteComponent& sprite) {
+            if (!slowFall.isActive || !sprite.sprite)
+                return;
+            
+            auto* body = sprite.sprite->getPhysicsBody();
+            if (!body)
+                return;
+            
+            cocos2d::Vec2 velocity = body->getVelocity();
+            
+            // 只在下落时应用缓降效果（velocity.y < 0 表示向下）
+            if (velocity.y < 0) {
+                bool modified = false;
+                
+                // 垂直方向：限制最大下落速度
+                float maxFall = -slowFall.maxFallSpeed;
+                if (velocity.y < maxFall) {
+                    // 应用阻尼，逐渐减速到最大下落速度
+                    velocity.y = velocity.y * slowFall.fallDamping;
+                    if (velocity.y < maxFall) {
+                        velocity.y = maxFall;
+                    }
+                    modified = true;
+                }
+                
+                // 水平方向：施加空气阻力
+                if (std::abs(velocity.x) > 10.0f) {
+                    velocity.x = velocity.x * slowFall.horizontalDamping;
+                    modified = true;
+                }
+                
+                if (modified) {
+                    body->setVelocity(velocity);
+                }
+            }
+        });
+    }
+};
+
 // ==================== System管理器（EnTT版本） ====================
 
 /**
