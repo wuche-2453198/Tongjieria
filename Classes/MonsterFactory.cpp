@@ -453,9 +453,31 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       spriteComp.monsterType = monsterId;
       spriteComp.frameTime = cfg.display.frameTime;
       spriteComp.baseScale = cfg.display.scale;
+      
+      // 加载所有动画帧
+      for (int i = 1; i <= cfg.display.frameCount; i++) {
+        std::string framePath = cfg.display.spriteFolder + "/" +
+                                cfg.display.spritePrefix + std::to_string(i) + ".png";
+        auto texture = Director::getInstance()->getTextureCache()->addImage(framePath);
+        if (texture) {
+          auto frame = SpriteFrame::createWithTexture(
+              texture, Rect(0, 0, texture->getContentSize().width,
+                            texture->getContentSize().height));
+          if (frame) {
+            spriteComp.animFrames.pushBack(frame);
+          }
+        }
+      }
+      
+      // 设置帧序列
       if (!cfg.display.frameSequence.empty()) {
         spriteComp.frameSequence = cfg.display.frameSequence;
       }
+      
+      spriteComp.animationLoaded = spriteComp.animFrames.size() >= 2;
+      
+      CCLOG("  Loaded %d animation frames for %s", 
+            (int)spriteComp.animFrames.size(), monsterId.c_str());
       
       // 添加TransformComponent
       auto &transform = registry.emplace<ecs::TransformComponent>(entity);
