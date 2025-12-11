@@ -1,5 +1,6 @@
 #include "MainMenuScene.h"
-#include "EcsTestScene.h"
+#include "SlimeTestScene.h"
+#include "ZombieTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -51,15 +52,28 @@ bool MainMenuScene::init() {
     this->addChild(titleLabel, 1);
   }
 
-  // 添加ECS测试按钮
-  auto ecsTestLabel =
-      Label::createWithTTF("ECS Test", "fonts/Marker Felt.ttf", 28);
-  auto ecsTestItem = MenuItemLabel::create(
-      ecsTestLabel, CC_CALLBACK_1(MainMenuScene::menuEcsTestCallback, this));
+  // 添加史莱姆测试按钮
+  auto slimeTestLabel =
+      Label::createWithTTF("Slime Test", "fonts/Marker Felt.ttf", 28);
+  slimeTestLabel->setColor(Color3B(100, 200, 100));
+  auto slimeTestItem = MenuItemLabel::create(
+      slimeTestLabel, CC_CALLBACK_1(MainMenuScene::menuSlimeTestCallback, this));
 
-  if (ecsTestItem != nullptr) {
-    ecsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                  origin.y + visibleSize.height / 2));
+  if (slimeTestItem != nullptr) {
+    slimeTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                    origin.y + visibleSize.height / 2 + 40));
+  }
+
+  // 添加僵尸测试按钮
+  auto zombieTestLabel =
+      Label::createWithTTF("Zombie Test", "fonts/Marker Felt.ttf", 28);
+  zombieTestLabel->setColor(Color3B(200, 100, 100));
+  auto zombieTestItem = MenuItemLabel::create(
+      zombieTestLabel, CC_CALLBACK_1(MainMenuScene::menuZombieTestCallback, this));
+
+  if (zombieTestItem != nullptr) {
+    zombieTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                     origin.y + visibleSize.height / 2 - 40));
   }
 
   // 添加关闭按钮
@@ -73,7 +87,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(ecsTestItem, closeItem, nullptr);
+    auto menu = Menu::create(slimeTestItem, zombieTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -86,9 +100,16 @@ void MainMenuScene::menuCloseCallback(Ref *pSender) {
   Director::getInstance()->end();
 }
 
-void MainMenuScene::menuEcsTestCallback(Ref *pSender) {
-  // 进入ECS测试场景
-  auto ecsTestScene = EcsTestScene::createScene();
+void MainMenuScene::menuSlimeTestCallback(Ref *pSender) {
+  // 进入史莱姆测试场景
+  auto slimeTestScene = SlimeTestScene::createScene();
   Director::getInstance()->replaceScene(
-      TransitionFade::create(0.5f, ecsTestScene));
+      TransitionFade::create(0.5f, slimeTestScene));
+}
+
+void MainMenuScene::menuZombieTestCallback(Ref *pSender) {
+  // 进入僵尸测试场景
+  auto zombieTestScene = ZombieTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, zombieTestScene));
 }

@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 /**
  * @class MonsterConfig
@@ -21,6 +22,7 @@ struct MonsterConfig {
     std::string spriteFolder;
     std::string spritePrefix;
     int frameCount = 2;
+    std::vector<int> frameSequence; // 自定义帧序列，如 {1,2,3,2}，为空则按顺序播放
     float frameTime = 0.15f;
     float scale = 1.0f;
     cocos2d::Color3B fallbackColor = cocos2d::Color3B::WHITE; // 备用颜色
@@ -47,6 +49,14 @@ struct MonsterConfig {
     float verticalImpulse = 500.0f;
     float patrolImpulseRatio = 0.5f;
     float directionChangeChance = 0.3f;
+    
+    // 行走类型专用参数
+    float walkSpeed = 80.0f;           // 行走速度
+    float jumpForce = 450.0f;          // 跳跃力度
+    bool obstacleJumpEnabled = true;   // 是否启用障碍物跳跃
+    bool targetJumpEnabled = true;     // 是否启用目标跳跃反应
+    float targetJumpReactionTime = 0.1f; // 目标跳跃反应时间
+    float patrolDirectionChangeInterval = 3.0f; // 巡逻改变方向间隔
   } movement;
 
   // AI属性
@@ -114,6 +124,7 @@ struct MonsterConfig {
     bool enabled = false;             // 是否启用缓降
     float maxFallSpeed = 100.0f;      // 最大下落速度
     float fallDamping = 0.85f;        // 下落阻尼系数
+    float horizontalDamping = 0.95f;  // 水平阻尼系数
   } slowFall;
 };
 
@@ -231,6 +242,16 @@ public:
 };
 
 /**
+ * @brief 粉色史莱姆 - 特别小的史莱姆
+ */
+class PinkSlimeCreator : public SlimeCreatorBase {
+public:
+  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
+    return cocos2d::Color3B(255, 182, 193); // 浅粉色
+  }
+};
+
+/**
  * @brief 冰雪史莱姆 - 攻击有概率赋予“冷冻”减益
  * 
  * 冷冻效果:
@@ -325,6 +346,54 @@ public:
 protected:
   void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
                             const MonsterConfig &config) override;
+};
+
+// ==================== 僵尸创建器 ====================
+
+/**
+ * @brief 僵尸基类创建器 - 提供通用的僵尸创建逻辑
+ * 
+ * 僵尸特性:
+ * - 行走式移动（非跳跃）
+ * - 遇到障碍物时跳跃
+ * - 追踪目标时若目标在高处则跳跃
+ * - 目标跳起时延迟反应后跟着跳
+ * - 支持自定义帧序列动画
+ */
+class ZombieCreatorBase : public IMonsterCreator {
+public:
+  ecs::EntityId create(ecs::World &world, const MonsterConfig &config,
+                       float x, float y, cocos2d::Node *parentNode) override;
+  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override;
+
+protected:
+  /**
+   * @brief 创建精灵和物理体（通用）
+   */
+  cocos2d::Sprite* createSprite(const MonsterConfig &config, float x, float y,
+                                 cocos2d::Node *parentNode);
+  
+  /**
+   * @brief 添加基础组件（通用）
+   */
+  void addBaseComponents(ecs::World &world, ecs::EntityId entity,
+                         const MonsterConfig &config, cocos2d::Sprite *sprite);
+  
+  /**
+   * @brief 添加特有组件（子类重写）
+   */
+  virtual void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
+                                    const MonsterConfig &config) {}
+};
+
+/**
+ * @brief 普通僵尸创建器
+ */
+class ZombieCreator : public ZombieCreatorBase {
+public:
+  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
+    return cocos2d::Color3B(139, 90, 43); // 棕色（僵尸肤色）
+  }
 };
 
 // ==================== 怪物工厂 ====================

@@ -414,6 +414,7 @@ struct GroundDetectorComponent : public IComponent {
   bool isOnGround = false;      // 是否在地面上
   bool isStill = false;         // 是否静止
   float stillThreshold = 10.0f; // 静止判断速度阈值
+  int groundContactCount = 0;   // 地面接触计数（用于处理同时接触多个地面）
 
   GroundDetectorComponent() = default;
 
@@ -501,16 +502,253 @@ struct JumpMovementComponent : public IComponent {
   }
 };
 
+// ==================== 通用怪物精灵组件 ====================
+
 /**
- * @brief 死亡生成组件 - 实体死亡时生成其他实体
- * 
- * 用于史莱姆母体等死亡时分裂的怪物
+ * @brief 通用怪物精灵组件 - 支持自定义帧序列的精灵动画
+ *
+ * 与SlimeSpriteComponent不同，此组件支持：
+ * - 自定义帧播放序列（如1232循环）
+ * - 更通用的怪物类型支持
  */
+struct MonsterSpriteComponent : public IComponent {
+  cocos2d::Sprite *sprite = nullptr;   // 精灵节点
+  cocos2d::Node *parentNode = nullptr; // 挂载的父节点
+  std::string monsterType;             // 怪物类型ID
+
+  // 渲染属性
+  int zOrder = 0;
+  bool visible = true;
+  bool facingRight = true; // 朝向
+  float baseScale = 1.0f;  // 基础缩放
+  cocos2d::Color3B color = cocos2d::Color3B::WHITE;
+  uint8_t opacity = 255;
+
+  // 动画相关
+  cocos2d::Vector<cocos2d::SpriteFrame *> animFrames; // 所有动画帧
+  std::vector<int> frameSequence;  // 帧播放序列（如 {1,2,3,2}）
+  float frameTime = 0.15f;         // 每帧时间
+  bool animationLoaded = false;    // 动画是否已加载
+  int currentFrameIndex = 0;       // 当前帧序列索引
+  float frameTimer = 0.0f;         // 帧计时器
+
+  MonsterSpriteComponent() = default;
+
+  ~MonsterSpriteComponent() {
+    if (sprite) {
+      sprite->stopAllActions();
+      sprite->removeFromParent();
+      sprite->release();
+      sprite = nullptr;
+    }
+  }
+
+  // 禁止拷贝
+  MonsterSpriteComponent(const MonsterSpriteComponent &) = delete;
+  MonsterSpriteComponent &operator=(const MonsterSpriteComponent &) = delete;
+
+  // 允许移动
+  MonsterSpriteComponent(MonsterSpriteComponent &&other) noexcept
+      : sprite(other.sprite), parentNode(other.parentNode),
+        monsterType(std::move(other.monsterType)), zOrder(other.zOrder),
+        visible(other.visible), facingRight(other.facingRight),
+        baseScale(other.baseScale), color(other.color), opacity(other.opacity),
+        animFrames(std::move(other.animFrames)),
+        frameSequence(std::move(other.frameSequence)),
+        frameTime(other.frameTime), animationLoaded(other.animationLoaded),
+        currentFrameIndex(other.currentFrameIndex), frameTimer(other.frameTimer) {
+    other.sprite = nullptr;
+    other.parentNode = nullptr;
+  }
+
+  /**
+   * @brief 设置朝向
+   * @param right true=朝右, false=朝左
+   */
+  void setFacing(bool right) {
+    facingRight = right;
+    if (sprite) {
+      sprite->setScaleX(baseScale * (right ? 1.0f : -1.0f));
+    }
+  }
+
+  /**
+   * @brief 同步位置到精灵
+   */
+  void syncPosition(const cocos2d::Vec2 &pos) {
+    if (sprite) {
+      sprite->setPosition(pos);
+    }
+  }
+
+  /**
+   * @brief 手动更新帧动画（按帧序列播放）
+   */
+  void updateAnimation(float delta) {
+    if (!animationLoaded || frameSequence.empty() || animFrames.empty())
+      return;
+
+    frameTimer += delta;
+    if (frameTimer >= frameTime) {
+      frameTimer -= frameTime;
+      currentFrameIndex = (currentFrameIndex + 1) % frameSequence.size();
+      
+      int frameIdx = frameSequence[currentFrameIndex] - 1; // 帧序列是1-indexed
+      if (frameIdx >= 0 && frameIdx < (int)animFrames.size()) {
+        sprite->setSpriteFrame(animFrames.at(frameIdx));
+      }
+    }
+  }
+
+  /**
+   * @brief 获取物理体
+   */
+  cocos2d::PhysicsBody *getPhysicsBody() {
+    return sprite ? sprite->getPhysicsBody() : nullptr;
+  }
+
+  /**
+   * @brief 获取物理体速度
+   */
+  cocos2d::Vec2 getVelocity() {
+    auto body = getPhysicsBody();
+    return body ? body->getVelocity() : cocos2d::Vec2::ZERO;
+  }
+
+  /**
+   * @brief 设置物理体速度
+   */
+  void setVelocity(const cocos2d::Vec2 &vel) {
+    auto body = getPhysicsBody();
+    if (body) {
+      body->setVelocity(vel);
+    }
+  }
+
+  /**
+   * @brief 应用冲量
+   */
+  void applyImpulse(const cocos2d::Vec2 &impulse) {
+    auto body = getPhysicsBody();
+    if (body) {
+      body->applyImpulse(impulse);
+    }
+  }
+};
+
+// ==================== 行走移动组件 ====================
+
+/**
+ * @brief 行走移动组件 - 僵尸等持续行走的怪物
+ */
+struct WalkMovementComponent : public IComponent {
+  float walkSpeed = 80.0f;
+  float jumpForce = 450.0f;
+  
+  float jumpCooldown = 0.2f;
+  float jumpCooldownTimer = 0.0f;
+  bool jumpCooldownActive = false;
+  
+  bool obstacleJumpEnabled = true;
+  float obstacleCheckDistance = 20.0f;
+  float obstacleJumpCooldown = 1.0f;
+  float obstacleJumpTimer = 0.0f;
+  cocos2d::Vec2 stuckCheckStartPos = cocos2d::Vec2(-9999, -9999);
+  float stuckTime = 0.0f;
+  float stuckThreshold = 0.5f;
+  float stuckDistanceRatio = 0.2f;
+  
+  bool useInstantObstacleDetection = false;
+  float expectedSpeed = 0.0f;
+  float actualSpeedRatio = 0.2f;
+  float initDelay = 1.0f;
+  float initTimer = 0.0f;
+  bool initialized = false;
+  
+  bool targetJumpEnabled = true;
+  float targetJumpReactionTime = 0.1f;
+  float targetJumpReactionTimer = 0.0f;
+  bool targetWasOnGround = true;
+  float targetLastY = 0.0f;
+  float targetHeightThreshold = 30.0f;
+  float jumpDetectionRange = 150.0f;
+  bool pendingReactionJump = false;
+  
+  int patrolDirection = 1;
+  float patrolDirectionChangeInterval = 3.0f;
+  float patrolTimer = 0.0f;
+  float patrolDirectionChangeChance = 0.3f;
+  
+  bool isWalking = false;
+  bool isJumping = false;
+  int currentDirection = 1;
+  
+  WalkMovementComponent() {
+    initDelay = 0.5f + (float)(rand() % 50) / 100.0f;
+    patrolDirection = (rand() % 2 == 0) ? 1 : -1;
+    currentDirection = patrolDirection;
+  }
+  WalkMovementComponent(float speed, float jump) : walkSpeed(speed), jumpForce(jump) {
+    initDelay = 0.5f + (float)(rand() % 50) / 100.0f;
+    patrolDirection = (rand() % 2 == 0) ? 1 : -1;
+    currentDirection = patrolDirection;
+  }
+  
+  bool canJump() const { return jumpCooldownTimer <= 0; }
+  
+  void onJump() {
+    jumpCooldownTimer = jumpCooldown;
+    jumpCooldownActive = false;
+  }
+  
+  void onLand() {
+    if (jumpCooldownTimer > 0 && !jumpCooldownActive) jumpCooldownActive = true;
+  }
+  
+  void updateJumpCooldown(float delta) {
+    if (jumpCooldownActive && jumpCooldownTimer > 0) jumpCooldownTimer -= delta;
+  }
+  
+  bool shouldObstacleJump(const cocos2d::Vec2 &currentPos, float delta) {
+    if (!obstacleJumpEnabled || obstacleJumpTimer > 0 || !canJump()) return false;
+    
+    if (!initialized) {
+      initTimer += delta;
+      if (initTimer >= initDelay) {
+        initialized = true;
+        stuckCheckStartPos = currentPos;
+        stuckTime = 0.0f;
+      }
+      return false;
+    }
+    
+    if (!isWalking) {
+      stuckCheckStartPos = currentPos;
+      stuckTime = 0.0f;
+      return false;
+    }
+    
+    stuckTime += delta;
+    
+    if (stuckTime >= stuckThreshold) {
+      float actualDist = std::abs(currentPos.x - stuckCheckStartPos.x);
+      float expectedDist = walkSpeed * stuckTime;
+      stuckCheckStartPos = currentPos;
+      stuckTime = 0.0f;
+      
+      if (expectedDist > 5.0f && actualDist < expectedDist * stuckDistanceRatio) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 struct DeathSpawnComponent : public IComponent {
-  std::string spawnType;  // 要生成的怪物类型ID
-  int minCount = 1;       // 最小生成数量
-  int maxCount = 3;       // 最大生成数量
-  float spawnRadius = 30.0f; // 生成半径（围绕死亡位置）
+  std::string spawnType;
+  int minCount = 1;
+  int maxCount = 3;
+  float spawnRadius = 30.0f;
   
   DeathSpawnComponent() = default;
   DeathSpawnComponent(const std::string& type, int min, int max)
@@ -527,11 +765,12 @@ struct DeathSpawnComponent : public IComponent {
 struct SlowFallComponent : public IComponent {
   float maxFallSpeed = 100.0f;      // 最大下落速度（正值）
   float fallDamping = 0.85f;        // 下落阻尼系数 (0-1, 越小阻力越大)
+  float horizontalDamping = 0.95f;  // 水平阻尼系数 (下落时水平方向的空气阻力)
   bool isActive = true;             // 是否启用缓降
   
   SlowFallComponent() = default;
-  SlowFallComponent(float maxSpeed, float damping)
-    : maxFallSpeed(maxSpeed), fallDamping(damping) {}
+  SlowFallComponent(float maxSpeed, float fallDamp, float horzDamp = 0.95f)
+    : maxFallSpeed(maxSpeed), fallDamping(fallDamp), horizontalDamping(horzDamp) {}
 };
 
 // ==================== 投射物相关组件 ====================

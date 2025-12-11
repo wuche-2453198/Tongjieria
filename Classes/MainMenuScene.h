@@ -12,8 +12,11 @@ public:
   // 关闭按钮回调
   void menuCloseCallback(cocos2d::Ref *pSender);
 
-  // ECS测试场景按钮回调
-  void menuEcsTestCallback(cocos2d::Ref *pSender);
+  // 史莱姆测试场景按钮回调
+  void menuSlimeTestCallback(cocos2d::Ref *pSender);
+
+  // 僵尸测试场景按钮回调
+  void menuZombieTestCallback(cocos2d::Ref *pSender);
 
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);

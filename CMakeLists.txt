@@ -39,14 +39,16 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
-     Classes/EcsTestScene.cpp
+     Classes/SlimeTestScene.cpp
+     Classes/ZombieTestScene.cpp
      Classes/MonsterFactory.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/SplashScene.h
      Classes/MainMenuScene.h
-     Classes/EcsTestScene.h
+     Classes/SlimeTestScene.h
+     Classes/ZombieTestScene.h
      Classes/MonsterFactory.h
      Classes/ecs/ECS.h
      Classes/ecs/Entity.h

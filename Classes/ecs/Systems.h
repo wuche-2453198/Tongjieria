@@ -2,10 +2,22 @@
 #define __ECS_SYSTEMS_H__
 
 #include "Components.h"
+#include "Entity.h"
 #include "System.h"
-#include "World.h"
+#include "cocos2d.h"
 
 namespace ecs {
+
+/**
+ * @brief 简单的射线预测碰撞修正，防止高速移动穿入静态障碍
+ * @param body 需要修正的刚体
+ * @param delta 当前帧的delta时间
+ */
+inline void performRaycastCorrection(cocos2d::PhysicsBody *body, float delta) {
+  // 暂时禁用射线修正，避免将实体推出屏幕或导致嵌入问题
+  // 交由物理引擎自行处理碰撞
+  return;
+}
 
 // ==================== 史莱姆渲染系统 ====================
 
@@ -24,8 +36,11 @@ public:
           if (!slimeSprite.sprite)
             return;
 
-          // 同步位置
-          slimeSprite.syncPosition(transform.position);
+          // 注意：不要手动同步位置！物理引擎会自动更新精灵位置
+          // 只从精灵读取位置到transform供其他系统使用
+          if (auto *body = slimeSprite.sprite->getPhysicsBody()) {
+            transform.position = slimeSprite.sprite->getPosition();
+          }
 
           // 同步显示属性
           slimeSprite.sprite->setRotation(transform.rotation);
@@ -200,8 +215,9 @@ public:
                       GroundDetectorComponent &ground, AggroComponent &aggro,
                       SlimeSpriteComponent &sprite,
                       TransformComponent &transform) {
-          // 只有在地面且静止时才计时冷却
-          if (ground.isGroundedAndStill()) {
+          // 只要在地面就计时冷却（不需要静止）
+          // 通过法线检测已经确保只有真正的地面接触才会设置isOnGround
+          if (ground.isOnGround) {
             jump.jumpTimer += delta;
             if (jump.jumpTimer >= jump.jumpCooldown) {
               jump.readyToJump = true;
@@ -257,7 +273,7 @@ public:
 // ==================== 史莱姆渲染同步系统 ====================
 
 /**
- * @brief 史莱姆同步系统 - 同步Transform位置到精灵（从物理体读取）
+ * @brief 史莱姆同步系统 - 从精灵读取位置到Transform（物理引擎驱动精灵位置）
  */
 class SlimeSyncSystem : public ISystem {
 public:
@@ -266,13 +282,267 @@ public:
 
   void update(float delta) override {
     _world->forEach<TransformComponent, SlimeSpriteComponent>(
-        [](EntityId entity, TransformComponent &transform,
-           SlimeSpriteComponent &sprite) {
+        [delta](EntityId entity, TransformComponent &transform,
+                SlimeSpriteComponent &sprite) {
           if (!sprite.sprite)
             return;
 
-          // 从精灵位置同步到Transform（物理体驱动）
+          // 物理引擎自动更新精灵位置，我们只需要读取它
           transform.position = sprite.sprite->getPosition();
+        });
+  }
+};
+
+// ==================== 行走移动系统 ====================
+
+/**
+ * @brief 行走移动系统 - 管理僵尸等行走类怪物的移动逻辑
+ *
+ * 特性:
+ * - 持续行走而非跳跃移动
+ * - 遇到障碍物卡住时自动跳跃
+ * - 目标在高处时跳跃追击
+ * - 目标跳起时延迟反应后跟着跳
+ */
+class WalkMovementSystem : public ISystem {
+public:
+  const char *getName() const override { return "WalkMovementSystem"; }
+  int getPriority() const override { return SystemPriority::MOVEMENT; }
+
+  void update(float delta) override {
+    _world->forEach<WalkMovementComponent, GroundDetectorComponent,
+                    AggroComponent, MonsterSpriteComponent, TransformComponent>(
+        [delta, this](EntityId entity, WalkMovementComponent &walk,
+                      GroundDetectorComponent &ground, AggroComponent &aggro,
+                      MonsterSpriteComponent &sprite,
+                      TransformComponent &transform) {
+          
+          // 检测落地（从空中到地面）
+          if (ground.isOnGround && walk.isJumping) {
+            walk.onLand(); // 激活跳跃冷却计时
+          }
+          
+          // 更新跳跃冷却（只有在地面上且激活后才计时）
+          if (ground.isOnGround) {
+            walk.updateJumpCooldown(delta);
+          }
+          
+          // 更新障碍物跳跃冷却（只有在地面上才计时）
+          if (ground.isOnGround && walk.obstacleJumpTimer > 0) {
+            walk.obstacleJumpTimer -= delta;
+          }
+          
+          cocos2d::Vec2 currentVelocity = sprite.getVelocity();
+          bool shouldJump = false;
+          float targetHeightDiff = 0.0f;
+          float horizontalDistToTarget = 9999.0f;
+          
+          // 首先计算与目标的水平距离（用于后续判断）
+          if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+            auto *targetTransform =
+                _world->getComponent<TransformComponent>(aggro.targetEntity);
+            if (targetTransform) {
+              horizontalDistToTarget = std::abs(targetTransform->position.x - transform.position.x);
+            }
+          }
+          
+          // 更新反应跳跃计时器
+          if (walk.pendingReactionJump) {
+            walk.targetJumpReactionTimer += delta;
+            if (walk.targetJumpReactionTimer >= walk.targetJumpReactionTime) {
+              walk.pendingReactionJump = false;
+              walk.targetJumpReactionTimer = 0.0f;
+              // 执行反应跳跃（只有在跳跃检测范围内才执行）
+              if (ground.isOnGround && walk.canJump() && 
+                  horizontalDistToTarget < walk.jumpDetectionRange) {
+                executeJump(walk, sprite, ground);
+                CCLOG("Entity %u: Reaction jump (target jumped)", entity);
+              }
+            }
+          }
+          
+          // 确定移动方向和目标
+          if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+            // 有仇恨目标：向目标移动
+            auto *targetTransform =
+                _world->getComponent<TransformComponent>(aggro.targetEntity);
+            if (targetTransform) {
+              
+              // 设置移动方向（基于目标位置而非方向向量）
+              float dirX = targetTransform->position.x - transform.position.x;
+              if (std::abs(dirX) > 5.0f) { // 只有距离超过5像素时才改变方向
+                walk.currentDirection = dirX > 0 ? 1 : -1;
+              }
+              
+              // 计算高度差
+              targetHeightDiff = targetTransform->position.y - transform.position.y;
+              
+              // 检测目标是否刚跳起来（只有在检测范围内才检测）
+              if (walk.targetJumpEnabled && !walk.pendingReactionJump &&
+                  horizontalDistToTarget < walk.jumpDetectionRange) {
+                float targetCurrentY = targetTransform->position.y;
+                float targetYDelta = targetCurrentY - walk.targetLastY;
+                
+                // 如果目标Y坐标突然上升超过阈值，说明目标跳了
+                if (targetYDelta > 20.0f && walk.targetLastY > 0) {
+                  walk.pendingReactionJump = true;
+                  walk.targetJumpReactionTimer = 0.0f;
+                  CCLOG("Entity %u: Detected target jump, will react in %.1fs", 
+                        entity, walk.targetJumpReactionTime);
+                }
+              }
+              walk.targetLastY = targetTransform->position.y;
+              
+              // 目标在高处，需要跳跃追击（只有在检测范围内才跳）
+              if (targetHeightDiff > walk.targetHeightThreshold && 
+                  ground.isOnGround && walk.canJump() &&
+                  horizontalDistToTarget < walk.jumpDetectionRange) {
+                shouldJump = true;
+              }
+            }
+          } else {
+            // 无仇恨目标：巡逻模式
+            walk.patrolTimer += delta;
+            if (walk.patrolTimer >= walk.patrolDirectionChangeInterval) {
+              walk.patrolTimer = 0.0f;
+              // 随机改变方向
+              if ((float)rand() / RAND_MAX < walk.patrolDirectionChangeChance) {
+                walk.patrolDirection *= -1;
+              }
+            }
+            walk.currentDirection = walk.patrolDirection;
+            sprite.setFacing(walk.currentDirection > 0);
+            
+            // 重置目标追踪状态
+            walk.targetLastY = 0.0f;
+            walk.pendingReactionJump = false;
+          }
+          
+          // 检测障碍物卡住（传统位移检测）
+          if (walk.shouldObstacleJump(transform.position, delta) && ground.isOnGround) {
+            shouldJump = true;
+            CCLOG("Entity %u: Obstacle detected (stuck), jumping", entity);
+          }
+          
+          // 即时障碍物检测（通过速度差异）
+          if (walk.useInstantObstacleDetection && ground.isOnGround && 
+              walk.initialized && walk.canJump() && !shouldJump) {
+            float actualVelX = std::abs(currentVelocity.x);
+            float expectedVelX = walk.walkSpeed;
+            
+            // 如果在地面上，期望移动，但实际速度很小，说明被障碍物阻挡
+            if (walk.isWalking && expectedVelX > 10.0f && 
+                actualVelX < expectedVelX * walk.actualSpeedRatio) {
+              shouldJump = true;
+              CCLOG("Entity %u: Obstacle detected (speed diff), jumping", entity);
+            }
+          }
+          
+          // 执行跳跃
+          if (shouldJump && ground.isOnGround && walk.canJump()) {
+            executeJump(walk, sprite, ground);
+          }
+          
+          // 应用水平移动和朝向（在地面上时）
+          if (ground.isOnGround) {
+            walk.expectedSpeed = walk.walkSpeed;
+            currentVelocity.x = walk.walkSpeed * walk.currentDirection;
+            sprite.setVelocity(currentVelocity);
+            walk.isWalking = true;
+            // 同步朝向（只有在地面上有水平速度时才更新朝向）
+            if (std::abs(currentVelocity.x) > 1.0f) {
+              // 僵尸贴图朝向为面向左侧（原始帧向左），为了让行走方向一致，在向右移动时需要水平翻转
+              bool movingRight = currentVelocity.x > 0;
+              sprite.setFacing(!movingRight);
+            }
+          }
+          
+          // 更新跳跃状态
+          walk.isJumping = !ground.isOnGround;
+        });
+  }
+
+private:
+  void executeJump(WalkMovementComponent &walk, MonsterSpriteComponent &sprite,
+                   GroundDetectorComponent &ground) {
+    // 跳跃时保持当前水平速度
+    cocos2d::Vec2 currentVel = sprite.getVelocity();
+    cocos2d::Vec2 jumpVel(currentVel.x, walk.jumpForce);
+    sprite.setVelocity(jumpVel);
+    
+    walk.onJump(); // 触发通用跳跃冷却
+    walk.obstacleJumpTimer = walk.obstacleJumpCooldown;
+    walk.stuckTime = 0.0f;
+    ground.isOnGround = false;
+    walk.isJumping = true;
+  }
+};
+
+// ==================== 怪物精灵动画系统 ====================
+
+/**
+ * @brief 怪物精灵动画系统 - 更新MonsterSpriteComponent的帧动画
+ */
+class MonsterAnimationSystem : public ISystem {
+public:
+  const char *getName() const override { return "MonsterAnimationSystem"; }
+  int getPriority() const override { return SystemPriority::ANIMATION; }
+
+  void update(float delta) override {
+    _world->forEach<MonsterSpriteComponent>(
+        [delta](EntityId entity, MonsterSpriteComponent &sprite) {
+          sprite.updateAnimation(delta);
+        });
+  }
+};
+
+// ==================== 怪物渲染同步系统 ====================
+
+/**
+ * @brief 怪物同步系统 - 同步Transform位置到精灵（从物理体读取）
+ */
+class MonsterSyncSystem : public ISystem {
+public:
+  const char *getName() const override { return "MonsterSyncSystem"; }
+  int getPriority() const override { return SystemPriority::RENDER - 10; }
+
+  void update(float delta) override {
+    _world->forEach<TransformComponent, MonsterSpriteComponent>(
+        [this, delta](EntityId entity, TransformComponent &transform,
+                      MonsterSpriteComponent &sprite) {
+          if (!sprite.sprite)
+            return;
+
+          auto *body = sprite.getPhysicsBody();
+          if (!body)
+            return;
+
+          performRaycastCorrection(body, delta);
+          // 从精灵位置同步到Transform（物理体驱动）
+          transform.position = body->getPosition();
+        });
+  }
+};
+
+// ==================== 怪物地面检测系统 ====================
+
+/**
+ * @brief 怪物地面检测系统 - 根据物理体速度判断MonsterSpriteComponent的地面状态
+ */
+class MonsterGroundDetectorSystem : public ISystem {
+public:
+  const char *getName() const override { return "MonsterGroundDetectorSystem"; }
+  int getPriority() const override { return SystemPriority::PHYSICS + 10; }
+
+  void update(float delta) override {
+    _world->forEach<GroundDetectorComponent, MonsterSpriteComponent>(
+        [](EntityId entity, GroundDetectorComponent &ground,
+           MonsterSpriteComponent &sprite) {
+          cocos2d::Vec2 velocity = sprite.getVelocity();
+
+          // 判断是否静止
+          ground.isStill = std::abs(velocity.x) < ground.stillThreshold &&
+                           std::abs(velocity.y) < ground.stillThreshold;
         });
   }
 };
@@ -304,7 +574,9 @@ public:
           
           // 只在下落时应用缓降效果（velocity.y < 0 表示向下）
           if (velocity.y < 0) {
-            // 限制最大下落速度
+            bool modified = false;
+            
+            // 垂直方向：限制最大下落速度
             float maxFall = -slowFall.maxFallSpeed;
             if (velocity.y < maxFall) {
               // 应用阻尼，逐渐减速到最大下落速度
@@ -312,6 +584,16 @@ public:
               if (velocity.y < maxFall) {
                 velocity.y = maxFall;
               }
+              modified = true;
+            }
+            
+            // 水平方向：施加空气阻力
+            if (std::abs(velocity.x) > 10.0f) {
+              velocity.x = velocity.x * slowFall.horizontalDamping;
+              modified = true;
+            }
+            
+            if (modified) {
               body->setVelocity(velocity);
             }
           }

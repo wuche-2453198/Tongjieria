@@ -12,8 +12,8 @@
   },
   
   "physics": {
-    "bodyWidth": 40.0,
-    "bodyHeight": 45.0,
+    "bodyWidth": 45.0,
+    "bodyHeight": 50.0,
     "bodyHeightOffset": -5.0,
     "mass": 0.8,
     "friction": 0.6,
@@ -47,7 +47,8 @@
   
   "slowFall": {
     "maxFallSpeed": 80.0,
-    "fallDamping": 0.7
+    "fallDamping": 0.7,
+    "horizontalDamping": 0.98
   },
   
   "loot": [
