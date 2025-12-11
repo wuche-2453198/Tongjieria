@@ -78,7 +78,11 @@ bool ZombieTestScene::init()
 void ZombieTestScene::setupEcsSystems()
 {
   auto &factory = MonsterFactory::getInstance();
-  factory.loadConfigsFromDir("config/zombies");
+  
+  // 加载僵尸和史莱姆配置
+  int zombieCount = factory.loadConfigsFromDir("config/zombies");
+  int slimeCount = factory.loadConfigsFromDir("config/slimes");
+  CCLOG("Loaded %d zombie configs and %d slime configs", zombieCount, slimeCount);
 
   // ==================== 使用EnTT版本Systems ====================
   CCLOG("========== Setting up EnTT Systems ==========");
@@ -87,10 +91,14 @@ void ZombieTestScene::setupEcsSystems()
   
   // 按优先级顺序添加Systems
   _systemManager.addSystem<ecs::AggroSystemEntt>();
-  _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
-  _systemManager.addSystem<ecs::WalkMovementSystemEntt>();
-  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();
-  _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();
+  _systemManager.addSystem<ecs::GroundDetectorSystemEntt>();        // 通用地面检测
+  _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>(); // 怪物地面检测
+  _systemManager.addSystem<ecs::JumpMovementSystemEntt>();          // 跳跃移动（史莱姆）
+  _systemManager.addSystem<ecs::WalkMovementSystemEntt>();          // 行走移动（僵尸）
+  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();             // 史莱姆同步
+  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();           // 僵尸同步
+  _systemManager.addSystem<ecs::SlimeRenderSystemEntt>();           // 史莱姆渲染
+  _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();      // 僵尸动画
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
   _systemManager.addSystem<ecs::LifetimeSystemEntt>();
@@ -276,17 +284,33 @@ void ZombieTestScene::createEcsZombie()
   auto &factory = MonsterFactory::getInstance();
   
   float groundTop = origin.y + 50.0f;
-  float spacing = visibleSize.width / 5.0f;
+  float spacing = visibleSize.width / 7.0f;  // 增加空间，因为要生成更多怪物
   
-  // 生成混合的僵尸：普通僵尸和31px小僵尸
-  for (int i = 0; i < 6; i++) {
+  CCLOG("========== Creating Monsters ==========");
+  
+  // 生成混合的怪物：僵尸和史莱姆
+  for (int i = 0; i < 8; i++) {
     float x = origin.x + spacing * (i + 0.5f);
     float y = groundTop + 100.0f;
     
-    // 交替生成普通僵尸和小型僵尸
-    const char* zombieType = (i % 2 == 0) ? "Zombie" : "31px-Zombie";
-    factory.createMonsterEntt(_registry, zombieType, x, y, this);
+    const char* monsterType = nullptr;
+    
+    // 多样化怪物生成
+    if (i % 4 == 0) {
+      monsterType = "Zombie";           // 普通僵尸
+    } else if (i % 4 == 1) {
+      monsterType = "31px-Zombie";      // 小僵尸
+    } else if (i % 4 == 2) {
+      monsterType = "GreenSlime";       // 绿色史莱姆
+    } else {
+      monsterType = "BlueSlime";        // 蓝色史莱姆
+    }
+    
+    factory.createMonsterEntt(_registry, monsterType, x, y, this);
+    CCLOG("  Created %s at position (%.1f, %.1f)", monsterType, x, y);
   }
+  
+  CCLOG("========================================");
 }
 
 void ZombieTestScene::setupSharedContactListener()
