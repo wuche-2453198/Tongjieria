@@ -222,7 +222,10 @@ void SlimeTestScene::createFakePlayerEntity()
   
   _fakePlayerEntity = entt::to_integral(playerEntity);
   
-  CCLOG("SlimeTestScene: Fake player created (EnTT entity %u)", _fakePlayerEntity);
+  // 注册到NodeEntityMap（关键！让史莱姆能找到玩家）
+  ecs::NodeEntityMap::getInstance().registerNode(_fakePlayer, _fakePlayerEntity);
+  
+  CCLOG("SlimeTestScene: Fake player created (EnTT entity %u) and registered to NodeEntityMap", _fakePlayerEntity);
 }
 
 void SlimeTestScene::createEcsSlime()

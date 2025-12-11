@@ -432,13 +432,23 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
     parentNode->addChild(sprite, 1);
     
     // ==================== 通用：设置物理体 ====================
-    PhysicsMaterial material(cfg.physics.mass, cfg.physics.friction, cfg.physics.restitution);
+    // 史莱姆需要更高的摩擦力来防止滑行
+    float friction = (cfg.type == "Slime") ? 0.9f : cfg.physics.friction;
+    float restitution = (cfg.type == "Slime") ? 0.1f : cfg.physics.restitution;
+    
+    PhysicsMaterial material(cfg.physics.mass, friction, restitution);
     auto body = PhysicsBody::createBox(Size(cfg.physics.bodyWidth, cfg.physics.bodyHeight), material);
     body->setDynamic(true);
     body->setMass(cfg.physics.mass);
     body->setRotationEnable(false);
     body->setGravityEnable(cfg.physics.useGravity);
     body->setVelocityLimit(500.0f);
+    
+    // 史莱姆添加线性阻尼，快速停止滑行
+    if (cfg.type == "Slime") {
+      body->setLinearDamping(0.8f);  // 高阻尼快速停止
+    }
+    
     body->setCategoryBitmask(0x0002);        // 敌人类别
     body->setContactTestBitmask(0xFFFFFFFF); // 检测所有接触
     body->setCollisionBitmask(0xFFFFFFFB);   // 与所有碰撞，排除玩家(0x0004)
