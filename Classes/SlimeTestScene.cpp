@@ -79,21 +79,27 @@ void SlimeTestScene::setupEcsSystems()
   auto &factory = MonsterFactory::getInstance();
   factory.loadConfigsFromDir("config/slimes");
 
-  // 史莱姆专用系统
-  _world.addSystem<ecs::AggroSystem>();
-  _world.addSystem<ecs::GroundDetectorSystem>();
-  _world.addSystem<ecs::SlowFallSystem>();
-  _world.addSystem<ecs::JumpMovementSystem>();
-  _world.addSystem<ecs::ProjectileAttackSystem>();
-  _world.addSystem<ecs::ProjectileSystem>();
-  _world.addSystem<ecs::DebuffSystem>();
-  _world.addSystem<ecs::SlimeSyncSystem>();
-  _world.addSystem<ecs::SlimeRenderSystem>();
-  _world.addSystem<ecs::HealthSystem>();
-  _world.addSystem<ecs::CombatSystem>();
-  _world.addSystem<ecs::LifetimeSystem>();
+  // ==================== 使用EnTT版本Systems（史莱姆专用）====================
+  CCLOG("========== Setting up EnTT Systems for Slimes ==========");
+  
+  _systemManager.setRegistry(&_registry);
+  
+  // 按优先级顺序添加Systems（仅史莱姆相关）
+  _systemManager.addSystem<ecs::AggroSystemEntt>();
+  _systemManager.addSystem<ecs::GroundDetectorSystemEntt>();
+  _systemManager.addSystem<ecs::SlowFallSystemEntt>();
+  _systemManager.addSystem<ecs::JumpMovementSystemEntt>();
+  _systemManager.addSystem<ecs::ProjectileAttackSystemEntt>();
+  _systemManager.addSystem<ecs::ProjectileSystemEntt>();
+  _systemManager.addSystem<ecs::DebuffSystemEntt>();
+  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();
+  _systemManager.addSystem<ecs::SlimeRenderSystemEntt>();
+  _systemManager.addSystem<ecs::HealthSystemEntt>();
+  _systemManager.addSystem<ecs::CombatSystemEntt>();
+  _systemManager.addSystem<ecs::LifetimeSystemEntt>();
 
-  CCLOG("SlimeTestScene: ECS Systems initialized");
+  CCLOG("EnTT Systems initialized: %zu systems", _systemManager.getSystemCount());
+  CCLOG("==========================================");
 }
 
 void SlimeTestScene::createPhysicsEnvironment()
@@ -205,13 +211,18 @@ void SlimeTestScene::createFakePlayerEntity()
     this->addChild(_playerLabel, 1);
   }
 
-  _fakePlayerEntity = _world.createEntity("Player");
-  _world.addComponent<ecs::TransformComponent>(_fakePlayerEntity,
-                                               _fakePlayer->getPositionX(),
-                                               _fakePlayer->getPositionY());
-  _world.addComponent<ecs::PlayerTag>(_fakePlayerEntity);
-
-  CCLOG("SlimeTestScene: Fake player created");
+  // 创建玩家实体（EnTT版本）
+  auto playerEntity = _registry.create();
+  
+  auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
+  transform.position.x = _fakePlayer->getPositionX();
+  transform.position.y = _fakePlayer->getPositionY();
+  
+  _registry.emplace<ecs::PlayerTag>(playerEntity);
+  
+  _fakePlayerEntity = entt::to_integral(playerEntity);
+  
+  CCLOG("SlimeTestScene: Fake player created (EnTT entity %u)", _fakePlayerEntity);
 }
 
 void SlimeTestScene::createEcsSlime()
@@ -237,9 +248,9 @@ void SlimeTestScene::createEcsSlime()
     float X = origin.x + 100.0f + i * (visibleSize.width - 200.0f) / (slimeCount - 1);
     float Y = groundTop + 100.0f;
     CCLOG("SlimeTestScene: Spawning %s at (%.1f, %.1f) [i=%d]", slimeTypes[i], X, Y, i);
-    factory.createMonster(_world, slimeTypes[i], X, Y, this);
+    factory.createMonsterEntt(_registry, slimeTypes[i], X, Y, this);
   }
-  CCLOG("SlimeTestScene: All slimes spawned");
+  CCLOG("SlimeTestScene: All slimes spawned (EnTT version)");
 }
 
 void SlimeTestScene::setupSharedContactListener()
@@ -257,11 +268,18 @@ void SlimeTestScene::setupSharedContactListener()
     ecs::EntityId entityA = nodeA ? ecs::NodeEntityMap::getInstance().findEntity(nodeA) : ecs::INVALID_ENTITY;
     ecs::EntityId entityB = nodeB ? ecs::NodeEntityMap::getInstance().findEntity(nodeB) : ecs::INVALID_ENTITY;
     
-    // 投射物碰撞处理
-    ecs::ProjectileComponent *projA = (entityA != ecs::INVALID_ENTITY) ? 
-        _world.getComponent<ecs::ProjectileComponent>(entityA) : nullptr;
-    ecs::ProjectileComponent *projB = (entityB != ecs::INVALID_ENTITY) ? 
-        _world.getComponent<ecs::ProjectileComponent>(entityB) : nullptr;
+    // 投射物碰撞处理（EnTT版本）
+    ecs::ProjectileComponent *projA = nullptr;
+    ecs::ProjectileComponent *projB = nullptr;
+    
+    if (entityA != ecs::INVALID_ENTITY) {
+      auto entA = static_cast<entt::entity>(entityA);
+      if (_registry.valid(entA)) projA = _registry.try_get<ecs::ProjectileComponent>(entA);
+    }
+    if (entityB != ecs::INVALID_ENTITY) {
+      auto entB = static_cast<entt::entity>(entityB);
+      if (_registry.valid(entB)) projB = _registry.try_get<ecs::ProjectileComponent>(entB);
+    }
     
     if (projA || projB) {
       ecs::ProjectileComponent *proj = projA ? projA : projB;
@@ -277,28 +295,31 @@ void SlimeTestScene::setupSharedContactListener()
       }
       
       if (otherEntity != ecs::INVALID_ENTITY) {
-        auto *playerTag = _world.getComponent<ecs::PlayerTag>(otherEntity);
-        if (playerTag) {
-          auto *health = _world.getComponent<ecs::HealthComponent>(otherEntity);
-          if (health) health->takeDamage(proj->damage);
-          
-          auto *debuff = _world.getComponent<ecs::DebuffComponent>(otherEntity);
-          if (!debuff) debuff = &_world.addComponent<ecs::DebuffComponent>(otherEntity);
-          
-          if (proj->chillChance > 0 && (float)rand() / RAND_MAX < proj->chillChance) {
-            debuff->applyChillDebuff(proj->chillDuration, proj->chillSpeedReduction);
+        auto otherEnt = static_cast<entt::entity>(otherEntity);
+        if (_registry.valid(otherEnt)) {
+          auto *playerTag = _registry.try_get<ecs::PlayerTag>(otherEnt);
+          if (playerTag) {
+            auto *health = _registry.try_get<ecs::HealthComponent>(otherEnt);
+            if (health) health->takeDamage(proj->damage);
+            
+            auto *debuff = _registry.try_get<ecs::DebuffComponent>(otherEnt);
+            if (!debuff) debuff = &_registry.emplace<ecs::DebuffComponent>(otherEnt);
+            
+            if (proj->chillChance > 0 && (float)rand() / RAND_MAX < proj->chillChance) {
+              debuff->applyChillDebuff(proj->chillDuration, proj->chillSpeedReduction);
+            }
+            if (proj->freezeChance > 0 && (float)rand() / RAND_MAX < proj->freezeChance) {
+              debuff->applyFreezeDebuff(proj->freezeDuration);
+            }
+            if (proj->poisonChance1 > 0 && (float)rand() / RAND_MAX < proj->poisonChance1) {
+              debuff->applyPoisonDebuff(proj->poisonDuration1, proj->poisonDamage1);
+            } else if (proj->poisonChance2 > 0 && (float)rand() / RAND_MAX < proj->poisonChance2) {
+              debuff->applyPoisonDebuff(proj->poisonDuration2, proj->poisonDamage2);
+            }
+            
+            proj->hasHit = true;
+            return true;
           }
-          if (proj->freezeChance > 0 && (float)rand() / RAND_MAX < proj->freezeChance) {
-            debuff->applyFreezeDebuff(proj->freezeDuration);
-          }
-          if (proj->poisonChance1 > 0 && (float)rand() / RAND_MAX < proj->poisonChance1) {
-            debuff->applyPoisonDebuff(proj->poisonDuration1, proj->poisonDamage1);
-          } else if (proj->poisonChance2 > 0 && (float)rand() / RAND_MAX < proj->poisonChance2) {
-            debuff->applyPoisonDebuff(proj->poisonDuration2, proj->poisonDamage2);
-          }
-          
-          proj->hasHit = true;
-          return true;
         }
       }
       return true;
@@ -335,10 +356,13 @@ void SlimeTestScene::setupSharedContactListener()
     if (isGroundContact) {
       ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
       if (entity != ecs::INVALID_ENTITY) {
-        auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
-        if (ground) {
-          ground->isOnGround = true;
-          ground->groundContactCount++;
+        auto ent = static_cast<entt::entity>(entity);
+        if (_registry.valid(ent)) {
+          auto *ground = _registry.try_get<ecs::GroundDetectorComponent>(ent);
+          if (ground) {
+            ground->isOnGround = true;
+            ground->groundContactCount++;
+          }
         }
       }
     }
@@ -364,25 +388,25 @@ void SlimeTestScene::setupSharedContactListener()
     Node *dynamicNode = dynamicBody->getNode();
     if (!dynamicNode) return;
 
-    // 检查法线，只有地面接触分离时才减少计数
-    // 这样可以避免墙角bug（墙壁接触没有增加计数，分离时也不应减少）
     cocos2d::Vec2 normal = contact.getContactData()->normal;
     if (!dynamicIsA) normal = -normal;
     bool wasGroundContact = (normal.y < -0.3f);
     
     if (!wasGroundContact) {
-      // 这不是地面接触，直接返回，不减少计数
       return;
     }
 
     ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
     if (entity != ecs::INVALID_ENTITY) {
-      auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
-      if (ground) {
-        ground->groundContactCount--;
-        if (ground->groundContactCount <= 0) {
-          ground->isOnGround = false;
-          ground->groundContactCount = 0;
+      auto ent = static_cast<entt::entity>(entity);
+      if (_registry.valid(ent)) {
+        auto *ground = _registry.try_get<ecs::GroundDetectorComponent>(ent);
+        if (ground) {
+          ground->groundContactCount--;
+          if (ground->groundContactCount <= 0) {
+            ground->isOnGround = false;
+            ground->groundContactCount = 0;
+          }
         }
       }
     }
@@ -445,24 +469,7 @@ void SlimeTestScene::update(float delta)
 {
   Layer::update(delta);
   updateFakePlayerPosition(delta);
-  _world.update(delta);
-  
-  // 调试：追踪史莱姆位置（每60帧输出一次）
-  static int frameCount = 0;
-  if (++frameCount >= 60) {
-    frameCount = 0;
-    _world.forEach<ecs::SlimeSpriteComponent, ecs::TransformComponent>(
-        [](ecs::EntityId entity, ecs::SlimeSpriteComponent &sprite, ecs::TransformComponent &transform) {
-          if (sprite.sprite) {
-            auto pos = sprite.sprite->getPosition();
-            auto *body = sprite.sprite->getPhysicsBody();
-            cocos2d::Vec2 vel(0, 0);
-            if (body) vel = body->getVelocity();
-            CCLOG("Slime %u: pos=(%.1f, %.1f) vel=(%.1f, %.1f) visible=%d", 
-                  entity, pos.x, pos.y, vel.x, vel.y, sprite.sprite->isVisible());
-          }
-        });
-  }
+  _systemManager.update(delta);
 }
 
 void SlimeTestScene::updateFakePlayerPosition(float delta)
@@ -489,9 +496,15 @@ void SlimeTestScene::updateFakePlayerPosition(float delta)
     newPos.y = std::max(origin.y + 20.0f, std::min(newPos.y, origin.y + visibleSize.height - 20.0f));
     _fakePlayer->setPosition(newPos);
     if (_playerLabel) _playerLabel->setPosition(Vec2(_fakePlayer->getPositionX(), _fakePlayer->getPositionY() + 40));
+    // 同步玩家位置到EnTT registry
     if (_fakePlayerEntity != ecs::INVALID_ENTITY) {
-      auto *transform = _world.getComponent<ecs::TransformComponent>(_fakePlayerEntity);
-      if (transform) transform->position = newPos;
+      auto playerEntity = static_cast<entt::entity>(_fakePlayerEntity);
+      if (_registry.valid(playerEntity)) {
+        auto* transform = _registry.try_get<ecs::TransformComponent>(playerEntity);
+        if (transform) {
+          transform->position = newPos;
+        }
+      }
     }
   }
 }
