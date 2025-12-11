@@ -80,36 +80,23 @@ void ZombieTestScene::setupEcsSystems()
   auto &factory = MonsterFactory::getInstance();
   factory.loadConfigsFromDir("config/zombies");
 
-  if (_useEnttSystems) {
-    // ==================== 使用EnTT版本Systems ====================
-    CCLOG("========== Setting up EnTT Systems ==========");
-    
-    _systemManager.setRegistry(&_registry);
-    
-    // 按优先级顺序添加Systems
-    _systemManager.addSystem<ecs::AggroSystemEntt>();
-    _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
-    _systemManager.addSystem<ecs::WalkMovementSystemEntt>();
-    _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();
-    _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();
-    _systemManager.addSystem<ecs::HealthSystemEntt>();
-    _systemManager.addSystem<ecs::CombatSystemEntt>();
-    _systemManager.addSystem<ecs::LifetimeSystemEntt>();
-    
-    CCLOG("EnTT Systems initialized: %zu systems", _systemManager.getSystemCount());
-    CCLOG("==========================================");
-  } else {
-    // ==================== 使用旧版ECS ====================
-    _world.addSystem<ecs::AggroSystem>();
-    _world.addSystem<ecs::MonsterGroundDetectorSystem>();
-    _world.addSystem<ecs::WalkMovementSystem>();
-    _world.addSystem<ecs::MonsterSyncSystem>();
-    _world.addSystem<ecs::MonsterAnimationSystem>();
-    _world.addSystem<ecs::HealthSystem>();
-    _world.addSystem<ecs::CombatSystem>();
-    _world.addSystem<ecs::LifetimeSystem>();
-    CCLOG("Legacy ECS Systems initialized");
-  }
+  // ==================== 使用EnTT版本Systems ====================
+  CCLOG("========== Setting up EnTT Systems ==========");
+  
+  _systemManager.setRegistry(&_registry);
+  
+  // 按优先级顺序添加Systems
+  _systemManager.addSystem<ecs::AggroSystemEntt>();
+  _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
+  _systemManager.addSystem<ecs::WalkMovementSystemEntt>();
+  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();
+  _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();
+  _systemManager.addSystem<ecs::HealthSystemEntt>();
+  _systemManager.addSystem<ecs::CombatSystemEntt>();
+  _systemManager.addSystem<ecs::LifetimeSystemEntt>();
+  
+  CCLOG("EnTT Systems initialized: %zu systems", _systemManager.getSystemCount());
+  CCLOG("==========================================");
 }
 
 void ZombieTestScene::createPhysicsEnvironment()
@@ -265,29 +252,21 @@ void ZombieTestScene::createFakePlayerEntity()
     this->addChild(_playerLabel, 1);
   }
 
-  if (_useEnttSystems) {
-    // EnTT版本：创建玩家实体
-    auto playerEntity = _registry.create();
-    
-    // 添加组件
-    auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
-    transform.position.x = _fakePlayer->getPositionX();
-    transform.position.y = _fakePlayer->getPositionY();
-    
-    _registry.emplace<ecs::PlayerTag>(playerEntity);
-    
-    // 注册到NodeEntityMap（使用EntityId兼容）
-    _fakePlayerEntity = entt::to_integral(playerEntity);
-    ecs::NodeEntityMap::getInstance().registerNode(_fakePlayer, _fakePlayerEntity);
-    
-    CCLOG("EnTT: Created player entity %u", _fakePlayerEntity);
-  } else {
-    // 旧版ECS：创建玩家实体
-    _fakePlayerEntity = _world.createEntity("Player");
-    _world.addComponent<ecs::TransformComponent>(_fakePlayerEntity, _fakePlayer->getPositionX(), _fakePlayer->getPositionY());
-    _world.addComponent<ecs::PlayerTag>(_fakePlayerEntity);
-    ecs::NodeEntityMap::getInstance().registerNode(_fakePlayer, _fakePlayerEntity);
-  }
+  // 创建玩家实体
+  auto playerEntity = _registry.create();
+  
+  // 添加组件
+  auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
+  transform.position.x = _fakePlayer->getPositionX();
+  transform.position.y = _fakePlayer->getPositionY();
+  
+  _registry.emplace<ecs::PlayerTag>(playerEntity);
+  
+  // 注册到NodeEntityMap
+  _fakePlayerEntity = entt::to_integral(playerEntity);
+  ecs::NodeEntityMap::getInstance().registerNode(_fakePlayer, _fakePlayerEntity);
+  
+  CCLOG("EnTT: Created player entity %u", _fakePlayerEntity);
 }
 
 void ZombieTestScene::createEcsZombie()
@@ -306,14 +285,7 @@ void ZombieTestScene::createEcsZombie()
     
     // 交替生成普通僵尸和小型僵尸
     const char* zombieType = (i % 2 == 0) ? "Zombie" : "31px-Zombie";
-    
-    if (_useEnttSystems) {
-      // EnTT版本：使用createMonsterEntt
-      factory.createMonsterEntt(_registry, zombieType, x, y, this);
-    } else {
-      // 旧版：使用createMonster
-      factory.createMonster(_world, zombieType, x, y, this);
-    }
+    factory.createMonsterEntt(_registry, zombieType, x, y, this);
   }
 }
 
@@ -357,19 +329,9 @@ void ZombieTestScene::setupSharedContactListener()
 
       ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
       if (entity != ecs::INVALID_ENTITY) {
-        if (_useEnttSystems) {
-          // EnTT版本：使用registry
-          auto enttEntity = static_cast<entt::entity>(entity);
-          if (_registry.valid(enttEntity)) {
-            auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
-            if (ground) {
-              ground->isOnGround = true;
-              ground->groundContactCount++;
-            }
-          }
-        } else {
-          // 旧版ECS
-          auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
+        auto enttEntity = static_cast<entt::entity>(entity);
+        if (_registry.valid(enttEntity)) {
+          auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
           if (ground) {
             ground->isOnGround = true;
             ground->groundContactCount++;
@@ -419,22 +381,9 @@ void ZombieTestScene::setupSharedContactListener()
 
     ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
     if (entity != ecs::INVALID_ENTITY) {
-      if (_useEnttSystems) {
-        // EnTT版本：使用registry
-        auto enttEntity = static_cast<entt::entity>(entity);
-        if (_registry.valid(enttEntity)) {
-          auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
-          if (ground) {
-            ground->groundContactCount--;
-            if (ground->groundContactCount <= 0) {
-              ground->isOnGround = false;
-              ground->groundContactCount = 0;
-            }
-          }
-        }
-      } else {
-        // 旧版ECS
-        auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
+      auto enttEntity = static_cast<entt::entity>(entity);
+      if (_registry.valid(enttEntity)) {
+        auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
         if (ground) {
           ground->groundContactCount--;
           if (ground->groundContactCount <= 0) {
@@ -502,13 +451,7 @@ void ZombieTestScene::update(float delta)
 {
   Layer::update(delta);
   updateFakePlayerPosition(delta);
-  
-  // 根据标志选择使用哪个ECS系统
-  if (_useEnttSystems) {
-    _systemManager.update(delta);  // EnTT版本
-  } else {
-    _world.update(delta);          // 旧版
-  }
+  _systemManager.update(delta);
 }
 
 void ZombieTestScene::updateFakePlayerPosition(float delta)
@@ -545,21 +488,14 @@ void ZombieTestScene::updateFakePlayerPosition(float delta)
     _playerLabel->setPosition(Vec2(_fakePlayer->getPositionX(), _fakePlayer->getPositionY() + 40));
   }
   
-  // 同步玩家位置到ECS TransformComponent
+  // 同步玩家位置到EnTT registry
   if (_fakePlayerEntity != ecs::INVALID_ENTITY) {
-    if (_useEnttSystems) {
-      // EnTT版本：更新registry中的Transform
-      auto playerEntity = static_cast<entt::entity>(_fakePlayerEntity);
-      if (_registry.valid(playerEntity)) {
-        auto* transform = _registry.try_get<ecs::TransformComponent>(playerEntity);
-        if (transform) {
-          transform->position = _fakePlayer->getPosition();
-        }
+    auto playerEntity = static_cast<entt::entity>(_fakePlayerEntity);
+    if (_registry.valid(playerEntity)) {
+      auto* transform = _registry.try_get<ecs::TransformComponent>(playerEntity);
+      if (transform) {
+        transform->position = _fakePlayer->getPosition();
       }
-    } else {
-      // 旧版ECS
-      auto *transform = _world.getComponent<ecs::TransformComponent>(_fakePlayerEntity);
-      if (transform) transform->position = _fakePlayer->getPosition();
     }
   }
 }

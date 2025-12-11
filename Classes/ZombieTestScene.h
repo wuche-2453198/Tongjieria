@@ -21,11 +21,9 @@ public:
   CREATE_FUNC(ZombieTestScene);
 
 private:
-  // ==================== ECS系统（双版本支持） ====================
-  ecs::World _world;                    // 旧版ECS（保留兼容）
-  entt::registry _registry;             // EnTT版本
+  // ==================== ECS系统（EnTT版本） ====================
+  entt::registry _registry;             // EnTT实体注册表
   ecs::SystemManagerEntt _systemManager; // EnTT System管理器
-  bool _useEnttSystems = true;          // 是否使用EnTT版Systems（默认true）
 
   // 虚拟玩家
   cocos2d::Sprite *_fakePlayer = nullptr;
