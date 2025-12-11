@@ -357,10 +357,23 @@ void ZombieTestScene::setupSharedContactListener()
 
       ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
       if (entity != ecs::INVALID_ENTITY) {
-        auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
-        if (ground) {
-          ground->isOnGround = true;
-          ground->groundContactCount++;
+        if (_useEnttSystems) {
+          // EnTT版本：使用registry
+          auto enttEntity = static_cast<entt::entity>(entity);
+          if (_registry.valid(enttEntity)) {
+            auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
+            if (ground) {
+              ground->isOnGround = true;
+              ground->groundContactCount++;
+            }
+          }
+        } else {
+          // 旧版ECS
+          auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
+          if (ground) {
+            ground->isOnGround = true;
+            ground->groundContactCount++;
+          }
         }
       }
     }
@@ -406,12 +419,28 @@ void ZombieTestScene::setupSharedContactListener()
 
     ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
     if (entity != ecs::INVALID_ENTITY) {
-      auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
-      if (ground) {
-        ground->groundContactCount--;
-        if (ground->groundContactCount <= 0) {
-          ground->isOnGround = false;
-          ground->groundContactCount = 0;
+      if (_useEnttSystems) {
+        // EnTT版本：使用registry
+        auto enttEntity = static_cast<entt::entity>(entity);
+        if (_registry.valid(enttEntity)) {
+          auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
+          if (ground) {
+            ground->groundContactCount--;
+            if (ground->groundContactCount <= 0) {
+              ground->isOnGround = false;
+              ground->groundContactCount = 0;
+            }
+          }
+        }
+      } else {
+        // 旧版ECS
+        auto *ground = _world.getComponent<ecs::GroundDetectorComponent>(entity);
+        if (ground) {
+          ground->groundContactCount--;
+          if (ground->groundContactCount <= 0) {
+            ground->isOnGround = false;
+            ground->groundContactCount = 0;
+          }
         }
       }
     }
