@@ -147,8 +147,8 @@ void SlimeTestScene::createPhysicsEnvironment()
   topWallBody->setContactTestBitmask(0xFFFFFFFF);
   topWall->setPhysicsBody(topWallBody);
 
-  // 地面 - 增加摩擦力防止史莱姆滑行
-  PhysicsMaterial groundMaterial(1.0f, 0.8f, 0.2f);  // density, friction, restitution
+  // 地面 - 高摩擦力+零弹性，完全防止史莱姆滑行和弹跳
+  PhysicsMaterial groundMaterial(1.0f, 0.9f, 0.0f);  // density, friction, restitution(完全无弹性)
   auto ground = Sprite::create();
   ground->setTextureRect(Rect(0, 0, visibleSize.width, 50));
   ground->setColor(Color3B(139, 90, 43));

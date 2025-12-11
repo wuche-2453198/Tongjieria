@@ -177,7 +177,7 @@ public:
     void update(float delta) override {
         auto view = _registry->view<TransformComponent, SlimeSpriteComponent>();
         
-        view.each([](auto entity, TransformComponent& transform, 
+        view.each([delta](auto entity, TransformComponent& transform, 
                      SlimeSpriteComponent& slimeSprite) {
             if (!slimeSprite.sprite)
                 return;
@@ -193,6 +193,16 @@ public:
             slimeSprite.sprite->setVisible(slimeSprite.visible);
             slimeSprite.sprite->setColor(slimeSprite.color);
             slimeSprite.sprite->setOpacity(slimeSprite.opacity);
+            
+            // 播放动画
+            if (slimeSprite.animationLoaded && slimeSprite.animFrames.size() >= 2) {
+                slimeSprite.frameTimer += delta;
+                if (slimeSprite.frameTimer >= slimeSprite.frameTime) {
+                    slimeSprite.frameTimer -= slimeSprite.frameTime;
+                    slimeSprite.currentFrameIndex = (slimeSprite.currentFrameIndex + 1) % slimeSprite.animFrames.size();
+                    slimeSprite.sprite->setSpriteFrame(slimeSprite.animFrames.at(slimeSprite.currentFrameIndex));
+                }
+            }
         });
     }
 };

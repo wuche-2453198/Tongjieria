@@ -59,6 +59,8 @@ struct SlimeSpriteComponent : public IComponent {
   cocos2d::Vector<cocos2d::SpriteFrame *> animFrames; // 动画帧
   float frameTime = 0.15f;                            // 每帧时间
   bool animationLoaded = false;                       // 动画是否已加载
+  int currentFrameIndex = 0;                          // 当前帧索引
+  float frameTimer = 0.0f;                            // 帧计时器
 
   SlimeSpriteComponent() = default;
 

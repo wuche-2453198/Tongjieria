@@ -570,10 +570,15 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       // 尖刺史莱姆：投射物攻击能力
       if (monsterId.find("Spiked") != std::string::npos) {
         auto &projectileAttack = registry.emplace<ecs::ProjectileAttackComponent>(entity);
-        projectileAttack.fireInterval = 3.0f;
+        projectileAttack.projectileSpritePath = "Minor monster/ice_spike.png";  // 设置投射物贴图
+        projectileAttack.projectileSpriteWidth = 15.0f;
+        projectileAttack.projectileSpriteHeight = 30.0f;
+        projectileAttack.projectileCount = 4;
+        projectileAttack.fireInterval = 2.5f;
         projectileAttack.fireRange = 300.0f;
         projectileAttack.projectileSpeed = 200.0f;
         projectileAttack.projectileDamage = 10.0f;
+        projectileAttack.projectileLifetime = 3.0f;
         
         // 冰刺史莱姆有冰冻效果
         if (monsterId.find("Ice") != std::string::npos) {
