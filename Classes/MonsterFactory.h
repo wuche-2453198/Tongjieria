@@ -3,6 +3,7 @@
 
 #include "cocos2d.h"
 #include "ecs/ECS.h"
+#include <entt/entt.hpp>
 #include "json/document.h"
 #include <functional>
 #include <string>
@@ -458,7 +459,7 @@ public:
   bool loadSingleConfig(const std::string &filePath);
 
   /**
-   * @brief 根据配置创建怪物实体（自动选择创建器）
+   * @brief 根据配置创建怪物实体（旧版ECS）
    * @param world ECS世界
    * @param monsterId 怪物ID (如 "GreenSlime")
    * @param x X坐标
@@ -469,6 +470,19 @@ public:
   ecs::EntityId createMonster(ecs::World &world, const std::string &monsterId,
                               float x, float y,
                               cocos2d::Node *parentNode = nullptr);
+
+  /**
+   * @brief 根据配置创建怪物实体（EnTT版本）
+   * @param registry EnTT注册表
+   * @param monsterId 怪物ID (如 "GreenSlime")
+   * @param x X坐标
+   * @param y Y坐标
+   * @param parentNode 父节点
+   * @return 实体ID (使用entt::to_integral转换)
+   */
+  ecs::EntityId createMonsterEntt(entt::registry &registry, const std::string &monsterId,
+                                  float x, float y,
+                                  cocos2d::Node *parentNode = nullptr);
 
   /**
    * @brief 注册怪物类型创建器

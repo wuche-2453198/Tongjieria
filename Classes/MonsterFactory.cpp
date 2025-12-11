@@ -393,6 +393,116 @@ ecs::EntityId MonsterFactory::createMonster(ecs::World &world,
   return creatorIt->second->create(world, cfg, x, y, parentNode);
 }
 
+// ==================== EnTT版本的怪物创建 ====================
+
+ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
+                                               const std::string &monsterId,
+                                               float x, float y,
+                                               cocos2d::Node *parentNode) {
+  using namespace cocos2d;
+  
+  // 查找配置
+  auto configIt = _configs.find(monsterId);
+  if (configIt == _configs.end()) {
+    CCLOG("MonsterFactory: Unknown monster ID: %s", monsterId.c_str());
+    return ecs::INVALID_ENTITY;
+  }
+
+  const MonsterConfig &cfg = configIt->second;
+  
+  // 创建EnTT实体
+  auto entity = registry.create();
+  
+  // 创建精灵（根据类型选择）
+  Sprite *sprite = nullptr;
+  if (cfg.type == "Zombie") {
+    // 创建僵尸精灵
+    std::string firstFramePath = cfg.display.spriteFolder + "/" + cfg.display.spritePrefix + "1.png";
+    sprite = Sprite::create(firstFramePath);
+    
+    if (!sprite) {
+      CCLOG("Failed to load sprite from %s, using fallback", firstFramePath.c_str());
+      sprite = Sprite::create();
+      sprite->setTextureRect(Rect(0, 0, 31, 39));
+      sprite->setColor(Color3B(139, 90, 43)); // 棕色
+    }
+    
+    if (sprite && parentNode) {
+      sprite->retain();
+      sprite->setScale(cfg.display.scale);
+      sprite->setPosition(Vec2(x, y));
+      parentNode->addChild(sprite, 1);
+      
+      // 设置物理体
+      PhysicsMaterial material(cfg.physics.mass, cfg.physics.friction, cfg.physics.restitution);
+      auto body = PhysicsBody::createBox(Size(cfg.physics.bodyWidth, cfg.physics.bodyHeight), material);
+      body->setDynamic(true);
+      body->setMass(cfg.physics.mass);
+      body->setRotationEnable(false);
+      body->setGravityEnable(cfg.physics.useGravity);
+      body->setVelocityLimit(500.0f);
+      body->setContactTestBitmask(0xFFFFFFFF);
+      body->setCollisionBitmask(0xFFFF);
+      body->setCategoryBitmask(0x0002);
+      body->setGroup(cfg.physics.collisionGroup);
+      sprite->setPhysicsBody(body);
+      
+      // 添加MonsterSpriteComponent
+      auto &spriteComp = registry.emplace<ecs::MonsterSpriteComponent>(entity);
+      spriteComp.sprite = sprite;
+      spriteComp.monsterType = monsterId;
+      spriteComp.frameTime = cfg.display.frameTime;
+      spriteComp.baseScale = cfg.display.scale;
+      if (!cfg.display.frameSequence.empty()) {
+        spriteComp.frameSequence = cfg.display.frameSequence;
+      }
+      
+      // 添加TransformComponent
+      auto &transform = registry.emplace<ecs::TransformComponent>(entity);
+      transform.position = Vec2(x, y);
+      
+      // 添加HealthComponent
+      auto &health = registry.emplace<ecs::HealthComponent>(entity);
+      health.maxHealth = cfg.stats.maxHealth;
+      health.currentHealth = cfg.stats.maxHealth;
+      
+      // 添加AggroComponent
+      auto &aggro = registry.emplace<ecs::AggroComponent>(entity);
+      aggro.targetTag = "Player";
+      aggro.aggroRange = cfg.ai.aggroRange;
+      aggro.deaggroRange = cfg.ai.deaggroRange;
+      
+      // 添加GroundDetectorComponent
+      auto &ground = registry.emplace<ecs::GroundDetectorComponent>(entity);
+      
+      // 添加WalkMovementComponent
+      if (cfg.movement.type == "walk") {
+        auto &walk = registry.emplace<ecs::WalkMovementComponent>(entity);
+        walk.walkSpeed = cfg.movement.walkSpeed;
+        walk.jumpForce = cfg.movement.jumpForce;
+        walk.obstacleJumpEnabled = cfg.movement.obstacleJumpEnabled;
+        walk.targetJumpEnabled = cfg.movement.targetJumpEnabled;
+        walk.targetJumpReactionTime = cfg.movement.targetJumpReactionTime;
+        walk.patrolDirectionChangeInterval = cfg.movement.patrolDirectionChangeInterval;
+      }
+      
+      // 注册到NodeEntityMap
+      ecs::EntityId entityId = entt::to_integral(entity);
+      ecs::NodeEntityMap::getInstance().registerNode(sprite, entityId);
+      
+      CCLOG("MonsterFactory(EnTT): Created %s at (%.1f, %.1f), entity=%u",
+            monsterId.c_str(), x, y, entityId);
+      
+      return entityId;
+    }
+  }
+  
+  // 如果创建失败，销毁实体
+  registry.destroy(entity);
+  CCLOG("MonsterFactory(EnTT): Failed to create %s", monsterId.c_str());
+  return ecs::INVALID_ENTITY;
+}
+
 std::vector<std::string> MonsterFactory::getMonsterIdsByType(const std::string &type) const {
   std::vector<std::string> ids;
   for (const auto &pair : _configs) {

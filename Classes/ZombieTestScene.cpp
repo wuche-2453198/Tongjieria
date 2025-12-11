@@ -306,7 +306,14 @@ void ZombieTestScene::createEcsZombie()
     
     // 交替生成普通僵尸和小型僵尸
     const char* zombieType = (i % 2 == 0) ? "Zombie" : "31px-Zombie";
-    factory.createMonster(_world, zombieType, x, y, this);
+    
+    if (_useEnttSystems) {
+      // EnTT版本：使用createMonsterEntt
+      factory.createMonsterEntt(_registry, zombieType, x, y, this);
+    } else {
+      // 旧版：使用createMonster
+      factory.createMonster(_world, zombieType, x, y, this);
+    }
   }
 }
 
