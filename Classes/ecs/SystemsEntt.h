@@ -2,6 +2,7 @@
 
 #include <entt/entt.hpp>
 #include "Components.h"
+#include "SpriteComponent.h"
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -742,6 +743,204 @@ private:
         walk.stuckTime = 0.0f;
         ground.isOnGround = false;
         walk.isJumping = true;
+    }
+};
+
+// ==================== 投射物系统（EnTT版本） ====================
+
+/**
+ * @brief 投射物系统 - 更新投射物位置、旋转和生命周期
+ */
+class ProjectileSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "ProjectileSystem"; }
+    int getPriority() const override { return SystemPriority::PHYSICS + 5; }
+
+    void update(float delta) override {
+        std::vector<entt::entity> toDestroy;
+        
+        auto view = _registry->view<ProjectileComponent, ProjectileSpriteComponent, TransformComponent>();
+        
+        view.each([delta, &toDestroy](auto entity, ProjectileComponent& proj,
+                                      ProjectileSpriteComponent& sprite,
+                                      TransformComponent& transform) {
+            // 更新生命周期
+            proj.lifetime -= delta;
+            if (proj.lifetime <= 0 || proj.hasHit) {
+                toDestroy.push_back(entity);
+                return;
+            }
+            
+            // 从物理体同步位置和旋转
+            if (sprite.sprite && sprite.sprite->getPhysicsBody()) {
+                transform.position = sprite.sprite->getPosition();
+                cocos2d::Vec2 velocity = sprite.sprite->getPhysicsBody()->getVelocity();
+                
+                // 根据速度方向更新旋转
+                if (velocity.lengthSquared() > 1.0f) {
+                    float rotAngle = atan2(velocity.y, velocity.x) * 180.0f / M_PI;
+                    sprite.sprite->setRotation(-rotAngle + 90.0f);
+                }
+            }
+        });
+        
+        // 销毁过期的投射物
+        for (auto entity : toDestroy) {
+            _registry->destroy(entity);
+        }
+    }
+};
+
+// ==================== 投射物攻击系统（EnTT版本） ====================
+
+/**
+ * @brief 投射物攻击系统 - 处理投射物发射
+ */
+class ProjectileAttackSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "ProjectileAttackSystem"; }
+    int getPriority() const override { return SystemPriority::AI + 10; }
+
+    void update(float delta) override {
+        auto view = _registry->view<ProjectileAttackComponent, AggroComponent, 
+                                     TransformComponent, SlimeSpriteComponent,
+                                     GroundDetectorComponent, JumpMovementComponent>();
+        
+        view.each([delta, this](auto entity, ProjectileAttackComponent& attack,
+                               AggroComponent& aggro, TransformComponent& transform,
+                               SlimeSpriteComponent& sprite, GroundDetectorComponent& ground,
+                               JumpMovementComponent& jump) {
+            
+            // 更新发射计时器
+            if (!attack.canFire) {
+                attack.fireTimer += delta;
+                if (attack.fireTimer >= attack.fireInterval) {
+                    attack.canFire = true;
+                    attack.fireTimer = 0.0f;
+                }
+            }
+            
+            // 检查目标是否在发射范围内
+            attack.targetInRange = aggro.hasAggro && 
+                                  aggro.distanceToTarget <= attack.fireRange;
+            
+            // 如果目标在范围内，阻止跳跃并尝试发射
+            if (attack.targetInRange) {
+                // 阻止跳跃
+                jump.readyToJump = false;
+                jump.jumpTimer = 0.0f;
+                
+                // 更新朝向
+                if (aggro.directionToTarget.x != 0) {
+                    sprite.setFacing(aggro.directionToTarget.x > 0);
+                }
+                
+                // 只有在地面上且可以发射时才发射
+                if (attack.canFire && ground.isOnGround) {
+                    fireProjectiles(entity, attack, transform, aggro, sprite);
+                    attack.canFire = false;
+                    attack.fireTimer = 0.0f;
+                }
+            }
+        });
+    }
+
+private:
+    void fireProjectiles(entt::entity owner, ProjectileAttackComponent& attack,
+                        TransformComponent& transform, AggroComponent& aggro,
+                        SlimeSpriteComponent& ownerSprite) {
+        
+        cocos2d::Node* parentNode = ownerSprite.sprite ? 
+                                     ownerSprite.sprite->getParent() : nullptr;
+        if (!parentNode) return;
+        
+        // 发射方向固定为正上方散开
+        float baseAngle = 90.0f;
+        float spreadStep = attack.projectileCount > 1 ? 
+                          attack.horizontalSpread / (attack.projectileCount - 1) : 0;
+        float startAngle = baseAngle - attack.horizontalSpread / 2.0f;
+        
+        for (int i = 0; i < attack.projectileCount; i++) {
+            float angle = startAngle + spreadStep * i;
+            float radians = angle * M_PI / 180.0f;
+            
+            // 计算初始速度
+            cocos2d::Vec2 velocity;
+            velocity.x = cos(radians) * attack.projectileSpeed;
+            velocity.y = sin(radians) * attack.verticalImpulse;
+            
+            // 创建投射物实体（EnTT方式）
+            auto projectile = _registry->create();
+            
+            // 添加变换组件
+            auto& projTransform = _registry->emplace<TransformComponent>(projectile);
+            projTransform.position = transform.position;
+            projTransform.velocity = velocity;
+            
+            // 添加投射物组件
+            auto& projComp = _registry->emplace<ProjectileComponent>(projectile);
+            projComp.owner = entt::to_integral(owner);
+            projComp.damage = attack.projectileDamage;
+            projComp.lifetime = attack.projectileLifetime;
+            projComp.chillChance = attack.chillChance;
+            projComp.chillDuration = attack.chillDuration;
+            projComp.chillSpeedReduction = attack.chillSpeedReduction;
+            projComp.freezeChance = attack.freezeChance;
+            projComp.freezeDuration = attack.freezeDuration;
+            projComp.poisonChance1 = attack.poisonChance1;
+            projComp.poisonDuration1 = attack.poisonDuration1;
+            projComp.poisonDamage1 = attack.poisonDamage1;
+            projComp.poisonChance2 = attack.poisonChance2;
+            projComp.poisonDuration2 = attack.poisonDuration2;
+            projComp.poisonDamage2 = attack.poisonDamage2;
+            
+            // 创建投射物精灵
+            auto& projSprite = _registry->emplace<ProjectileSpriteComponent>(projectile);
+            projSprite.sprite = cocos2d::Sprite::create(attack.projectileSpritePath);
+            
+            if (projSprite.sprite) {
+                projSprite.sprite->retain();
+                
+                // 根据物理体尺寸计算缩放
+                float scaleX = attack.projectileSpriteWidth / 
+                              projSprite.sprite->getContentSize().width;
+                float scaleY = attack.projectileSpriteHeight / 
+                              projSprite.sprite->getContentSize().height;
+                projSprite.sprite->setScale(scaleX, scaleY);
+                
+                projSprite.sprite->setPosition(transform.position);
+                parentNode->addChild(projSprite.sprite, 2);
+                
+                // 设置物理体
+                cocos2d::PhysicsMaterial material(0.1f, 0.0f, 0.0f);
+                auto body = cocos2d::PhysicsBody::createBox(
+                    cocos2d::Size(attack.projectileSpriteWidth, attack.projectileSpriteHeight),
+                    material);
+                body->setDynamic(true);
+                body->setMass(0.1f);
+                body->setGravityEnable(attack.useGravity);
+                body->setRotationEnable(true);
+                body->setVelocity(velocity);
+                body->setContactTestBitmask(0xFFFFFFFF);
+                body->setCollisionBitmask(0x0001);
+                body->setCategoryBitmask(0x0004);
+                body->setGroup(-2);
+                projSprite.sprite->setPhysicsBody(body);
+                
+                // 根据速度方向设置旋转
+                float rotAngle = atan2(velocity.y, velocity.x) * 180.0f / M_PI;
+                projSprite.sprite->setRotation(-rotAngle + 90.0f);
+                
+                // 注册到NodeEntityMap（使用EntityId）
+                NodeEntityMap::getInstance().registerNode(projSprite.sprite, 
+                                                         entt::to_integral(projectile));
+            }
+            
+            CCLOG("Fired Ice Spike %d at angle %.1f, velocity (%.1f, %.1f)", 
+                  i, angle, velocity.x, velocity.y);
+        }
+        
+        CCLOG("Entity %u: Fired %d ice spikes!", entt::to_integral(owner), attack.projectileCount);
     }
 };
 
