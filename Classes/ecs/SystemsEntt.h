@@ -422,6 +422,89 @@ public:
     }
 };
 
+// ==================== 仇恨检测系统（EnTT版本） ====================
+
+/**
+ * @brief 仇恨检测系统 - 检测目标并更新仇恨状态
+ * 
+ * EnTT优化：使用view直接获取玩家实体，O(1)复杂度
+ * 原版：遍历所有实体查找tag，O(N)复杂度
+ */
+class AggroSystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "AggroSystem"; }
+    int getPriority() const override { return SystemPriority::AI - 10; }
+
+    void update(float delta) override {
+        // 遍历所有具有仇恨组件的实体
+        auto aggroView = _registry->view<AggroComponent, TransformComponent>();
+        
+        aggroView.each([this](auto entity, AggroComponent& aggro, 
+                             TransformComponent& transform) {
+            // EnTT高效查找：根据targetTag直接获取目标实体
+            entt::entity target = findTargetByTag(aggro.targetTag);
+            // 转换entt::entity到EntityId（都是uint32_t）
+            aggro.targetEntity = (target == entt::null) ? INVALID_ENTITY : entt::to_integral(target);
+
+            if (target == entt::null) {
+                aggro.distanceToTarget = 99999.0f;
+                aggro.directionToTarget = cocos2d::Vec2::ZERO;
+                if (aggro.hasAggro) {
+                    aggro.hasAggro = false;
+                    CCLOG("Entity %u: Lost target, exiting aggro", entt::to_integral(entity));
+                }
+                return;
+            }
+
+            // 计算到目标的距离和方向
+            auto* targetTransform = _registry->try_get<TransformComponent>(target);
+            if (!targetTransform)
+                return;
+
+            cocos2d::Vec2 diff = targetTransform->position - transform.position;
+            aggro.distanceToTarget = diff.length();
+            aggro.directionToTarget = diff.getNormalized();
+
+            // 仇恨状态切换
+            if (aggro.shouldEnterAggro()) {
+                aggro.hasAggro = true;
+                CCLOG("Entity %u: Target in range (%.1f <= %.1f), entering aggro",
+                      entt::to_integral(entity), aggro.distanceToTarget, aggro.aggroRange);
+            } else if (aggro.shouldExitAggro()) {
+                aggro.hasAggro = false;
+                CCLOG("Entity %u: Target too far (%.1f > %.1f), exiting aggro",
+                      entt::to_integral(entity), aggro.distanceToTarget, aggro.deaggroRange);
+            }
+        });
+    }
+
+private:
+    /**
+     * @brief 根据tag查找目标实体（EnTT高效版本）
+     * 
+     * 性能对比：
+     * - 旧版：O(N) 遍历所有实体
+     * - EnTT：O(1) 直接从view获取
+     */
+    entt::entity findTargetByTag(const std::string& tag) {
+        // 目前只支持查找玩家
+        if (tag == "Player") {
+            // 使用PlayerTag组件查找玩家实体
+            auto playerView = _registry->view<PlayerTag, TransformComponent>();
+            // EnTT 3.x使用迭代器检查是否为空
+            for (auto entity : playerView) {
+                return entity;  // 返回第一个玩家（O(1)！）
+            }
+        }
+        
+        // 如果需要支持更多tag类型，可以添加：
+        // else if (tag == "Enemy") { ... }
+        // else if (tag == "Boss") { ... }
+        
+        return entt::null;
+    }
+};
+
 // ==================== System管理器（EnTT版本） ====================
 
 /**
