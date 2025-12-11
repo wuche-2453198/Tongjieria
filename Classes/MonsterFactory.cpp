@@ -450,6 +450,9 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       // 史莱姆：使用SlimeSpriteComponent
       auto &spriteComp = registry.emplace<ecs::SlimeSpriteComponent>(entity);
       spriteComp.sprite = sprite;
+      spriteComp.slimeType = monsterId;  // 设置史莱姆类型
+      spriteComp.frameTime = cfg.display.frameTime;
+      spriteComp.baseScale = cfg.display.scale;
       
       // 加载所有动画帧
       for (int i = 1; i <= cfg.display.frameCount; i++) {
@@ -467,8 +470,8 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       }
       spriteComp.animationLoaded = spriteComp.animFrames.size() >= 2;
       
-      CCLOG("  Loaded %d animation frames for slime %s", 
-            (int)spriteComp.animFrames.size(), monsterId.c_str());
+      CCLOG("  Loaded %d animation frames for slime %s (frameTime=%.2f)", 
+            (int)spriteComp.animFrames.size(), monsterId.c_str(), spriteComp.frameTime);
             
     } else if (cfg.type == "Zombie") {
       // 僵尸：使用MonsterSpriteComponent
