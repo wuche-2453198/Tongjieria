@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include "Components.h"
 #include "SpriteComponent.h"
+#include "System.h"  // 使用System.h中的SystemPriority定义
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -19,18 +20,7 @@
 
 namespace ecs {
 
-// ==================== System优先级（保持不变） ====================
-
-namespace SystemPriority {
-    constexpr int INPUT = -1000;   // 输入处理
-    constexpr int AI = -500;       // AI决策
-    constexpr int PHYSICS = 0;     // 物理模拟
-    constexpr int MOVEMENT = 100;  // 移动
-    constexpr int COLLISION = 200; // 碰撞处理
-    constexpr int ANIMATION = 500; // 动画更新
-    constexpr int RENDER = 1000;   // 渲染
-    constexpr int UI = 2000;       // UI更新
-}
+// SystemPriority已在System.h中定义，无需重复
 
 // ==================== EnTT System基类 ====================
 

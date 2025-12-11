@@ -3,6 +3,8 @@
 
 #include "cocos2d.h"
 #include "ecs/ECS.h"
+#include "ecs/SystemsEntt.h"
+#include <entt/entt.hpp>
 #include <map>
 
 /**
@@ -19,7 +21,11 @@ public:
   CREATE_FUNC(ZombieTestScene);
 
 private:
-  ecs::World _world;
+  // ==================== ECS系统（双版本支持） ====================
+  ecs::World _world;                    // 旧版ECS（保留兼容）
+  entt::registry _registry;             // EnTT版本
+  ecs::SystemManagerEntt _systemManager; // EnTT System管理器
+  bool _useEnttSystems = true;          // 是否使用EnTT版Systems（默认true）
 
   // 虚拟玩家
   cocos2d::Sprite *_fakePlayer = nullptr;
