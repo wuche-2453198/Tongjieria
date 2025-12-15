@@ -1,0 +1,108 @@
+{
+  "recipes": [
+    {
+      "Result": { "ItemID": 4, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 10 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 3, "Count": 3 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 1 },
+        { "Type": "Item", "ID": 2, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 9, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 10 },
+        { "Type": "Item", "ID": 3, "Count": 5 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 6, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 5, "Count": 20 },
+        { "Type": "Item", "ID": 3, "Count": 3 },
+        { "Type": "Item", "ID": 1, "Count": 4 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 8, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 7, "Count": 5 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 11, "Count": 1 },
+      "Station": "Furnace",
+      "Ingredients": [
+        { "Type": "Item", "ID": 10, "Count": 3 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 7, "Count": 1 },
+      "Station": "Furnace",
+      "Ingredients": [
+        { "Type": "Item", "ID": 12, "Count": 3 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 13, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 6 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 14, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 4 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 15, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 8 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 16, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 1, "Count": 8 },
+        { "Type": "Item", "ID": 7, "Count": 2 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 17, "Count": 1 },
+      "Station": "Furnace",
+      "Ingredients": [
+        { "Type": "Item", "ID": 23, "Count": 2 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 18, "Count": 2 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 17, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 21, "Count": 1 },
+      "Station": "Anvil",
+      "Ingredients": [
+        { "Type": "Item", "ID": 7, "Count": 12 },
+        { "Type": "Item", "ID": 1, "Count": 3 }
+      ]
+    }
+  ]
+}

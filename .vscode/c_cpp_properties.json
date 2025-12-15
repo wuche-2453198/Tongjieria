@@ -22,7 +22,8 @@
                 "${workspaceFolder}/cocos2d/external/chipmunk/include/chipmunk",
                 "${workspaceFolder}/cocos2d/external/bullet/include",
                 "${workspaceFolder}/cocos2d/external/recast/include",
-                "${workspaceFolder}/cocos2d/external/Box2D"
+                "${workspaceFolder}/cocos2d/external/Box2D",
+                "${workspaceFolder}/third_party/entt-main/entt-main/single_include"
             ],
             "defines": [
                 "_DEBUG",

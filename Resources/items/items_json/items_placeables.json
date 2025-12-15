@@ -1,0 +1,245 @@
+[
+  {
+    "id": 2001,
+    "name": "Dirt",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/dirt.png",
+    "value": 1,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2002,
+    "name": "Stone",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/stone.png",
+    "value": 2,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2003,
+    "name": "Cobblestone",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/cobblestone.png",
+    "value": 2,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2004,
+    "name": "Stone Bricks",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/stone_bricks.png",
+    "value": 3,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2005,
+    "name": "Chiseled Stone",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/chiseled_stone.png",
+    "value": 4,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2006,
+    "name": "Chiseled Cobblestone",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/chiseled_cobblestone.png",
+    "value": 3,
+    "tags": [5, 501]
+  },
+  {
+    "id": 2007,
+    "name": "Wood",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/wood.png",
+    "value": 1,
+    "tags": [5, 502]
+  },
+  {
+    "id": 2008,
+    "name": "Varnished Wood",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/varnished_wood.png",
+    "value": 3,
+    "tags": [5, 502]
+  },
+  {
+    "id": 2009,
+    "name": "Sand",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/sand.png",
+    "value": 1,
+    "tags": [5, 503]
+  },
+  {
+    "id": 2010,
+    "name": "Sandstone",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/sandstone.png",
+    "value": 2,
+    "tags": [5, 503]
+  },
+  {
+    "id": 2011,
+    "name": "Clay",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/clay.png",
+    "value": 2,
+    "tags": [5, 504]
+  },
+  {
+    "id": 2012,
+    "name": "Clay Bricks",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/clay_bricks.png",
+    "value": 3,
+    "tags": [5, 504]
+  },
+  {
+    "id": 2013,
+    "name": "Glass",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/glass.png",
+    "value": 3,
+    "tags": [5, 505]
+  },
+  {
+    "id": 2014,
+    "name": "Mud",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/mud.png",
+    "value": 1,
+    "tags": [5, 506]
+  },
+  {
+    "id": 2015,
+    "name": "Snow",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/blocks/snow.png",
+    "value": 1,
+    "tags": [5, 507]
+  },
+  {
+    "id": 2016,
+    "name": "Zythium Lamp",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/blocks/zythium_lamp.png",
+    "value": 50,
+    "tags": [5, 508]
+  },
+  {
+    "id": 2101,
+    "name": "Workbench",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/workbench.png",
+    "value": 10,
+    "tags": [5, 511]
+  },
+  {
+    "id": 2102,
+    "name": "Furnace",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/furnace.png",
+    "value": 20,
+    "tags": [5, 512]
+  },
+  {
+    "id": 2111,
+    "name": "Wooden Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/wooden_chest.png",
+    "value": 15,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2112,
+    "name": "Stone Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/stone_chest.png",
+    "value": 20,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2113,
+    "name": "Copper Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/copper_chest.png",
+    "value": 30,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2114,
+    "name": "Iron Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/iron_chest.png",
+    "value": 50,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2115,
+    "name": "Silver Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/silver_chest.png",
+    "value": 70,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2116,
+    "name": "Gold Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/gold_chest.png",
+    "value": 100,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2117,
+    "name": "Zinc Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/zinc_chest.png",
+    "value": 80,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2118,
+    "name": "Obdurite Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/obdurite_chest.png",
+    "value": 150,
+    "tags": [5, 513]
+  },
+  {
+    "id": 2119,
+    "name": "Rhymestone Chest",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/rhymestone_chest.png",
+    "value": 200,
+    "tags": [5, 513]
+  }
+]

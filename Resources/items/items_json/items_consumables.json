@@ -1,0 +1,11 @@
+[
+  {
+    "id": 4001,
+    "name": "Varnish",
+    "type": 4,
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/varnish.png",
+    "value": 20,
+    "tags": [4, 401]
+  }
+]

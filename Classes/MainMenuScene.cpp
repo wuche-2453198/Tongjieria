@@ -1,5 +1,6 @@
 #include "MainMenuScene.h"
 #include "EcsTestScene.h"
+#include "ItemsTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -56,10 +57,19 @@ bool MainMenuScene::init() {
       Label::createWithTTF("ECS Test", "fonts/Marker Felt.ttf", 28);
   auto ecsTestItem = MenuItemLabel::create(
       ecsTestLabel, CC_CALLBACK_1(MainMenuScene::menuEcsTestCallback, this));
-
   if (ecsTestItem != nullptr) {
     ecsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                  origin.y + visibleSize.height / 2));
+                                  origin.y + visibleSize.height / 2 + 40));
+  }
+
+  // 添加物品/背包测试按钮
+  auto itemsTestLabel =
+      Label::createWithTTF("Items Test", "fonts/Marker Felt.ttf", 28);
+  auto itemsTestItem = MenuItemLabel::create(
+      itemsTestLabel, CC_CALLBACK_1(MainMenuScene::menuItemsTestCallback, this));
+  if (itemsTestItem != nullptr) {
+    itemsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                    origin.y + visibleSize.height / 2 - 10));
   }
 
   // 添加关闭按钮
@@ -73,7 +83,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(ecsTestItem, closeItem, nullptr);
+    auto menu = Menu::create(ecsTestItem, itemsTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -91,4 +101,11 @@ void MainMenuScene::menuEcsTestCallback(Ref *pSender) {
   auto ecsTestScene = EcsTestScene::createScene();
   Director::getInstance()->replaceScene(
       TransitionFade::create(0.5f, ecsTestScene));
+}
+
+void MainMenuScene::menuItemsTestCallback(Ref *pSender) {
+  // 进入物品/背包测试场景
+  auto itemsScene = ItemsTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, itemsScene));
 }

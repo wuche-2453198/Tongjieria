@@ -87,3 +87,6 @@ DocumentLayout.backup.json
 
 # 忽略整个 build 目录
 /build/
+
+
+# 忽视演示与素材

@@ -1,0 +1,731 @@
+[
+  {
+    "id": 1101,
+    "name": "Copper Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/copper_helmet.png",
+    "value": 10,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1102,
+    "name": "Copper Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/copper_chestplate.png",
+    "value": 15,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1103,
+    "name": "Copper Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/copper_greaves.png",
+    "value": 10,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1104,
+    "name": "Copper Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/copper_leggings.png",
+    "value": 12,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1111,
+    "name": "Iron Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/iron_helmet.png",
+    "value": 20,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1112,
+    "name": "Iron Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/iron_chestplate.png",
+    "value": 30,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1113,
+    "name": "Iron Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/iron_greaves.png",
+    "value": 20,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1114,
+    "name": "Iron Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/iron_leggings.png",
+    "value": 25,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1121,
+    "name": "Silver Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/silver_helmet.png",
+    "value": 35,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1122,
+    "name": "Silver Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/silver_chestplate.png",
+    "value": 50,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1123,
+    "name": "Silver Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/silver_greaves.png",
+    "value": 35,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1124,
+    "name": "Silver Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/silver_leggings.png",
+    "value": 40,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1131,
+    "name": "Gold Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/gold_helmet.png",
+    "value": 50,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1132,
+    "name": "Gold Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/gold_chestplate.png",
+    "value": 75,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1133,
+    "name": "Gold Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/gold_greaves.png",
+    "value": 50,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1134,
+    "name": "Gold Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/gold_leggings.png",
+    "value": 60,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1141,
+    "name": "Aluminum Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/aluminum_helmet.png",
+    "value": 30,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1142,
+    "name": "Aluminum Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/aluminum_chestplate.png",
+    "value": 45,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1143,
+    "name": "Aluminum Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/aluminum_greaves.png",
+    "value": 30,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1144,
+    "name": "Aluminum Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/aluminum_leggings.png",
+    "value": 35,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1151,
+    "name": "Lead Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/lead_helmet.png",
+    "value": 25,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1152,
+    "name": "Lead Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/lead_chestplate.png",
+    "value": 35,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1153,
+    "name": "Lead Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/lead_greaves.png",
+    "value": 25,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1154,
+    "name": "Lead Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/lead_leggings.png",
+    "value": 28,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1161,
+    "name": "Zinc Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zinc_helmet.png",
+    "value": 40,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1162,
+    "name": "Zinc Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zinc_chestplate.png",
+    "value": 60,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1163,
+    "name": "Zinc Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zinc_greaves.png",
+    "value": 40,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1164,
+    "name": "Zinc Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zinc_leggings.png",
+    "value": 45,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1171,
+    "name": "Obdurite Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/obdurite_helmet.png",
+    "value": 80,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1172,
+    "name": "Obdurite Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/obdurite_chestplate.png",
+    "value": 120,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1173,
+    "name": "Obdurite Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/obdurite_greaves.png",
+    "value": 80,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1174,
+    "name": "Obdurite Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/obdurite_leggings.png",
+    "value": 90,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1181,
+    "name": "Rhymestone Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/rhymestone_helmet.png",
+    "value": 100,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1182,
+    "name": "Rhymestone Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/rhymestone_chestplate.png",
+    "value": 150,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1183,
+    "name": "Rhymestone Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/rhymestone_greaves.png",
+    "value": 100,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1184,
+    "name": "Rhymestone Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/rhymestone_leggings.png",
+    "value": 110,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1191,
+    "name": "Zythium Helmet",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zythium_helmet.png",
+    "value": 200,
+    "tags": [1, 101]
+  },
+  {
+    "id": 1192,
+    "name": "Zythium Chestplate",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zythium_chestplate.png",
+    "value": 300,
+    "tags": [1, 102]
+  },
+  {
+    "id": 1193,
+    "name": "Zythium Greaves",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zythium_greaves.png",
+    "value": 200,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1194,
+    "name": "Zythium Leggings",
+    "type": 1,
+    "maxStack": 1,
+    "icon": "items/Equipment/armor/zythium_leggings.png",
+    "value": 220,
+    "tags": [1, 103]
+  },
+  {
+    "id": 1201,
+    "name": "Wooden Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/wooden_sword.png",
+    "value": 5,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1202,
+    "name": "Wooden Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/wooden_axe.png",
+    "value": 5,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1203,
+    "name": "Wooden Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/wooden_pick.png",
+    "value": 5,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1211,
+    "name": "Stone Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/stone_sword.png",
+    "value": 10,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1212,
+    "name": "Stone Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/stone_axe.png",
+    "value": 10,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1213,
+    "name": "Stone Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/stone_pick.png",
+    "value": 10,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1214,
+    "name": "Stone Lighter",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/stone_lighter.png",
+    "value": 8,
+    "tags": [2, 204]
+  },
+  {
+    "id": 1221,
+    "name": "Copper Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/copper_sword.png",
+    "value": 15,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1222,
+    "name": "Copper Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/copper_axe.png",
+    "value": 15,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1223,
+    "name": "Copper Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/copper_pick.png",
+    "value": 15,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1231,
+    "name": "Iron Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/iron_sword.png",
+    "value": 25,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1232,
+    "name": "Iron Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/iron_axe.png",
+    "value": 25,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1233,
+    "name": "Iron Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/iron_pick.png",
+    "value": 25,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1241,
+    "name": "Silver Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/silver_sword.png",
+    "value": 40,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1242,
+    "name": "Silver Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/silver_axe.png",
+    "value": 40,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1243,
+    "name": "Silver Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/silver_pick.png",
+    "value": 40,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1251,
+    "name": "Gold Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/gold_sword.png",
+    "value": 60,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1252,
+    "name": "Gold Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/gold_axe.png",
+    "value": 60,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1253,
+    "name": "Gold Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/gold_pick.png",
+    "value": 60,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1261,
+    "name": "Aluminum Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/aluminum_sword.png",
+    "value": 35,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1262,
+    "name": "Aluminum Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/aluminum_axe.png",
+    "value": 35,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1263,
+    "name": "Aluminum Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/aluminum_pick.png",
+    "value": 35,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1271,
+    "name": "Lead Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/lead_sword.png",
+    "value": 20,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1272,
+    "name": "Lead Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/lead_axe.png",
+    "value": 20,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1273,
+    "name": "Lead Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/lead_pick.png",
+    "value": 20,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1281,
+    "name": "Zinc Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/zinc_sword.png",
+    "value": 45,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1282,
+    "name": "Zinc Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/zinc_axe.png",
+    "value": 45,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1283,
+    "name": "Zinc Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/zinc_pick.png",
+    "value": 45,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1291,
+    "name": "Obdurite Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/obdurite_sword.png",
+    "value": 90,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1292,
+    "name": "Obdurite Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/obdurite_axe.png",
+    "value": 90,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1293,
+    "name": "Obdurite Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/obdurite_pick.png",
+    "value": 90,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1301,
+    "name": "Rhymestone Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/rhymestone_sword.png",
+    "value": 120,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1302,
+    "name": "Rhymestone Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/rhymestone_axe.png",
+    "value": 120,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1303,
+    "name": "Rhymestone Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/rhymestone_pick.png",
+    "value": 120,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1311,
+    "name": "Magnetite Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/magnetite_sword.png",
+    "value": 110,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1312,
+    "name": "Magnetite Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/magnetite_axe.png",
+    "value": 110,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1313,
+    "name": "Magnetite Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/magnetite_pick.png",
+    "value": 110,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1321,
+    "name": "Irradium Sword",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/irradium_sword.png",
+    "value": 150,
+    "tags": [2, 201]
+  },
+  {
+    "id": 1322,
+    "name": "Irradium Axe",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/irradium_axe.png",
+    "value": 150,
+    "tags": [2, 202]
+  },
+  {
+    "id": 1323,
+    "name": "Irradium Pick",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/irradium_pick.png",
+    "value": 150,
+    "tags": [2, 203]
+  },
+  {
+    "id": 1331,
+    "name": "Wrench",
+    "type": 2,
+    "maxStack": 1,
+    "icon": "items/Equipment/tools/wrench.png",
+    "value": 30,
+    "tags": [2, 205]
+  }
+]
