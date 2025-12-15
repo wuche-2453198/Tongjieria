@@ -16,7 +16,7 @@
 [Rr]eleases/
 x64/
 x86/
-Win32/
+/Win32/
 [Bb]in/
 [Oo]bj/
 [Ll]ib/

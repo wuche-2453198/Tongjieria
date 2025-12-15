@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/Classes",
+                "${workspaceFolder}/cocos2d/cocos",
+                "${workspaceFolder}/cocos2d/cocos/platform/win32",
+                "${workspaceFolder}/cocos2d/cocos/audio/include",
+                "${workspaceFolder}/cocos2d/external",
+                "${workspaceFolder}/cocos2d/external/win32-specific/gles/include/OGLES",
+                "${workspaceFolder}/cocos2d/external/win32-specific/icon/include",
+                "${workspaceFolder}/cocos2d/external/win32-specific/zlib/include",
+                "${workspaceFolder}/cocos2d/external/glfw3/include/win32",
+                "${workspaceFolder}/cocos2d/external/freetype2/include/win32",
+                "${workspaceFolder}/cocos2d/external/websockets/include/win32",
+                "${workspaceFolder}/cocos2d/external/curl/include/win32",
+                "${workspaceFolder}/cocos2d/external/jpeg/include/win32",
+                "${workspaceFolder}/cocos2d/external/png/include/win32",
+                "${workspaceFolder}/cocos2d/external/tiff/include/win32",
+                "${workspaceFolder}/cocos2d/external/webp/include/win32",
+                "${workspaceFolder}/cocos2d/external/chipmunk/include/chipmunk",
+                "${workspaceFolder}/cocos2d/external/bullet/include",
+                "${workspaceFolder}/cocos2d/external/recast/include",
+                "${workspaceFolder}/cocos2d/external/Box2D"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "WIN32",
+                "_WINDOWS",
+                "CC_STATIC",
+                "COCOS2D_DEBUG=1"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34604/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

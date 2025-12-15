@@ -11,7 +11,8 @@ public:
     static Inventory* getInstance();
 
     // Initialize capacity (clears current slots)
-    void init(size_t capacity = 50);
+    // Default: 40 general slots + 10 weapon + 4 armor + 4 coin + 1 trash = 59
+    void init(size_t capacity = 59);
 
     // Add items; returns true if fully added, false if overflow
     bool addItem(int id, int count);

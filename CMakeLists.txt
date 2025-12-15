@@ -5,6 +5,10 @@ set(APP_NAME Mygame)
 
 project(${APP_NAME})
 
+# Enable C++17 for ECS framework features
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if(XCODE)
     if(NOT DEFINED CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET)
         SET (CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 8.0)
@@ -33,22 +37,60 @@ endif()
 # add cross-platforms source files and header files 
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
-     
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
+     Classes/EcsTestScene.cpp
+     Classes/MonsterFactory.cpp
+     Classes/ItemsTestScene.cpp
      Classes/items/ItemManager.cpp
      Classes/items/Inventory.cpp
      Classes/items/InventoryLayer.cpp
+     Classes/items/RecipeManager.cpp
+     Classes/items/StationDetector.cpp
+     Classes/items/CraftingMatcher.cpp
+     Classes/items/CraftingExecutor.cpp
+     Classes/items/CraftBar.cpp
+     Classes/NPC/BlueSlime.cpp
+     Classes/NPC/Enemy.cpp
+     Classes/NPC/GameScene.cpp
+     Classes/NPC/GreenSlime.cpp
+     Classes/NPC/RedSlime.cpp
+     Classes/NPC/SlimeEnemy.cpp
+     Classes/NPC/YellowSlime.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
-     
      Classes/SplashScene.h
      Classes/MainMenuScene.h
+     Classes/EcsTestScene.h
+     Classes/MonsterFactory.h
+     Classes/ItemsTestScene.h
      Classes/items/InventoryDef.h
      Classes/items/ItemManager.h
      Classes/items/Inventory.h
      Classes/items/InventoryLayer.h
+     Classes/items/CraftingDef.h
+     Classes/items/RecipeManager.h
+     Classes/items/StationDetector.h
+     Classes/items/CraftingMatcher.h
+     Classes/items/CraftingExecutor.h
+     Classes/items/CraftBar.h
+     Classes/ecs/ECS.h
+     Classes/ecs/Entity.h
+     Classes/ecs/EntityHandle.h
+     Classes/ecs/Component.h
+     Classes/ecs/System.h
+     Classes/ecs/World.h
+     Classes/ecs/Components.h
+     Classes/ecs/SpriteComponent.h
+     Classes/ecs/Systems.h
+     Classes/NPC/BlueSlime.h
+     Classes/NPC/Enemy.h
+     Classes/NPC/GameScene.h
+     Classes/NPC/GreenSlime.h
+     Classes/NPC/RedSlime.h
+     Classes/NPC/SlimeEnemy.h
+     Classes/NPC/YellowSlime.h
      )
 
 if(ANDROID)
@@ -117,9 +159,15 @@ else()
 endif()
 
 target_link_libraries(${APP_NAME} cocos2d)
+
+# Set C++17 standard for the game target (required for ECS framework)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt-main/entt-main/single_include
 )
 
 # mark app resources
