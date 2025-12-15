@@ -583,5 +583,41 @@
     "icon": "items/Materials/dust/charcoal.png",
     "value": 3,
     "tags": [3, 351]
+  },
+  {
+    "id": 3502,
+    "name": "Copper Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/copper_coin.png",
+    "value": 1,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3503,
+    "name": "Silver Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/silver_coin.png",
+    "value": 100,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3504,
+    "name": "Gold Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/gold_coin.png",
+    "value": 10000,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3505,
+    "name": "Platinum Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/platinum_coin.png",
+    "value": 1000000,
+    "tags": [3, 361]
   }
 ]

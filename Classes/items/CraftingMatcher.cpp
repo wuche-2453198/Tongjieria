@@ -17,15 +17,23 @@ CraftingMatcher* CraftingMatcher::getInstance() {
 }
 
 std::vector<const RecipeDefinition*> CraftingMatcher::getAvailableRecipes() {
-    auto allRecipes = RecipeManager::getInstance()->getAllRecipes();
+    auto& allRecipes = RecipeManager::getInstance()->getAllRecipes();
     std::vector<const RecipeDefinition*> result;
+
+    CCLOG("CraftingMatcher::getAvailableRecipes - Total recipes: %zu", allRecipes.size());
 
     // Step 1: Filter by environment
     for (const auto& recipe : allRecipes) {
+        CCLOG("  Checking recipe: ID=%d, station=%d", recipe.resultItemId, static_cast<int>(recipe.requiredStation));
         if (checkStation(recipe)) {
+            CCLOG("    -> Station check PASSED, adding to result");
             result.push_back(&recipe);
+        } else {
+            CCLOG("    -> Station check FAILED");
         }
     }
+
+    CCLOG("CraftingMatcher::getAvailableRecipes - Filtered recipes: %zu", result.size());
 
     // Step 2: Sort by availability (craftable recipes first)
     std::sort(result.begin(), result.end(),

@@ -101,6 +101,10 @@ bool ItemsTestScene::init() {
 
     // Consumables (Type 4)
     inventory->addItem(4001, 5);   // Varnish x5
+    inventory->addItem(3502, 100);
+    inventory->addItem(3503, 100);
+    inventory->addItem(3504, 100);
+    inventory->addItem(3505, 100);
 
     CCLOG("Added 35+ diverse items across all categories for testing");
     CCLOG("Equipment: 6 armor pieces | Placeables: 9 types | Materials: 15 types | Consumables: 1 type");
@@ -267,11 +271,99 @@ void ItemsTestScene::testCraftingSystem() {
     auto detector = StationDetector::getInstance();
     CCLOG("Current stations: %zu (should have Hand by default)", detector->getCurrentStations().size());
 
+    // 3. Test coin recipes specifically
+    CCLOG("\n--- Testing Coin Recipes ---");
+    auto itemMgr = ItemManager::getInstance();
+
+    // Check if coin items are loaded
+    for (int coinId = 3502; coinId <= 3505; ++coinId) {
+        auto coinDef = itemMgr->getItemData(coinId);
+        if (coinDef) {
+            CCLOG("Coin item loaded: ID=%d, Name=%s, MaxStack=%d",
+                  coinId, coinDef->name.c_str(), coinDef->maxStack);
+        } else {
+            CCLOG("WARNING: Coin item %d not found!", coinId);
+        }
+    }
+
+    // Check if coin recipes are loaded
+    CCLOG("\n--- Checking Coin Recipes ---");
+    for (int resultId = 3503; resultId <= 3505; ++resultId) {
+        auto coinRecipes = recipeMgr->getRecipesByResultItem(resultId);
+        if (!coinRecipes.empty()) {
+            auto recipe = coinRecipes[0];
+            auto resultDef = itemMgr->getItemData(recipe->resultItemId);
+            CCLOG("Recipe found: %d x %s",
+                  recipe->resultCount,
+                  resultDef ? resultDef->name.c_str() : "Unknown");
+            CCLOG("  Station: %s",
+                  recipe->requiredStation == StationType::Hand ? "Hand" : "Other");
+            for (const auto& ing : recipe->ingredients) {
+                auto ingDef = itemMgr->getItemData(ing.itemId);
+                CCLOG("  - Requires: %d x %s",
+                      ing.count,
+                      ingDef ? ingDef->name.c_str() : "Unknown");
+            }
+        } else {
+            CCLOG("WARNING: No recipe found for result item %d", resultId);
+        }
+    }
+
     // 3. Query available recipes (Hand only)
     auto matcher = CraftingMatcher::getInstance();
-    auto recipes = matcher->getAvailableRecipes();
-    CCLOG("Available recipes (Hand only): %zu", recipes.size());
 
+    // Debug: Check all recipes before filtering
+    auto allRecipes = recipeMgr->getAllRecipes();
+    CCLOG("\n--- Debug: Total recipes in RecipeManager: %zu ---", allRecipes.size());
+    for (const auto& recipe : allRecipes) {
+        CCLOG("  Recipe: result=%d, station=%d",
+              recipe.resultItemId,
+              static_cast<int>(recipe.requiredStation));
+    }
+
+    // Debug: Check station detector
+    auto currentStations = detector->getCurrentStations();
+    CCLOG("\n--- Debug: Current stations: %zu ---", currentStations.size());
+    for (auto station : currentStations) {
+        CCLOG("  Station: %d", static_cast<int>(station));
+    }
+
+    auto recipes = matcher->getAvailableRecipes();
+    CCLOG("\n--- Available Recipes (Hand only): %zu ---", recipes.size());
+
+    // List all available hand recipes with coin recipes highlighted
+    int coinRecipeCount = 0;
+    for (const auto* recipe : recipes) {
+        auto resultDef = itemMgr->getItemData(recipe->resultItemId);
+        bool isCoinRecipe = (recipe->resultItemId >= 3503 && recipe->resultItemId <= 3505);
+
+        if (isCoinRecipe) {
+            coinRecipeCount++;
+            CCLOG(">>> COIN RECIPE: %d x %s (ID: %d)",
+                  recipe->resultCount,
+                  resultDef ? resultDef->name.c_str() : "Unknown",
+                  recipe->resultItemId);
+
+            // Check if we can craft it
+            bool canCraft = matcher->canCraft(*recipe);
+            auto status = matcher->getRecipeStatus(*recipe);
+            CCLOG("    Can craft: %s, Status: %d",
+                  canCraft ? "YES" : "NO",
+                  static_cast<int>(status));
+
+            if (status == CraftingStatus::MissingMaterial) {
+                auto missing = matcher->getMissingMaterials(*recipe);
+                for (const auto& m : missing) {
+                    auto matDef = itemMgr->getItemData(m.first);
+                    CCLOG("    Missing: %s x%d",
+                          matDef ? matDef->name.c_str() : std::to_string(m.first).c_str(),
+                          m.second);
+                }
+            }
+        }
+    }
+
+    CCLOG("\n>>> Total coin recipes available: %d / 3 expected", coinRecipeCount);
     CCLOG("=== Crafting System Ready ===\n");
 }
 

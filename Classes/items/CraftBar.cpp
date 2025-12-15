@@ -207,6 +207,14 @@ void CraftBar::refreshCategoryButtons() {
         auto recipe = recipes[i];
         auto itemDef = ItemManager::getInstance()->getItemData(recipe->resultItemId);
 
+        // Debug: Log item lookup result
+        if (!itemDef) {
+            CCLOG("CraftBar WARNING: Cannot find item definition for ID %d", recipe->resultItemId);
+            CCLOG("  Total items in ItemManager: %zu", ItemManager::getInstance()->getItemCount());
+        } else {
+            CCLOG("CraftBar: Found item ID %d = %s", recipe->resultItemId, itemDef->name.c_str());
+        }
+
         // Create button background manually
         auto buttonBg = LayerColor::create(Color4B(60, 80, 120, 200),
                                            kBarWidth - 20, buttonHeight);
