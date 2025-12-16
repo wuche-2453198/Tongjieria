@@ -39,9 +39,8 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
-     Classes/EcsTestScene.cpp
-     Classes/MonsterFactory.cpp
      Classes/ItemsTestScene.cpp
+     Classes/PlayerTestScene.cpp
      Classes/items/ItemManager.cpp
      Classes/items/Inventory.cpp
      Classes/items/InventoryLayer.cpp
@@ -50,6 +49,8 @@ list(APPEND GAME_SOURCE
      Classes/items/CraftingMatcher.cpp
      Classes/items/CraftingExecutor.cpp
      Classes/items/CraftBar.cpp
+     Classes/player/PlayerInput.cpp
+     Classes/player/PlayerFactory.cpp
      Classes/NPC/BlueSlime.cpp
      Classes/NPC/Enemy.cpp
      Classes/NPC/GameScene.cpp
@@ -62,9 +63,8 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/SplashScene.h
      Classes/MainMenuScene.h
-     Classes/EcsTestScene.h
-     Classes/MonsterFactory.h
      Classes/ItemsTestScene.h
+     Classes/PlayerTestScene.h
      Classes/items/InventoryDef.h
      Classes/items/ItemManager.h
      Classes/items/Inventory.h
@@ -75,15 +75,9 @@ list(APPEND GAME_HEADER
      Classes/items/CraftingMatcher.h
      Classes/items/CraftingExecutor.h
      Classes/items/CraftBar.h
-     Classes/ecs/ECS.h
-     Classes/ecs/Entity.h
-     Classes/ecs/EntityHandle.h
-     Classes/ecs/Component.h
-     Classes/ecs/System.h
-     Classes/ecs/World.h
-     Classes/ecs/Components.h
-     Classes/ecs/SpriteComponent.h
-     Classes/ecs/Systems.h
+     Classes/player/PlayerComponents.h
+     Classes/player/PlayerInput.h
+     Classes/player/PlayerFactory.h
      Classes/NPC/BlueSlime.h
      Classes/NPC/Enemy.h
      Classes/NPC/GameScene.h

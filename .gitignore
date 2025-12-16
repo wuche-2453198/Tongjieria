@@ -90,3 +90,5 @@ DocumentLayout.backup.json
 
 
 # 忽视演示与素材
+/third_party/
+/cocos2d/
