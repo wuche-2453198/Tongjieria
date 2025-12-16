@@ -67,8 +67,13 @@ private:
     int _dragSource = -1;
     cocos2d::Sprite* _dragSprite = nullptr;
 
+    // Organization button
+    cocos2d::ui::Button* _organizationButton = nullptr;
+
     void buildSlots();
     void attachMouseHandlers();
+    void onOrganizationButtonClicked(cocos2d::Ref* sender);
+    void sortInventory();
 };
 
 #endif // __INVENTORY_LAYER_H__

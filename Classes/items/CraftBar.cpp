@@ -36,6 +36,7 @@ bool CraftBar::init() {
     this->setPosition(Vec2(20, 20));
 
     setupCollapsedUI();
+    setupExpandCraftingButton();
     setupEventListeners();
     refreshRecipes();
 
@@ -44,22 +45,27 @@ bool CraftBar::init() {
 }
 
 void CraftBar::setupCollapsedUI() {
-    // Main background for collapsed state
+    // Main background for collapsed state (hidden)
     auto bg = LayerColor::create(Color4B(20, 30, 50, 240), kBarWidth, kCollapsedHeight);
     bg->setPosition(Vec2::ZERO);
+    bg->setVisible(false); // Hide the background canvas
     this->addChild(bg, -1);
 
     // Border removed for cleaner look
     // (No border to match the frameless design)
 
-    // Title at top
+    // Title at top (hidden)
     _titleLabel = Label::createWithSystemFont("Crafting", "Arial", 18);
     _titleLabel->setPosition(Vec2(kBarWidth * 0.5f, kCollapsedHeight - 25));
     _titleLabel->setColor(Color3B(255, 220, 100));
+    _titleLabel->setVisible(false); // Hide the title text
     this->addChild(_titleLabel, 1);
 
-    // Selected recipe slot at bottom (fixed)
+    // Selected recipe slot at bottom (hidden)
     setupSelectedRecipeSlot();
+    if (_selectedRecipeSlot) {
+        _selectedRecipeSlot->setVisible(false); // Hide the selected recipe display
+    }
 
     // Category scroll view in the middle
     setupCategoryScrollView();
@@ -69,9 +75,10 @@ void CraftBar::setupSelectedRecipeSlot() {
     float slotY = 60;
     float slotHeight = 80;
 
-    // Background for selected slot
+    // Background for selected slot (hidden)
     auto slotBg = LayerColor::create(Color4B(40, 50, 70, 200), kBarWidth - 10, slotHeight);
     slotBg->setPosition(Vec2(5, slotY));
+    slotBg->setVisible(false); // Hide the slot background
     this->addChild(slotBg, 1);
 
     _selectedRecipeSlot = Node::create();
@@ -215,15 +222,16 @@ void CraftBar::refreshCategoryButtons() {
 
         rowNode->setContentSize(Size(rowWidth, rowHeight));
 
-        // Add item slot background for result item (dark background with light border)
-        auto resultSlotBg = LayerColor::create(Color4B(30, 30, 40, 220), slotSize, slotSize);
-        resultSlotBg->setPosition(Vec2(0, 0));
-        rowNode->addChild(resultSlotBg, -1);
-
-        // Add border for result slot
-        auto resultBorder = DrawNode::create();
-        resultBorder->drawRect(Vec2(0, 0), Vec2(slotSize, slotSize), Color4F(0.6f, 0.6f, 0.6f, 0.8f));
-        rowNode->addChild(resultBorder, 0);
+        // Add item slot background for result item using Inventory.png
+        auto resultSlotBg = Sprite::create("items/bottom/Inventory.png");
+        if (resultSlotBg) {
+            float bgScale = (slotSize * 1.0f) / std::max(resultSlotBg->getContentSize().width,
+                                                          resultSlotBg->getContentSize().height);
+            resultSlotBg->setScale(bgScale);
+            resultSlotBg->setAnchorPoint(Vec2(0, 0));
+            resultSlotBg->setPosition(Vec2(0, 0));
+            rowNode->addChild(resultSlotBg, -1);
+        }
 
         // Add result item icon
         auto resultIcon = ItemManager::getInstance()->getItemSprite(recipe->resultItemId);
@@ -252,19 +260,17 @@ void CraftBar::refreshCategoryButtons() {
 
             // Add ingredient icons with slots
             for (const auto& ingredient : recipe->ingredients) {
-                // Add item slot background for ingredient (dark background with light border)
+                // Add item slot background for ingredient using Inventory.png
                 float slotY = (slotSize - ingredientSlotSize) * 0.5f;  // Center vertically
-                auto ingSlotBg = LayerColor::create(Color4B(30, 30, 40, 220),
-                                                    ingredientSlotSize, ingredientSlotSize);
-                ingSlotBg->setPosition(Vec2(xOffset, slotY));
-                rowNode->addChild(ingSlotBg, -1);
-
-                // Add border for ingredient slot
-                auto ingBorder = DrawNode::create();
-                ingBorder->drawRect(Vec2(xOffset, slotY),
-                                   Vec2(xOffset + ingredientSlotSize, slotY + ingredientSlotSize),
-                                   Color4F(0.6f, 0.6f, 0.6f, 0.8f));
-                rowNode->addChild(ingBorder, 0);
+                auto ingSlotBg = Sprite::create("items/bottom/Inventory.png");
+                if (ingSlotBg) {
+                    float ingBgScale = (ingredientSlotSize * 1.0f) / std::max(ingSlotBg->getContentSize().width,
+                                                                               ingSlotBg->getContentSize().height);
+                    ingSlotBg->setScale(ingBgScale);
+                    ingSlotBg->setAnchorPoint(Vec2(0, 0));
+                    ingSlotBg->setPosition(Vec2(xOffset, slotY));
+                    rowNode->addChild(ingSlotBg, -1);
+                }
 
                 auto ingIcon = ItemManager::getInstance()->getItemSprite(ingredient.itemId);
                 if (ingIcon) {
@@ -442,31 +448,165 @@ void CraftBar::onStationChanged(EventCustom* event) {
     refreshRecipes();
 }
 
-// Expanded panel methods (to be implemented in phase 2)
-void CraftBar::setupExpandedUI() {
-    // TODO: Implement expanded recipe list panel
+// Setup expand crafting button (placed below the category scroll view)
+void CraftBar::setupExpandCraftingButton() {
+    float buttonY = 140.0f - 60.0f;  // Below the category scroll view
+    float buttonSize = 50.0f;
+
+    _expandCraftingButton = ui::Button::create("items/bottom/crafting.png",
+                                                "items/bottom/crafting.png",
+                                                "items/bottom/crafting.png");
+    if (_expandCraftingButton) {
+        _expandCraftingButton->setPosition(Vec2(kBarWidth * 0.5f, buttonY));
+        _expandCraftingButton->setScale(buttonSize / _expandCraftingButton->getContentSize().width);
+        _expandCraftingButton->addClickEventListener(CC_CALLBACK_1(CraftBar::onExpandCraftingButtonClicked, this));
+        this->addChild(_expandCraftingButton, 10);
+        CCLOG("CraftBar: Expand crafting button created at Y=%.1f", buttonY);
+    } else {
+        CCLOG("Warning: Failed to create expand crafting button");
+    }
 }
 
-void CraftBar::setupRecipeListView() {
-    // TODO: Implement ListView for recipes with 70px row height
-}
-
-void CraftBar::refreshRecipeList() {
-    // TODO: Refresh expanded recipe list
-}
-
-void CraftBar::onRecipeItemClicked(int recipeIndex) {
-    // TODO: Handle recipe selection in expanded mode
+void CraftBar::onExpandCraftingButtonClicked(Ref* sender) {
+    CCLOG("CraftBar: Expand crafting button clicked");
+    togglePanel();
 }
 
 void CraftBar::togglePanel() {
-    // TODO: Toggle between collapsed and expanded
+    if (_craftingPanelExpanded) {
+        collapsePanel();
+    } else {
+        expandPanel();
+    }
 }
 
 void CraftBar::expandPanel() {
-    // TODO: Expand to show full recipe list
+    CCLOG("CraftBar: Expanding crafting panel");
+    _craftingPanelExpanded = true;
+
+    if (!_expandedCraftingPanel) {
+        createExpandedCraftingPanel();
+    }
+
+    if (_expandedCraftingPanel) {
+        _expandedCraftingPanel->setVisible(true);
+        // Animate expansion from left to center
+        _expandedCraftingPanel->setScale(0.0f);
+        auto scaleAction = ScaleTo::create(0.3f, 1.0f);
+        auto easeAction = EaseBackOut::create(scaleAction);
+        _expandedCraftingPanel->runAction(easeAction);
+    }
 }
 
 void CraftBar::collapsePanel() {
-    // TODO: Collapse to category view
+    CCLOG("CraftBar: Collapsing crafting panel");
+    _craftingPanelExpanded = false;
+
+    if (_expandedCraftingPanel) {
+        // Animate collapse
+        auto scaleAction = ScaleTo::create(0.2f, 0.0f);
+        auto easeAction = EaseBackIn::create(scaleAction);
+        auto hideAction = Hide::create();
+        auto sequence = Sequence::create(easeAction, hideAction, nullptr);
+        _expandedCraftingPanel->runAction(sequence);
+    }
+}
+
+void CraftBar::createExpandedCraftingPanel() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto origin = Director::getInstance()->getVisibleOrigin();
+
+    // Panel size: horizontal layout in center of screen
+    float panelWidth = visibleSize.width * 0.6f;  // 60% of screen width
+    float panelHeight = visibleSize.height * 0.7f; // 70% of screen height
+
+    // Create main panel node
+    _expandedCraftingPanel = Node::create();
+    _expandedCraftingPanel->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    _expandedCraftingPanel->setContentSize(Size(panelWidth, panelHeight));
+    _expandedCraftingPanel->setPosition(Vec2(origin.x + visibleSize.width * 0.5f,
+                                             origin.y + visibleSize.height * 0.5f));
+
+    // Semi-transparent background
+    auto bg = LayerColor::create(Color4B(20, 30, 50, 230), panelWidth, panelHeight);
+    bg->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    bg->setPosition(Vec2(panelWidth * 0.5f, panelHeight * 0.5f));
+    _expandedCraftingPanel->addChild(bg, -1);
+
+    // Border
+    auto border = DrawNode::create();
+    Color4F borderColor(0.85f, 0.74f, 0.40f, 0.9f);
+    Vec2 rect[4] = {
+        Vec2(2, 2),
+        Vec2(panelWidth - 2, 2),
+        Vec2(panelWidth - 2, panelHeight - 2),
+        Vec2(2, panelHeight - 2)
+    };
+    border->drawPoly(rect, 4, true, borderColor);
+    _expandedCraftingPanel->addChild(border, 0);
+
+    // Title
+    auto titleLabel = Label::createWithSystemFont("All Recipes", "Arial", 24);
+    titleLabel->setPosition(Vec2(panelWidth * 0.5f, panelHeight - 30));
+    titleLabel->setColor(Color3B(255, 220, 100));
+    _expandedCraftingPanel->addChild(titleLabel, 1);
+
+    // Close button (X)
+    auto closeButton = ui::Button::create();
+    closeButton->setTitleText("X");
+    closeButton->setTitleFontSize(24);
+    closeButton->setTitleColor(Color3B::WHITE);
+    closeButton->setPosition(Vec2(panelWidth - 30, panelHeight - 30));
+    closeButton->addClickEventListener([this](Ref* sender) {
+        collapsePanel();
+    });
+    _expandedCraftingPanel->addChild(closeButton, 2);
+
+    // Recipe grid view
+    setupRecipeListView();
+
+    _expandedCraftingPanel->setVisible(false);
+
+    // Add to scene (parent of CraftBar)
+    auto scene = Director::getInstance()->getRunningScene();
+    if (scene) {
+        scene->addChild(_expandedCraftingPanel, 100);
+        CCLOG("CraftBar: Expanded crafting panel created, size=(%.1fx%.1f)", panelWidth, panelHeight);
+    }
+}
+
+void CraftBar::setupRecipeListView() {
+    if (!_expandedCraftingPanel) return;
+
+    auto panelSize = _expandedCraftingPanel->getContentSize();
+    float listWidth = panelSize.width - 40;
+    float listHeight = panelSize.height - 100;
+
+    // Create scroll view for recipes
+    auto recipeScrollView = ui::ScrollView::create();
+    recipeScrollView->setContentSize(Size(listWidth, listHeight));
+    recipeScrollView->setPosition(Vec2(20, 20));
+    recipeScrollView->setDirection(ui::ScrollView::Direction::VERTICAL);
+    recipeScrollView->setBounceEnabled(true);
+    recipeScrollView->setScrollBarEnabled(true);
+    recipeScrollView->setClippingEnabled(true);
+    _expandedCraftingPanel->addChild(recipeScrollView, 1);
+
+    refreshRecipeList();
+}
+
+void CraftBar::refreshRecipeList() {
+    // This will be populated with all available recipes
+    // For now, we'll reuse the category buttons logic but in a grid layout
+    CCLOG("CraftBar: Refreshing expanded recipe list");
+}
+
+void CraftBar::onRecipeItemClicked(int recipeIndex) {
+    // Handle recipe selection in expanded mode
+    CCLOG("CraftBar: Recipe item %d clicked in expanded mode", recipeIndex);
+}
+
+// Expanded panel methods (to be implemented in phase 2)
+void CraftBar::setupExpandedUI() {
+    // Already implemented above
 }

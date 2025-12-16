@@ -131,6 +131,27 @@ bool InventoryLayer::init() {
     _tooltipBg->setVisible(false);
     this->addChild(_tooltipBg, 20);
 
+    // Organization button (placed to the right of trash slot)
+    // Trash slot is at index: kNormalSlots + kWeaponSlots + kAmmoSlots + kCoinSlots
+    int trashSlotIndex = kNormalSlots + kWeaponSlots + kAmmoSlots + kCoinSlots;
+    Vec2 trashPos = getSlotPos(trashSlotIndex);
+    float buttonSize = _slotSize;
+
+    _organizationButton = ui::Button::create("items/bottom/organization_bottom.png",
+                                              "items/bottom/organization_bottom.png",
+                                              "items/bottom/organization_bottom.png");
+    if (_organizationButton) {
+        // Position to the right of trash slot with a small gap
+        Vec2 buttonPos = trashPos + Vec2(buttonSize + _slotPadding * 2, 0);
+        _organizationButton->setPosition(buttonPos);
+        _organizationButton->setScale(buttonSize / _organizationButton->getContentSize().width);
+        _organizationButton->addClickEventListener(CC_CALLBACK_1(InventoryLayer::onOrganizationButtonClicked, this));
+        this->addChild(_organizationButton, 10);
+        CCLOG("InventoryLayer: Organization button created at pos (%.1f, %.1f)", buttonPos.x, buttonPos.y);
+    } else {
+        CCLOG("Warning: Failed to create organization button");
+    }
+
     return true;
 }
 
@@ -148,7 +169,7 @@ void InventoryLayer::buildSlots() {
         _slotSizes[idx] = size;
         Vec2 pos = getSlotPos(idx);
 
-        // Create background sprite (use image for trash slot, solid color for others)
+        // Create background sprite (use images for specific slot types)
         Sprite* bg = nullptr;
         if (kind == SlotKind::Trash) {
             // Use rubbish.png as background for trash slot
@@ -171,14 +192,78 @@ void InventoryLayer::buildSlots() {
                 bg->setScale(0.94f);
                 this->addChild(bg, 0);
             }
+        } else if (kind == SlotKind::Normal) {
+            // Use Inventory.png as background for normal inventory slots
+            bg = Sprite::create("items/bottom/Inventory.png");
+            if (bg) {
+                bg->setPosition(pos);
+                // Scale to match special slot size (coin/ammo/trash)
+                float scale = (size*1.1f) / std::max(bg->getContentSize().width, bg->getContentSize().height);
+                bg->setScale(scale);
+                bg->setOpacity(200); // More opaque for normal slots
+                this->addChild(bg, 0);
+            } else {
+                CCLOG("Warning: Failed to load items/bottom/Inventory.png, using default color");
+                // Fallback to colored sprite if image fails to load
+                bg = Sprite::create();
+                bg->setTextureRect(Rect(0, 0, size, size));
+                bg->setColor(getSlotColor(kind));
+                bg->setOpacity(150);
+                bg->setPosition(pos);
+                bg->setScale(1.1f); // Match special slot size
+                this->addChild(bg, 0);
+            }
+        } else if (kind == SlotKind::Coin || kind == SlotKind::Ammo) {
+            // Use Inventory.png as background for Coin and Ammo slots
+            bg = Sprite::create("items/bottom/Inventory.png");
+            if (bg) {
+                bg->setPosition(pos);
+                // Scale to 0.9x of slot size
+                float scale = (size * 0.9f) / std::max(bg->getContentSize().width, bg->getContentSize().height);
+                bg->setScale(scale);
+                bg->setOpacity(200); // More opaque
+                this->addChild(bg, 0);
+            } else {
+                CCLOG("Warning: Failed to load items/bottom/Inventory.png for %s slot, using default color",
+                      kind == SlotKind::Coin ? "Coin" : "Ammo");
+                // Fallback to colored sprite if image fails to load
+                bg = Sprite::create();
+                bg->setTextureRect(Rect(0, 0, size, size));
+                bg->setColor(getSlotColor(kind));
+                bg->setOpacity(150);
+                bg->setPosition(pos);
+                bg->setScale(0.9f);
+                this->addChild(bg, 0);
+            }
+        } else if (kind == SlotKind::Weapon) {
+            // Use Inventory1.png as background for Weapon slots
+            bg = Sprite::create("items/bottom/Inventory1.png");
+            if (bg) {
+                bg->setPosition(pos);
+                // Scale to fit weapon slot size
+                float scale = size / std::max(bg->getContentSize().width, bg->getContentSize().height);
+                bg->setScale(scale);
+                bg->setOpacity(200); // More opaque
+                this->addChild(bg, 0);
+            } else {
+                CCLOG("Warning: Failed to load items/bottom/Inventory1.png for Weapon slot, using default color");
+                // Fallback to colored sprite if image fails to load
+                bg = Sprite::create();
+                bg->setTextureRect(Rect(0, 0, size, size));
+                bg->setColor(getSlotColor(kind));
+                bg->setOpacity(150);
+                bg->setPosition(pos);
+                bg->setScale(1.0f);
+                this->addChild(bg, 0);
+            }
         } else {
-            // Normal colored background for other slots
+            // Other slots (should not reach here)
             bg = Sprite::create();
             bg->setTextureRect(Rect(0, 0, size, size));
-            bg->setColor(getSlotColor(kind));
+            bg->setColor(Color3B(80, 80, 80));
             bg->setOpacity(150);
             bg->setPosition(pos);
-            bg->setScale(kind == SlotKind::Weapon ? 1.0f : 0.94f); // weapon slightly larger, normal slightly smaller
+            bg->setScale(1.0f);
             this->addChild(bg, 0);
         }
         _slotBg[idx] = bg;
@@ -484,7 +569,13 @@ InventoryLayer::SlotKind InventoryLayer::getSlotKind(int index) const {
 }
 
 float InventoryLayer::getSlotSize(SlotKind kind) const {
-    return kind == SlotKind::Weapon ? _slotSize * kWeaponScale : _slotSize;
+    if (kind == SlotKind::Weapon) {
+        return _slotSize * kWeaponScale;
+    } else if (kind == SlotKind::Normal) {
+        return _slotSize * 1.0f; // Normal slots same size as special slots
+    } else {
+        return _slotSize; // Coin, Ammo, Trash use base size
+    }
 }
 
 cocos2d::Color3B InventoryLayer::getSlotColor(SlotKind kind) const {
@@ -629,4 +720,84 @@ void InventoryLayer::updateDragSprite(const Vec2& worldPos) {
 void InventoryLayer::onInventoryChanged(EventCustom* event) {
     refresh();
     updateHighlights();
+}
+
+void InventoryLayer::onOrganizationButtonClicked(Ref* sender) {
+    CCLOG("InventoryLayer: Organization button clicked, sorting inventory...");
+    sortInventory();
+}
+
+void InventoryLayer::sortInventory() {
+    auto inv = Inventory::getInstance();
+    auto& slots = const_cast<std::vector<InventorySlot>&>(inv->getSlots());
+
+    // Only sort normal slots (first 40 slots), don't touch weapon/coin/ammo/trash slots
+    const int sortableSlots = kNormalSlots;
+
+    // Create a temporary vector to hold non-empty slots
+    std::vector<InventorySlot> items;
+    for (int i = 0; i < sortableSlots; ++i) {
+        if (slots[i].itemId != 0 && slots[i].count > 0) {
+            items.push_back(slots[i]);
+        }
+    }
+
+    // Sort by item ID first, then by count (descending)
+    std::sort(items.begin(), items.end(), [](const InventorySlot& a, const InventorySlot& b) {
+        if (a.itemId != b.itemId) {
+            return a.itemId < b.itemId;
+        }
+        return a.count > b.count; // Larger stacks first
+    });
+
+    // Consolidate stacks of the same item
+    std::vector<InventorySlot> consolidated;
+    for (const auto& item : items) {
+        bool merged = false;
+        for (auto& slot : consolidated) {
+            if (slot.itemId == item.itemId) {
+                auto itemData = ItemManager::getInstance()->getItemData(item.itemId);
+                int maxStack = itemData ? itemData->maxStack : 99;
+
+                if (slot.count < maxStack) {
+                    int canAdd = std::min(item.count, maxStack - slot.count);
+                    slot.count += canAdd;
+
+                    int remaining = item.count - canAdd;
+                    if (remaining > 0) {
+                        // Create new slot for remaining items
+                        InventorySlot newSlot = item;
+                        newSlot.count = remaining;
+                        consolidated.push_back(newSlot);
+                    }
+                    merged = true;
+                    break;
+                }
+            }
+        }
+        if (!merged) {
+            consolidated.push_back(item);
+        }
+    }
+
+    // Clear the sortable slots
+    for (int i = 0; i < sortableSlots; ++i) {
+        slots[i].itemId = 0;
+        slots[i].count = 0;
+        slots[i].prefixId = 0;
+    }
+
+    // Place consolidated items back
+    int index = 0;
+    for (const auto& item : consolidated) {
+        if (index >= sortableSlots) break;
+        slots[index++] = item;
+    }
+
+    // Notify inventory changed
+    auto event = EventCustom("Event_InventoryChanged");
+    Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
+
+    CCLOG("InventoryLayer: Inventory sorted, %d items consolidated into %d slots",
+          (int)items.size(), (int)consolidated.size());
 }

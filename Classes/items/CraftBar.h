@@ -45,6 +45,11 @@ private:
     cocos2d::Sprite* _fadeGradientTop = nullptr;
     cocos2d::Sprite* _fadeGradientBottom = nullptr;
 
+    // Expand crafting button and panel
+    cocos2d::ui::Button* _expandCraftingButton = nullptr;
+    cocos2d::Node* _expandedCraftingPanel = nullptr;
+    bool _craftingPanelExpanded = false;
+
     // Layout constants (defined in .cpp)
     static const float kBarWidth;
     static const float kCollapsedHeight;
@@ -81,6 +86,11 @@ private:
     void togglePanel();
     void expandPanel();
     void collapsePanel();
+
+    // Expand crafting button handler
+    void onExpandCraftingButtonClicked(cocos2d::Ref* sender);
+    void setupExpandCraftingButton();
+    void createExpandedCraftingPanel();
 };
 
 #endif // __CRAFT_BAR_H__
