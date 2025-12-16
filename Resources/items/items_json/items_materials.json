@@ -619,5 +619,41 @@
     "icon": "items/Materials/coins/platinum_coin.png",
     "value": 1000000,
     "tags": [3, 361]
+  },
+  {
+    "id": 3506,
+    "name": "Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3507,
+    "name": "Boreal Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/boreal_wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3508,
+    "name": "Palm Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/palm_wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3509,
+    "name": "Mahogany",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/mahogany.png",
+    "value": 1,
+    "tags": [3, 362]
   }
 ]

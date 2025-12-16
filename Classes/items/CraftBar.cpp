@@ -49,16 +49,8 @@ void CraftBar::setupCollapsedUI() {
     bg->setPosition(Vec2::ZERO);
     this->addChild(bg, -1);
 
-    // Border
-    auto border = DrawNode::create();
-    Vec2 rect[4] = {
-        Vec2(1, 1),
-        Vec2(kBarWidth - 1, 1),
-        Vec2(kBarWidth - 1, kCollapsedHeight - 1),
-        Vec2(1, kCollapsedHeight - 1)
-    };
-    border->drawPoly(rect, 4, true, Color4F(0.85f, 0.74f, 0.40f, 0.9f));
-    this->addChild(border, 0);
+    // Border removed for cleaner look
+    // (No border to match the frameless design)
 
     // Title at top
     _titleLabel = Label::createWithSystemFont("Crafting", "Arial", 18);
@@ -194,72 +186,158 @@ void CraftBar::refreshCategoryButtons() {
     auto container = _categoryScrollView->getInnerContainer();
     container->removeAllChildren();
 
-    // Get available recipes grouped by result type
+    // Get available recipes
     auto recipes = CraftingMatcher::getInstance()->getAvailableRecipes();
 
-    // For now, create a simple list of all available recipes as categories
-    // In a full implementation, you would group by tags/categories
-    float buttonHeight = 45;
-    float buttonSpacing = 5;
+    // Layout constants
+    float slotSize = 50.0f;        // Square size (slightly larger than inventory slots)
+    float iconSize = 42.0f;        // Icon size within square
+    float ingredientSlotSize = 40.0f;  // Smaller slots for ingredients
+    float ingredientIconSize = 32.0f;  // Smaller icons for ingredients
+    float rowSpacing = 5.0f;
     float totalHeight = 0;
 
     for (size_t i = 0; i < recipes.size(); ++i) {
         auto recipe = recipes[i];
-        auto itemDef = ItemManager::getInstance()->getItemData(recipe->resultItemId);
+        bool isExpanded = (_expandedRecipeIndex == static_cast<int>(i));
 
-        // Debug: Log item lookup result
-        if (!itemDef) {
-            CCLOG("CraftBar WARNING: Cannot find item definition for ID %d", recipe->resultItemId);
-            CCLOG("  Total items in ItemManager: %zu", ItemManager::getInstance()->getItemCount());
-        } else {
-            CCLOG("CraftBar: Found item ID %d = %s", recipe->resultItemId, itemDef->name.c_str());
+        // Create row container
+        auto rowNode = Node::create();
+        float rowHeight = slotSize;
+        float rowWidth = kBarWidth - 20;
+
+        // Calculate expanded width if needed
+        if (isExpanded) {
+            // Width = result square + arrow + ingredients (with slots)
+            rowWidth = slotSize + 30.0f + (recipe->ingredients.size() * (ingredientSlotSize + 8.0f));
+            rowWidth = std::min(rowWidth, kBarWidth * 2.5f); // Cap maximum width
         }
 
-        // Create button background manually
-        auto buttonBg = LayerColor::create(Color4B(60, 80, 120, 200),
-                                           kBarWidth - 20, buttonHeight);
+        rowNode->setContentSize(Size(rowWidth, rowHeight));
 
-        // Create label for button text
-        auto label = Label::createWithSystemFont(
-            itemDef ? itemDef->name : "Unknown",
-            "Arial", 12);
-        label->setPosition(Vec2((kBarWidth - 20) * 0.5f, buttonHeight * 0.5f));
-        label->setColor(Color3B::WHITE);
-        buttonBg->addChild(label);
+        // Add item slot background for result item (dark background with light border)
+        auto resultSlotBg = LayerColor::create(Color4B(30, 30, 40, 220), slotSize, slotSize);
+        resultSlotBg->setPosition(Vec2(0, 0));
+        rowNode->addChild(resultSlotBg, -1);
 
-        // Position button
-        buttonBg->setPosition(Vec2(0, totalHeight));
+        // Add border for result slot
+        auto resultBorder = DrawNode::create();
+        resultBorder->drawRect(Vec2(0, 0), Vec2(slotSize, slotSize), Color4F(0.6f, 0.6f, 0.6f, 0.8f));
+        rowNode->addChild(resultBorder, 0);
 
-        // Add touch listener for clicking
+        // Add result item icon
+        auto resultIcon = ItemManager::getInstance()->getItemSprite(recipe->resultItemId);
+        if (resultIcon) {
+            auto sprite = Sprite::createWithSpriteFrame(resultIcon);
+            if (sprite) {
+                float scale = iconSize / std::max(sprite->getContentSize().width,
+                                                  sprite->getContentSize().height);
+                sprite->setScale(scale);
+                sprite->setPosition(Vec2(slotSize * 0.5f, slotSize * 0.5f));
+                sprite->setTag(999); // For highlight
+                rowNode->addChild(sprite, 1);
+            }
+        }
+
+        // If expanded, show ingredients horizontally
+        if (isExpanded) {
+            float xOffset = slotSize + 15.0f;
+
+            // Add arrow symbol
+            auto arrow = Label::createWithSystemFont("<-", "Arial", 16);
+            arrow->setPosition(Vec2(xOffset, slotSize * 0.5f));
+            arrow->setColor(Color3B(200, 200, 200));
+            rowNode->addChild(arrow, 1);
+            xOffset += 25.0f;
+
+            // Add ingredient icons with slots
+            for (const auto& ingredient : recipe->ingredients) {
+                // Add item slot background for ingredient (dark background with light border)
+                float slotY = (slotSize - ingredientSlotSize) * 0.5f;  // Center vertically
+                auto ingSlotBg = LayerColor::create(Color4B(30, 30, 40, 220),
+                                                    ingredientSlotSize, ingredientSlotSize);
+                ingSlotBg->setPosition(Vec2(xOffset, slotY));
+                rowNode->addChild(ingSlotBg, -1);
+
+                // Add border for ingredient slot
+                auto ingBorder = DrawNode::create();
+                ingBorder->drawRect(Vec2(xOffset, slotY),
+                                   Vec2(xOffset + ingredientSlotSize, slotY + ingredientSlotSize),
+                                   Color4F(0.6f, 0.6f, 0.6f, 0.8f));
+                rowNode->addChild(ingBorder, 0);
+
+                auto ingIcon = ItemManager::getInstance()->getItemSprite(ingredient.itemId);
+                if (ingIcon) {
+                    auto ingSprite = Sprite::createWithSpriteFrame(ingIcon);
+                    if (ingSprite) {
+                        float ingScale = ingredientIconSize / std::max(ingSprite->getContentSize().width,
+                                                                       ingSprite->getContentSize().height);
+                        ingSprite->setScale(ingScale);
+                        ingSprite->setPosition(Vec2(xOffset + ingredientSlotSize * 0.5f,
+                                                   slotY + ingredientSlotSize * 0.5f));
+                        rowNode->addChild(ingSprite, 1);
+
+                        // Add count label at bottom-right of slot
+                        auto countLabel = Label::createWithSystemFont(
+                            StringUtils::format("x%d", ingredient.count),
+                            "Arial", 10);
+                        countLabel->setAnchorPoint(Vec2(1.0f, 0.0f));  // Bottom-right anchor
+                        countLabel->setPosition(Vec2(xOffset + ingredientSlotSize - 2.0f,
+                                                    slotY + 2.0f));
+                        countLabel->setColor(Color3B(255, 255, 100));
+                        rowNode->addChild(countLabel, 2);
+                    }
+                }
+
+                xOffset += ingredientSlotSize + 8.0f;
+            }
+        }
+
+        // Position row
+        rowNode->setPosition(Vec2(0, totalHeight));
+
+        // Add touch listener
         auto touchListener = EventListenerTouchOneByOne::create();
         touchListener->setSwallowTouches(true);
-        touchListener->onTouchBegan = [buttonBg, i](Touch* touch, Event* event) {
-            Vec2 locationInNode = buttonBg->convertToNodeSpace(touch->getLocation());
-            Size s = buttonBg->getContentSize();
+        touchListener->onTouchBegan = [rowNode](Touch* touch, Event* event) {
+            Vec2 locationInNode = rowNode->convertToNodeSpace(touch->getLocation());
+            Size s = rowNode->getContentSize();
             Rect rect(0, 0, s.width, s.height);
 
             if (rect.containsPoint(locationInNode)) {
-                buttonBg->setColor(Color3B(120, 160, 200)); // Highlight
+                auto sprite = rowNode->getChildByTag(999);
+                if (sprite) {
+                    sprite->setColor(Color3B(180, 180, 180));
+                }
                 return true;
             }
             return false;
         };
-        touchListener->onTouchEnded = [this, buttonBg, i](Touch* touch, Event* event) {
-            buttonBg->setColor(Color3B(60, 80, 120)); // Reset color
+        touchListener->onTouchEnded = [this, rowNode, i](Touch* touch, Event* event) {
+            auto sprite = rowNode->getChildByTag(999);
+            if (sprite) {
+                sprite->setColor(Color3B::WHITE);
+            }
+            // Toggle expansion
+            if (_expandedRecipeIndex == static_cast<int>(i)) {
+                _expandedRecipeIndex = -1;  // Collapse
+            } else {
+                _expandedRecipeIndex = i;   // Expand this one
+            }
+            refreshCategoryButtons();  // Refresh to show expansion
             onCategoryButtonClicked(nullptr, i);
         };
-        _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, buttonBg);
+        _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, rowNode);
 
-        container->addChild(buttonBg);
-        totalHeight += buttonHeight + buttonSpacing;
+        container->addChild(rowNode);
+        totalHeight += rowHeight + rowSpacing;
     }
 
     // Update inner container size
     container->setContentSize(Size(kBarWidth - 10, totalHeight));
     _categoryScrollView->setInnerContainerSize(container->getContentSize());
 
-    CCLOG("CraftBar: Created %zu category buttons, total height: %.1f",
-          _categoryButtons.size(), totalHeight);
+    CCLOG("CraftBar: Created %zu recipe rows, expanded index: %d", recipes.size(), _expandedRecipeIndex);
 }
 
 void CraftBar::onCategoryButtonClicked(Ref* sender, int categoryIndex) {
@@ -311,9 +389,17 @@ void CraftBar::updateSelectedRecipeSlot() {
     }
 
     // Update icon if possible
-    if (itemDef && !itemDef->iconPath.empty()) {
-        _selectedIcon->setTexture(itemDef->iconPath);
-        _selectedIcon->setScale(0.8f);
+    auto itemIcon = ItemManager::getInstance()->getItemSprite(_selectedRecipe->resultItemId);
+    if (itemIcon) {
+        _selectedIcon->setSpriteFrame(itemIcon);
+        _selectedIcon->setVisible(true);
+        // Scale to fit slot (assuming slot icon area is around 40x40)
+        float iconSize = 40.0f;
+        float scale = iconSize / std::max(_selectedIcon->getContentSize().width,
+                                         _selectedIcon->getContentSize().height);
+        _selectedIcon->setScale(scale);
+    } else {
+        _selectedIcon->setVisible(false);
     }
 }
 

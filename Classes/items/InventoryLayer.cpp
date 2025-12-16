@@ -148,13 +148,39 @@ void InventoryLayer::buildSlots() {
         _slotSizes[idx] = size;
         Vec2 pos = getSlotPos(idx);
 
-        auto bg = Sprite::create();
-        bg->setTextureRect(Rect(0, 0, size, size));
-        bg->setColor(getSlotColor(kind));
-        bg->setOpacity(150);
-        bg->setPosition(pos);
-        bg->setScale(kind == SlotKind::Weapon ? 1.0f : 0.94f); // weapon slightly larger, normal slightly smaller
-        this->addChild(bg, 0);
+        // Create background sprite (use image for trash slot, solid color for others)
+        Sprite* bg = nullptr;
+        if (kind == SlotKind::Trash) {
+            // Use rubbish.png as background for trash slot
+            bg = Sprite::create("items/bottom/rubbish.png");
+            if (bg) {
+                bg->setPosition(pos);
+                // Scale to fit the slot size
+                float scale = (size * 0.9f) / std::max(bg->getContentSize().width, bg->getContentSize().height);
+                bg->setScale(scale);
+                bg->setOpacity(180); // Slightly transparent
+                this->addChild(bg, 0);
+            } else {
+                CCLOG("Warning: Failed to load items/bottom/rubbish.png, using default color");
+                // Fallback to colored sprite if image fails to load
+                bg = Sprite::create();
+                bg->setTextureRect(Rect(0, 0, size, size));
+                bg->setColor(getSlotColor(kind));
+                bg->setOpacity(150);
+                bg->setPosition(pos);
+                bg->setScale(0.94f);
+                this->addChild(bg, 0);
+            }
+        } else {
+            // Normal colored background for other slots
+            bg = Sprite::create();
+            bg->setTextureRect(Rect(0, 0, size, size));
+            bg->setColor(getSlotColor(kind));
+            bg->setOpacity(150);
+            bg->setPosition(pos);
+            bg->setScale(kind == SlotKind::Weapon ? 1.0f : 0.94f); // weapon slightly larger, normal slightly smaller
+            this->addChild(bg, 0);
+        }
         _slotBg[idx] = bg;
 
         auto pattern = DrawNode::create();
@@ -192,7 +218,8 @@ void InventoryLayer::buildSlots() {
             tagText = std::to_string(displayNum);
             CCLOG("InventoryLayer: Weapon slot %d -> label '%s' (idx=%d)", num, tagText.c_str(), idx);
         } else if (kind == SlotKind::Trash) {
-            tagText = "X";
+            // No label needed - using rubbish.png icon instead
+            tagText = "";
         } else {
             // Ammo, Coin, and Normal slots don't need labels
             tagText = "";
@@ -496,8 +523,7 @@ void InventoryLayer::drawSlotPattern(DrawNode* node, SlotKind kind, float size) 
             break;
         }
         case SlotKind::Trash: {
-            node->drawLine(Vec2(-half * 0.5f, -half * 0.5f), Vec2(half * 0.5f, half * 0.5f), Color4F(0.9f, 0.3f, 0.3f, 0.35f));
-            node->drawLine(Vec2(-half * 0.5f, half * 0.5f), Vec2(half * 0.5f, -half * 0.5f), Color4F(0.9f, 0.3f, 0.3f, 0.35f));
+            // No pattern needed - using rubbish.png image as background instead
             break;
         }
         case SlotKind::Weapon: {

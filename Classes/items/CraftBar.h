@@ -38,6 +38,7 @@ private:
     cocos2d::ui::ListView* _recipeListView = nullptr;
     std::vector<const RecipeDefinition*> _currentRecipes;
     const RecipeDefinition* _selectedRecipe = nullptr;
+    int _expandedRecipeIndex = -1;  // Track which recipe is expanded (-1 = none)
 
     // Visual elements
     cocos2d::DrawNode* _scrollIndicator = nullptr;

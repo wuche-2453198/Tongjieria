@@ -20,6 +20,111 @@
       "Ingredients": [
         { "Type": "Item", "ID": 3504, "Count": 100 }
       ]
+    },
+    {
+      "Result": { "ItemID": 3502, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3503, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 3503, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3504, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 3504, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3505, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 1 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 10 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 10 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 10 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 10 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 6 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 6 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 6 }
+      ]
+    },
+    {
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 6 }
+      ]
     }
   ]
 }

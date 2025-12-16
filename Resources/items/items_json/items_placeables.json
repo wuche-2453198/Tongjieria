@@ -241,5 +241,32 @@
     "icon": "items/Placeables/machines/rhymestone_chest.png",
     "value": 200,
     "tags": [5, 513]
+  },
+  {
+    "id": 2120,
+    "name": "Wooden Door",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/woodware/wooden_door.png",
+    "value": 6,
+    "tags": [5, 514]
+  },
+  {
+    "id": 2121,
+    "name": "Wood Platform",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/woodware/wood_platform.png",
+    "value": 1,
+    "tags": [5, 514]
+  },
+  {
+    "id": 2122,
+    "name": "Torch",
+    "type": 5,
+    "maxStack": 999,
+    "icon": "items/Placeables/woodware/torch.png",
+    "value": 1,
+    "tags": [5, 514]
   }
 ]
