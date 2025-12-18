@@ -142,6 +142,11 @@ void PlayerInput::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event) {
     }
     state.isPressed = true;
     state.justReleased = false;
+
+    // 调试：输出空格键按下事件
+    if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
+        CCLOG("!!! PlayerInput: SPACE key pressed event received !!!");
+    }
 }
 
 void PlayerInput::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event) {

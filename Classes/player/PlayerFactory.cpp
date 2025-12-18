@@ -22,6 +22,7 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
     // 4. 添加属性组件
     auto& stats = registry.emplace<ecs::PlayerStatsComponent>(player);
     loadPlayerStats(stats);
+    stats.isOnGround = true; // 初始化时假设在地面上
 
     // 5. 添加移动组件
     auto& movement = registry.emplace<ecs::PlayerMovementComponent>(player);
@@ -71,16 +72,12 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
 Sprite* PlayerFactory::createPlayerSprite(const Vec2& spawnPos, Node* parentNode) {
     Sprite* sprite = nullptr;
 
-    // 尝试加载玩家精灵图
-    sprite = Sprite::create("player/player_idle_0.png");
-
-    if (!sprite) {
-        // 备用方案：创建矩形占位符
-        CCLOG("PlayerFactory: Failed to load player sprite, using fallback rectangle");
-        sprite = Sprite::create();
-        sprite->setTextureRect(Rect(0, 0, 20, 42)); // 泰拉瑞亚玩家大小约20x42像素
-        sprite->setColor(Color3B(255, 200, 100)); // 金黄色
-    }
+    // Cocos2d 不直接支持 GIF，使用备用方案创建玩家精灵
+    // 最终方案：创建彩色矩形作为玩家（暂时使用，后续可以换成 PNG 序列帧）
+    CCLOG("PlayerFactory: Creating player sprite as colored rectangle (GIF not supported by Cocos2d)");
+    sprite = Sprite::create();
+    sprite->setTextureRect(Rect(0, 0, 40, 50)); // 40x50 像素的玩家
+    sprite->setColor(Color3B(255, 200, 100)); // 金黄色（类似泰拉瑞亚玩家颜色）
 
     if (sprite) {
         sprite->setPosition(spawnPos);
@@ -104,9 +101,17 @@ void PlayerFactory::addPhysicsBody(Sprite* sprite) {
         return;
     }
 
-    // 玩家物理体参数（泰拉瑞亚风格）
-    float bodyWidth = 20.0f;
-    float bodyHeight = 42.0f;
+    // 玩家物理体参数（根据精灵大小动态调整）
+    Size spriteSize = sprite->getContentSize();
+    float bodyWidth = spriteSize.width * 0.6f;   // 物理体比精灵稍小，避免边缘碰撞问题
+    float bodyHeight = spriteSize.height * 0.8f;
+
+    // 如果是备用矩形，使用固定大小
+    if (spriteSize.width <= 0 || spriteSize.height <= 0) {
+        bodyWidth = 20.0f;
+        bodyHeight = 42.0f;
+        CCLOG("PlayerFactory: Using default physics body size");
+    }
 
     PhysicsMaterial material(1.0f, 0.0f, 0.5f); // 密度/恢复系数/摩擦力
 
@@ -114,6 +119,9 @@ void PlayerFactory::addPhysicsBody(Sprite* sprite) {
         Size(bodyWidth, bodyHeight),
         material
     );
+
+    CCLOG("PlayerFactory: Physics body size: %.1fx%.1f (sprite size: %.1fx%.1f)",
+          bodyWidth, bodyHeight, spriteSize.width, spriteSize.height);
 
     if (physicsBody) {
         physicsBody->setDynamic(true);               // 动态物体

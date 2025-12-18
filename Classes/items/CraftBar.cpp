@@ -14,7 +14,7 @@ const float CraftBar::kBarWidth = 200.0f;
 const float CraftBar::kCollapsedHeight = 350.0f;
 const float CraftBar::kExpandedWidth = 280.0f;
 const float CraftBar::kExpandedHeight = 450.0f;
-const float CraftBar::kCategoryScrollHeight = 240.0f;
+const float CraftBar::kCategoryScrollHeight = 280.0f;  // Increased from 240 to 280
 const float CraftBar::kRecipeScrollHeight = 350.0f;
 const float CraftBar::kRecipeItemHeight = 70.0f;
 const float CraftBar::kScrollWheelSpeed = 60.0f;
@@ -33,7 +33,7 @@ bool CraftBar::init() {
     if (!Layer::init()) return false;
 
     // Position at bottom-left corner with margin
-    this->setPosition(Vec2(20, 20));
+    this->setPosition(Vec2(20, 70));  // Moved up 50 pixels (from 20 to 70)
 
     setupCollapsedUI();
     setupExpandCraftingButton();
@@ -61,58 +61,12 @@ void CraftBar::setupCollapsedUI() {
     _titleLabel->setVisible(false); // Hide the title text
     this->addChild(_titleLabel, 1);
 
-    // Selected recipe slot at bottom (hidden)
-    setupSelectedRecipeSlot();
-    if (_selectedRecipeSlot) {
-        _selectedRecipeSlot->setVisible(false); // Hide the selected recipe display
-    }
-
-    // Category scroll view in the middle
+    // Category scroll view (removed selected recipe slot)
     setupCategoryScrollView();
 }
 
-void CraftBar::setupSelectedRecipeSlot() {
-    float slotY = 60;
-    float slotHeight = 80;
-
-    // Background for selected slot (hidden)
-    auto slotBg = LayerColor::create(Color4B(40, 50, 70, 200), kBarWidth - 10, slotHeight);
-    slotBg->setPosition(Vec2(5, slotY));
-    slotBg->setVisible(false); // Hide the slot background
-    this->addChild(slotBg, 1);
-
-    _selectedRecipeSlot = Node::create();
-    _selectedRecipeSlot->setPosition(Vec2(kBarWidth * 0.5f, slotY + slotHeight * 0.5f));
-    this->addChild(_selectedRecipeSlot, 2);
-
-    // Icon placeholder
-    _selectedIcon = Sprite::create();
-    _selectedIcon->setPosition(Vec2(-60, 0));
-    _selectedRecipeSlot->addChild(_selectedIcon);
-
-    // Name label
-    _selectedNameLabel = Label::createWithSystemFont("Select Recipe", "Arial", 12);
-    _selectedNameLabel->setPosition(Vec2(20, 15));
-    _selectedNameLabel->setDimensions(100, 0);
-    _selectedNameLabel->setAlignment(TextHAlignment::LEFT);
-    _selectedNameLabel->setColor(Color3B(220, 220, 220));
-    _selectedRecipeSlot->addChild(_selectedNameLabel);
-
-    // Count label
-    _selectedCountLabel = Label::createWithSystemFont("", "Arial", 10);
-    _selectedCountLabel->setPosition(Vec2(20, -5));
-    _selectedCountLabel->setColor(Color3B(180, 180, 180));
-    _selectedRecipeSlot->addChild(_selectedCountLabel);
-
-    // Click to craft hint
-    auto craftHint = Label::createWithSystemFont("Click to craft", "Arial", 9);
-    craftHint->setPosition(Vec2(20, -18));
-    craftHint->setColor(Color3B(150, 200, 150));
-    _selectedRecipeSlot->addChild(craftHint);
-}
-
 void CraftBar::setupCategoryScrollView() {
-    float scrollY = 150;
+    float scrollY = 50;  // Moved down from 130
     float scrollWidth = kBarWidth - 10;
 
     // Create ScrollView with VERTICAL direction
@@ -189,12 +143,24 @@ void CraftBar::setupMouseWheelListener() {
 void CraftBar::refreshCategoryButtons() {
     if (!_categoryScrollView) return;
 
+    // Save current scroll position to restore after refresh
+    Vec2 savedScrollPos = _categoryScrollView->getInnerContainerPosition();
+
     // Clear existing buttons
     auto container = _categoryScrollView->getInnerContainer();
     container->removeAllChildren();
 
     // Get available recipes
     auto recipes = CraftingMatcher::getInstance()->getAvailableRecipes();
+
+    // Sort recipes: craftable first, uncraftable last
+    std::vector<const RecipeDefinition*> sortedRecipes(recipes.begin(), recipes.end());
+    std::stable_sort(sortedRecipes.begin(), sortedRecipes.end(),
+        [](const RecipeDefinition* a, const RecipeDefinition* b) {
+            bool canCraftA = CraftingMatcher::getInstance()->canCraft(*a);
+            bool canCraftB = CraftingMatcher::getInstance()->canCraft(*b);
+            return canCraftA > canCraftB;  // true (craftable) comes before false
+        });
 
     // Layout constants
     float slotSize = 50.0f;        // Square size (slightly larger than inventory slots)
@@ -204,9 +170,11 @@ void CraftBar::refreshCategoryButtons() {
     float rowSpacing = 5.0f;
     float totalHeight = 0;
 
-    for (size_t i = 0; i < recipes.size(); ++i) {
-        auto recipe = recipes[i];
+    for (size_t i = 0; i < sortedRecipes.size(); ++i) {
+        auto recipe = sortedRecipes[i];
         bool isExpanded = (_expandedRecipeIndex == static_cast<int>(i));
+        bool isSelected = (_selectedRecipeIndex == static_cast<int>(i));
+        bool canCraft = CraftingMatcher::getInstance()->canCraft(*recipe);
 
         // Create row container
         auto rowNode = Node::create();
@@ -222,14 +190,27 @@ void CraftBar::refreshCategoryButtons() {
 
         rowNode->setContentSize(Size(rowWidth, rowHeight));
 
-        // Add item slot background for result item using Inventory.png
-        auto resultSlotBg = Sprite::create("items/bottom/Inventory.png");
+        // Choose background based on state:
+        // - Cannot craft: dark_bottom.png
+        // - Can craft + selected: light_bottom.png
+        // - Can craft + not selected: Inventory.png
+        std::string bgPath;
+        if (!canCraft) {
+            bgPath = "items/bottom/dark_bottom.png";
+        } else if (isSelected) {
+            bgPath = "items/bottom/light_bottom.png";
+        } else {
+            bgPath = "items/bottom/Inventory.png";
+        }
+
+        auto resultSlotBg = Sprite::create(bgPath);
         if (resultSlotBg) {
             float bgScale = (slotSize * 1.0f) / std::max(resultSlotBg->getContentSize().width,
                                                           resultSlotBg->getContentSize().height);
             resultSlotBg->setScale(bgScale);
             resultSlotBg->setAnchorPoint(Vec2(0, 0));
             resultSlotBg->setPosition(Vec2(0, 0));
+            resultSlotBg->setTag(888);  // Tag for background update
             rowNode->addChild(resultSlotBg, -1);
         }
 
@@ -343,69 +324,51 @@ void CraftBar::refreshCategoryButtons() {
     container->setContentSize(Size(kBarWidth - 10, totalHeight));
     _categoryScrollView->setInnerContainerSize(container->getContentSize());
 
-    CCLOG("CraftBar: Created %zu recipe rows, expanded index: %d", recipes.size(), _expandedRecipeIndex);
+    // Restore scroll position after refresh
+    _categoryScrollView->setInnerContainerPosition(savedScrollPos);
+
+    CCLOG("CraftBar: Created %zu recipe rows, expanded index: %d", sortedRecipes.size(), _expandedRecipeIndex);
 }
 
 void CraftBar::onCategoryButtonClicked(Ref* sender, int categoryIndex) {
     auto recipes = CraftingMatcher::getInstance()->getAvailableRecipes();
 
-    if (categoryIndex >= 0 && categoryIndex < static_cast<int>(recipes.size())) {
-        _selectedRecipe = recipes[categoryIndex];
-        updateSelectedRecipeSlot();
+    // Sort recipes the same way as in refreshCategoryButtons
+    std::vector<const RecipeDefinition*> sortedRecipes(recipes.begin(), recipes.end());
+    std::stable_sort(sortedRecipes.begin(), sortedRecipes.end(),
+        [](const RecipeDefinition* a, const RecipeDefinition* b) {
+            bool canCraftA = CraftingMatcher::getInstance()->canCraft(*a);
+            bool canCraftB = CraftingMatcher::getInstance()->canCraft(*b);
+            return canCraftA > canCraftB;
+        });
 
-        // Try to craft when clicking
-        if (_selectedRecipe) {
-            bool canCraft = CraftingMatcher::getInstance()->canCraft(*_selectedRecipe);
-            if (canCraft) {
-                bool success = CraftingExecutor::getInstance()->craft(*_selectedRecipe);
-                CCLOG("CraftBar: Craft %s", success ? "SUCCESS" : "FAILED");
-            } else {
-                CCLOG("CraftBar: Cannot craft - missing materials or station");
-            }
+    if (categoryIndex >= 0 && categoryIndex < static_cast<int>(sortedRecipes.size())) {
+        auto recipe = sortedRecipes[categoryIndex];
+        bool canCraft = CraftingMatcher::getInstance()->canCraft(*recipe);
+
+        // Cannot craft at all - do nothing
+        if (!canCraft) {
+            CCLOG("CraftBar: Cannot craft - missing materials or station");
+            return;
         }
-    }
-}
 
-void CraftBar::updateSelectedRecipeSlot() {
-    if (!_selectedRecipe) {
-        _selectedNameLabel->setString("No Recipe");
-        _selectedCountLabel->setString("");
-        return;
-    }
+        // First click: Select the recipe (highlight it)
+        if (_selectedRecipeIndex != categoryIndex) {
+            _selectedRecipeIndex = categoryIndex;
+            _selectedRecipe = recipe;
+            CCLOG("CraftBar: Recipe %d selected (first click)", categoryIndex);
+            refreshCategoryButtons();  // Refresh to update background
+        }
+        // Second click: Execute crafting
+        else {
+            bool success = CraftingExecutor::getInstance()->craft(*recipe);
+            CCLOG("CraftBar: Craft %s (second click)", success ? "SUCCESS" : "FAILED");
 
-    auto itemDef = ItemManager::getInstance()->getItemData(_selectedRecipe->resultItemId);
-
-    // Update name
-    std::string name = itemDef ? itemDef->name : "Unknown";
-    _selectedNameLabel->setString(name);
-
-    // Update count and materials
-    int maxCraft = CraftingMatcher::getInstance()->getMaxCraftCount(*_selectedRecipe);
-    bool canCraft = CraftingMatcher::getInstance()->canCraft(*_selectedRecipe);
-
-    std::string countText = StringUtils::format("x%d (Max: %d)",
-        _selectedRecipe->resultCount, maxCraft);
-    _selectedCountLabel->setString(countText);
-
-    // Color based on availability
-    if (canCraft) {
-        _selectedNameLabel->setColor(Color3B(100, 255, 100));
-    } else {
-        _selectedNameLabel->setColor(Color3B(255, 150, 150));
-    }
-
-    // Update icon if possible
-    auto itemIcon = ItemManager::getInstance()->getItemSprite(_selectedRecipe->resultItemId);
-    if (itemIcon) {
-        _selectedIcon->setSpriteFrame(itemIcon);
-        _selectedIcon->setVisible(true);
-        // Scale to fit slot (assuming slot icon area is around 40x40)
-        float iconSize = 40.0f;
-        float scale = iconSize / std::max(_selectedIcon->getContentSize().width,
-                                         _selectedIcon->getContentSize().height);
-        _selectedIcon->setScale(scale);
-    } else {
-        _selectedIcon->setVisible(false);
+            // Reset selection after crafting
+            _selectedRecipeIndex = -1;
+            _selectedRecipe = nullptr;
+            // No need to refresh here as inventory change will trigger refresh
+        }
     }
 }
 
@@ -420,11 +383,14 @@ void CraftBar::updateFadeGradients() {
 }
 
 void CraftBar::refreshRecipes() {
+    // Reset selection when recipes refresh (due to inventory/station changes)
+    _selectedRecipeIndex = -1;
+    _selectedRecipe = nullptr;
+    _selectedQuickCraftIndex = -1;  // Also reset quick craft selection
     refreshCategoryButtons();
-
-    // Update selected recipe slot
-    if (_selectedRecipe) {
-        updateSelectedRecipeSlot();
+    // Refresh quick craft bar if it exists and is visible
+    if (_quickCraftingBar && _quickCraftingBar->isVisible()) {
+        refreshQuickCraftingBar();
     }
 }
 
@@ -448,9 +414,10 @@ void CraftBar::onStationChanged(EventCustom* event) {
     refreshRecipes();
 }
 
-// Setup expand crafting button (placed below the category scroll view)
+// Setup expand crafting button (placed at the bottom of the scroll view)
 void CraftBar::setupExpandCraftingButton() {
-    float buttonY = 140.0f - 60.0f;  // Below the category scroll view
+    float scrollY = 50;  // Match scroll view position
+    float buttonY = scrollY;  // Align with bottom of scroll view
     float buttonSize = 50.0f;
 
     _expandCraftingButton = ui::Button::create("items/bottom/crafting.png",
@@ -496,6 +463,15 @@ void CraftBar::expandPanel() {
         auto easeAction = EaseBackOut::create(scaleAction);
         _expandedCraftingPanel->runAction(easeAction);
     }
+
+    // Show and refresh quick crafting bar
+    if (_quickCraftingBar) {
+        refreshQuickCraftingBar();
+        _quickCraftingBar->setVisible(true);
+        _quickCraftingBar->setOpacity(0);
+        auto fadeIn = FadeIn::create(0.3f);
+        _quickCraftingBar->runAction(fadeIn);
+    }
 }
 
 void CraftBar::collapsePanel() {
@@ -510,15 +486,23 @@ void CraftBar::collapsePanel() {
         auto sequence = Sequence::create(easeAction, hideAction, nullptr);
         _expandedCraftingPanel->runAction(sequence);
     }
+
+    // Hide quick crafting bar
+    if (_quickCraftingBar) {
+        auto fadeOut = FadeOut::create(0.2f);
+        auto hideAction = Hide::create();
+        auto sequence = Sequence::create(fadeOut, hideAction, nullptr);
+        _quickCraftingBar->runAction(sequence);
+    }
 }
 
 void CraftBar::createExpandedCraftingPanel() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     auto origin = Director::getInstance()->getVisibleOrigin();
 
-    // Panel size: horizontal layout in center of screen
-    float panelWidth = visibleSize.width * 0.6f;  // 60% of screen width
-    float panelHeight = visibleSize.height * 0.7f; // 70% of screen height
+    // Panel size: narrower to avoid covering inventory and equipment panels
+    float panelWidth = visibleSize.width * 0.3f;  // 30% of screen width (reduced from 40%)
+    float panelHeight = visibleSize.height * 0.55f; // 55% of screen height (reduced from 60%)
 
     // Create main panel node
     _expandedCraftingPanel = Node::create();
@@ -526,41 +510,6 @@ void CraftBar::createExpandedCraftingPanel() {
     _expandedCraftingPanel->setContentSize(Size(panelWidth, panelHeight));
     _expandedCraftingPanel->setPosition(Vec2(origin.x + visibleSize.width * 0.5f,
                                              origin.y + visibleSize.height * 0.5f));
-
-    // Semi-transparent background
-    auto bg = LayerColor::create(Color4B(20, 30, 50, 230), panelWidth, panelHeight);
-    bg->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-    bg->setPosition(Vec2(panelWidth * 0.5f, panelHeight * 0.5f));
-    _expandedCraftingPanel->addChild(bg, -1);
-
-    // Border
-    auto border = DrawNode::create();
-    Color4F borderColor(0.85f, 0.74f, 0.40f, 0.9f);
-    Vec2 rect[4] = {
-        Vec2(2, 2),
-        Vec2(panelWidth - 2, 2),
-        Vec2(panelWidth - 2, panelHeight - 2),
-        Vec2(2, panelHeight - 2)
-    };
-    border->drawPoly(rect, 4, true, borderColor);
-    _expandedCraftingPanel->addChild(border, 0);
-
-    // Title
-    auto titleLabel = Label::createWithSystemFont("All Recipes", "Arial", 24);
-    titleLabel->setPosition(Vec2(panelWidth * 0.5f, panelHeight - 30));
-    titleLabel->setColor(Color3B(255, 220, 100));
-    _expandedCraftingPanel->addChild(titleLabel, 1);
-
-    // Close button (X)
-    auto closeButton = ui::Button::create();
-    closeButton->setTitleText("X");
-    closeButton->setTitleFontSize(24);
-    closeButton->setTitleColor(Color3B::WHITE);
-    closeButton->setPosition(Vec2(panelWidth - 30, panelHeight - 30));
-    closeButton->addClickEventListener([this](Ref* sender) {
-        collapsePanel();
-    });
-    _expandedCraftingPanel->addChild(closeButton, 2);
 
     // Recipe grid view
     setupRecipeListView();
@@ -573,6 +522,9 @@ void CraftBar::createExpandedCraftingPanel() {
         scene->addChild(_expandedCraftingPanel, 100);
         CCLOG("CraftBar: Expanded crafting panel created, size=(%.1fx%.1f)", panelWidth, panelHeight);
     }
+
+    // Create quick crafting bar
+    createQuickCraftingBar();
 }
 
 void CraftBar::setupRecipeListView() {
@@ -604,6 +556,149 @@ void CraftBar::refreshRecipeList() {
 void CraftBar::onRecipeItemClicked(int recipeIndex) {
     // Handle recipe selection in expanded mode
     CCLOG("CraftBar: Recipe item %d clicked in expanded mode", recipeIndex);
+}
+
+// Quick crafting bar implementation
+void CraftBar::createQuickCraftingBar() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto origin = Director::getInstance()->getVisibleOrigin();
+
+    // Create horizontal bar node
+    _quickCraftingBar = Node::create();
+
+    // Position at screen center, lowered by 70 pixels
+    float barY = origin.y + visibleSize.height * 0.65f - 70.0f;
+    _quickCraftingBar->setPosition(Vec2(origin.x + visibleSize.width * 0.5f, barY));
+
+    _quickCraftingBar->setVisible(false);
+
+    // Add to scene
+    auto scene = Director::getInstance()->getRunningScene();
+    if (scene) {
+        scene->addChild(_quickCraftingBar, 101);  // Above expanded panel
+        CCLOG("CraftBar: Quick crafting bar created at y=%.1f", barY);
+    }
+}
+
+void CraftBar::refreshQuickCraftingBar() {
+    if (!_quickCraftingBar) return;
+
+    // Clear existing buttons
+    _quickCraftingBar->removeAllChildren();
+    _quickCraftButtons.clear();
+
+    // Get all available recipes
+    auto matcher = CraftingMatcher::getInstance();
+    auto recipes = matcher->getAvailableRecipes();
+
+    if (recipes.empty()) {
+        CCLOG("CraftBar: No recipes available for quick crafting bar");
+        return;
+    }
+
+    // Layout constants
+    float iconSize = 52.0f;
+    float iconPadding = 6.0f;
+    int maxIcons = std::min((int)recipes.size(), 20);  // Limit to 20 icons
+
+    // Calculate total width and starting position
+    float totalWidth = maxIcons * (iconSize + iconPadding) - iconPadding;
+    float startX = -totalWidth * 0.5f;
+
+    // Create icon buttons for each recipe
+    for (int i = 0; i < maxIcons; ++i) {
+        auto recipe = recipes[i];
+        auto itemMgr = ItemManager::getInstance();
+        auto itemDef = itemMgr->getItemData(recipe->resultItemId);
+
+        if (!itemDef) continue;
+
+        bool canCraft = matcher->canCraft(*recipe);
+        bool isSelected = (_selectedQuickCraftIndex == i);
+
+        // Create button
+        auto button = ui::Button::create();
+        button->setScale9Enabled(true);
+        button->setContentSize(Size(iconSize, iconSize));
+
+        // Set background based on state:
+        // - Cannot craft: dark_bottom.png
+        // - Can craft + selected: light_bottom.png
+        // - Can craft + not selected: Inventory.png
+        std::string bgPath;
+        if (!canCraft) {
+            bgPath = "items/bottom/dark_bottom.png";
+        } else if (isSelected) {
+            bgPath = "items/bottom/light_bottom.png";
+        } else {
+            bgPath = "items/bottom/Inventory.png";
+        }
+        button->loadTextureNormal(bgPath);
+
+        // Add item icon
+        auto itemIcon = itemMgr->getItemSprite(recipe->resultItemId);
+        if (itemIcon) {
+            auto iconSprite = Sprite::createWithSpriteFrame(itemIcon);
+            iconSprite->setPosition(Vec2(iconSize * 0.5f, iconSize * 0.5f));
+            iconSprite->setScale(iconSize * 0.7f / iconSprite->getContentSize().width);
+            iconSprite->setTag(999);  // Tag for reference
+            button->addChild(iconSprite, 1);
+        }
+
+        // Position
+        float posX = startX + i * (iconSize + iconPadding) + iconSize * 0.5f;
+        button->setPosition(Vec2(posX, 0));
+
+        // Click handler
+        button->addClickEventListener([this, i](Ref* sender) {
+            onQuickCraftButtonClicked(i);
+        });
+
+        _quickCraftingBar->addChild(button);
+        _quickCraftButtons.push_back(button);
+    }
+
+    CCLOG("CraftBar: Quick crafting bar refreshed with %d icons", maxIcons);
+}
+
+void CraftBar::onQuickCraftButtonClicked(int recipeIndex) {
+    auto matcher = CraftingMatcher::getInstance();
+    auto recipes = matcher->getAvailableRecipes();
+
+    if (recipeIndex < 0 || recipeIndex >= (int)recipes.size()) {
+        CCLOG("CraftBar: Invalid recipe index %d", recipeIndex);
+        return;
+    }
+
+    auto recipe = recipes[recipeIndex];
+
+    // Check if can craft
+    bool canCraft = matcher->canCraft(*recipe);
+    if (!canCraft) {
+        CCLOG("CraftBar: Cannot craft recipe %d - missing materials or station", recipeIndex);
+        return;
+    }
+
+    // First click: Select the recipe (highlight it)
+    if (_selectedQuickCraftIndex != recipeIndex) {
+        _selectedQuickCraftIndex = recipeIndex;
+        CCLOG("CraftBar: Quick craft recipe %d selected (first click)", recipeIndex);
+        refreshQuickCraftingBar();  // Refresh to update background
+    }
+    // Second click: Execute crafting
+    else {
+        auto executor = CraftingExecutor::getInstance();
+        bool success = executor->craft(*recipe);
+
+        if (success) {
+            CCLOG("CraftBar: Quick craft successful for recipe %d (second click)", recipeIndex);
+            // Reset selection after crafting
+            _selectedQuickCraftIndex = -1;
+            // No need to refresh here as inventory change will trigger refresh
+        } else {
+            CCLOG("CraftBar: Quick craft failed for recipe %d", recipeIndex);
+        }
+    }
 }
 
 // Expanded panel methods (to be implemented in phase 2)

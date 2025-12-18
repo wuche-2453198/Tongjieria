@@ -24,10 +24,6 @@ private:
 
     // Fixed UI elements
     cocos2d::Label* _titleLabel = nullptr;
-    cocos2d::Node* _selectedRecipeSlot = nullptr;
-    cocos2d::Sprite* _selectedIcon = nullptr;
-    cocos2d::Label* _selectedNameLabel = nullptr;
-    cocos2d::Label* _selectedCountLabel = nullptr;
 
     // Collapsed state: Category scroll view
     cocos2d::ui::ScrollView* _categoryScrollView = nullptr;
@@ -39,6 +35,7 @@ private:
     std::vector<const RecipeDefinition*> _currentRecipes;
     const RecipeDefinition* _selectedRecipe = nullptr;
     int _expandedRecipeIndex = -1;  // Track which recipe is expanded (-1 = none)
+    int _selectedRecipeIndex = -1;  // Track which recipe is selected for crafting (-1 = none)
 
     // Visual elements
     cocos2d::DrawNode* _scrollIndicator = nullptr;
@@ -49,6 +46,11 @@ private:
     cocos2d::ui::Button* _expandCraftingButton = nullptr;
     cocos2d::Node* _expandedCraftingPanel = nullptr;
     bool _craftingPanelExpanded = false;
+
+    // Quick crafting bar (horizontal icon bar in screen center)
+    cocos2d::Node* _quickCraftingBar = nullptr;
+    std::vector<cocos2d::ui::Button*> _quickCraftButtons;
+    int _selectedQuickCraftIndex = -1;  // Track which quick craft button is selected (-1 = none)
 
     // Layout constants (defined in .cpp)
     static const float kBarWidth;
@@ -63,7 +65,6 @@ private:
     // Setup methods
     void setupEventListeners();
     void setupCollapsedUI();
-    void setupSelectedRecipeSlot();
     void setupCategoryScrollView();
     void setupExpandedUI();
     void setupRecipeListView();
@@ -76,7 +77,6 @@ private:
     // Recipe list management
     void refreshRecipeList();
     void onRecipeItemClicked(int recipeIndex);
-    void updateSelectedRecipeSlot();
 
     // Scroll visual feedback
     void updateScrollIndicator();
@@ -91,6 +91,11 @@ private:
     void onExpandCraftingButtonClicked(cocos2d::Ref* sender);
     void setupExpandCraftingButton();
     void createExpandedCraftingPanel();
+
+    // Quick crafting bar methods
+    void createQuickCraftingBar();
+    void refreshQuickCraftingBar();
+    void onQuickCraftButtonClicked(int recipeIndex);
 };
 
 #endif // __CRAFT_BAR_H__

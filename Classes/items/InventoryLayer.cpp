@@ -55,18 +55,11 @@ bool InventoryLayer::init() {
     setContentSize(Size(panelWidth, panelHeight));
     setPosition(Vec2(origin.x, origin.y + visibleSize.height - panelHeight));
 
-    // Background panel: semi-transparent dark with light border
+    // Background panel: semi-transparent dark without border
     auto panelBg = LayerColor::create(Color4B(18, 22, 32, 180));
     panelBg->setContentSize(Size(panelWidth, panelHeight));
     panelBg->setPosition(Vec2::ZERO);
     this->addChild(panelBg, -2);
-
-    auto border = DrawNode::create();
-    Color4F borderColor(0.85f, 0.74f, 0.40f, 0.9f); // warm gold-ish
-    Vec2 rect[4] = {Vec2(1, 1), Vec2(panelWidth - 1, 1), Vec2(panelWidth - 1, panelHeight - 1), Vec2(1, panelHeight - 1)};
-    border->drawPoly(rect, 4, true, borderColor);
-    border->setPosition(Vec2::ZERO);
-    this->addChild(border, -1);
 
     // Layout sizes (fixed slot size; panel will expand if needed)
     float weaponSize = _slotSize * kWeaponScale; // weapon slightly larger
@@ -93,13 +86,6 @@ bool InventoryLayer::init() {
     setContentSize(Size(panelWidth, panelHeight));
     setPosition(Vec2(origin.x, origin.y + visibleSize.height - panelHeight));
     panelBg->setContentSize(Size(panelWidth, panelHeight));
-
-    float borderWidth = panelWidth - 1;
-    float borderHeight = panelHeight - 1;
-    border->clear();
-    Vec2 rect2[4] = {Vec2(1, 1), Vec2(borderWidth, 1), Vec2(borderWidth, borderHeight), Vec2(1, borderHeight)};
-    Color4F borderColor2(0.85f, 0.74f, 0.40f, 0.9f);
-    border->drawPoly(rect2, 4, true, borderColor2);
 
     float marginX = 6.0f;
     float marginTop = 6.0f;
