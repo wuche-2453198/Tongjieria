@@ -2,21 +2,21 @@
   "id": "IceSlime",
   "type": "Slime",
   "description": "冰雪史莱姆，攻击有概率赋予冷冻减益",
-  
+
   "display": {
     "spriteFolder": "Minor monster/IceSlime",
     "spritePrefix": "Ice_Slime",
     "frameCount": 2,
     "frameTime": 0.18,
-    "scale": 1.15
+    "scale": 1.0
   },
-  
+
   "physics": {
     "bodyWidth": 32.0,
     "bodyHeight": 24.0,
-    "bodyHeightOffset": -5.0,
-    "mass": 1.1,
-    "friction": 0.8,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
     "restitution": 0.0,
     "collisionGroup": -1
   },

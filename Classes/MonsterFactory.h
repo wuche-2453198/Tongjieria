@@ -2,10 +2,10 @@
 #define __MONSTER_FACTORY_H__
 
 #include "cocos2d.h"
-#include "ecs/ECS.h"
+#include "ecs/Components.h"
+#include "ecs/SpriteComponent.h"
 #include <entt/entt.hpp>
 #include "json/document.h"
-#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -58,6 +58,14 @@ struct MonsterConfig {
     bool targetJumpEnabled = true;     // 是否启用目标跳跃反应
     float targetJumpReactionTime = 0.1f; // 目标跳跃反应时间
     float patrolDirectionChangeInterval = 3.0f; // 巡逻改变方向间隔
+    
+    // 飞行类型专用参数（DemonEye等）
+    float flySpeed = 120.0f;           // 飞行速度
+    float maxSpeed = 200.0f;           // 最大速度
+    float acceleration = 80.0f;        // 加速度
+    float turnRate = 1.5f;             // 转向速率（弧度/秒）
+    float wobbleAmplitude = 0.3f;      // 摆动幅度
+    float wobbleFrequency = 2.0f;      // 摆动频率
   } movement;
 
   // AI属性
@@ -129,305 +137,25 @@ struct MonsterConfig {
   } slowFall;
 };
 
-// ==================== 怪物类型创建器接口 ====================
-
-/**
- * @brief 怪物类型创建器 - 用于不同类型怪物的特化创建逻辑
- */
-class IMonsterCreator {
-public:
-  virtual ~IMonsterCreator() = default;
-  
-  /**
-   * @brief 创建怪物实体
-   * @param world ECS世界
-   * @param config 怪物配置
-   * @param x X坐标
-   * @param y Y坐标
-   * @param parentNode 父节点
-   * @return 实体ID
-   */
-  virtual ecs::EntityId create(ecs::World &world, const MonsterConfig &config,
-                               float x, float y,
-                               cocos2d::Node *parentNode) = 0;
-  
-  /**
-   * @brief 获取备用颜色（精灵加载失败时使用）
-   */
-  virtual cocos2d::Color3B getFallbackColor(const std::string &monsterId) = 0;
-};
-
-// ==================== 史莱姆基类创建器 ====================
-
-/**
- * @brief 史莱姆基类创建器 - 提供通用的史莱姆创建逻辑
- * 
- * 子类可以重写 addSpecialComponents() 添加特有组件
- */
-class SlimeCreatorBase : public IMonsterCreator {
-public:
-  ecs::EntityId create(ecs::World &world, const MonsterConfig &config,
-                       float x, float y, cocos2d::Node *parentNode) override;
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override;
-
-protected:
-  /**
-   * @brief 创建精灵和物理体（通用）
-   */
-  cocos2d::Sprite* createSprite(const MonsterConfig &config, float x, float y,
-                                 cocos2d::Node *parentNode);
-  
-  /**
-   * @brief 添加基础组件（通用）
-   */
-  void addBaseComponents(ecs::World &world, ecs::EntityId entity,
-                         const MonsterConfig &config, cocos2d::Sprite *sprite);
-  
-  /**
-   * @brief 添加特有组件（子类重写）
-   */
-  virtual void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                    const MonsterConfig &config) {}
-};
-
-// ==================== 各色史莱姆创建器 ====================
-
-/**
- * @brief 绿色史莱姆 - 基础史莱姆，无特殊能力
- */
-class GreenSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B::GREEN;
-  }
-};
-
-/**
- * @brief 蓝色史莱姆
- */
-class BlueSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B::BLUE;
-  }
-};
-
-/**
- * @brief 红色史莱姆
- */
-class RedSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B::RED;
-  }
-};
-
-/**
- * @brief 黄色史莱姆
- */
-class YellowSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B::YELLOW;
-  }
-};
-
-/**
- * @brief 紫色史莱姆
- */
-class PurpleSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(128, 0, 128);
-  }
-};
-
-/**
- * @brief 粉色史莱姆 - 特别小的史莱姆
- */
-class PinkSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(255, 182, 193); // 浅粉色
-  }
-};
-
-/**
- * @brief 冰雪史莱姆 - 攻击有概率赋予“冷冻”减益
- * 
- * 冷冻效果:
- * - 描述: 你的移动速度已降低
- * - 几率: 8.3% (如果未被冰冻)
- * - 持续时间: 10秒
- */
-class IceSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(135, 206, 250); // 淡蓝色 (LightSkyBlue)
-  }
-protected:
-  void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                            const MonsterConfig &config) override;
-};
-
-/**
- * @brief 史莱姆母体 - 死亡时生成1-3只史莱姆宝宝
- */
-class MotherSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(255, 182, 193); // 粉红色 (LightPink)
-  }
-protected:
-  void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                            const MonsterConfig &config) override;
-};
-
-/**
- * @brief 史莱姆宝宝 - 由史莱姆母体死亡时生成
- */
-class BabySlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(144, 238, 144); // 浅绿色 (LightGreen)
-  }
-};
-
-/**
- * @brief 冰雪尖刺史莱姆 - 发射冰雪尖刺，造成冷冻和冰冻减益
- * 
- * 特性:
- * - 当目标进入发射范围时，向周围发射4个冰雪尖刺
- * - 尖刺以抛物线轨迹飞行（受重力影响）
- * - 发射期间不会跳跃
- * - 必然造成冷冻减益，有几率造成冰冻减益
- */
-class SpikedIceSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(100, 149, 237); // 矢车菊蓝 (CornflowerBlue)
-  }
-protected:
-  void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                            const MonsterConfig &config) override;
-};
-
-/**
- * @brief 丛林尖刺史莱姆 - 发射丛林尖刺，造成中毒减益
- * 
- * 特性:
- * - 当目标进入发射范围时，向周围发射4个丛林尖刺
- * - 尖刺以抛物线轨迹飞行（受重力影响）
- * - 发射期间不会跳跃
- * - 37.5%几率造成长时间中毒，25%几率造成短时间中毒
- */
-class SpikedJungleSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(34, 139, 34); // 森林绿 (ForestGreen)
-  }
-protected:
-  void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                            const MonsterConfig &config) override;
-};
-
-/**
- * @brief 伞史莱姆 - 下落时有空气阻力，像撑着伞一样缓缓飘落
- * 
- * 特性:
- * - 跳跃后下落时速度受限
- * - 最大下落速度远低于普通史莱姆
- * - 像撑着伞飘落一样优雅
- */
-class UmbrellaSlimeCreator : public SlimeCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(255, 182, 193); // 浅粉色 (LightPink)
-  }
-protected:
-  void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                            const MonsterConfig &config) override;
-};
-
-// ==================== 僵尸创建器 ====================
-
-/**
- * @brief 僵尸基类创建器 - 提供通用的僵尸创建逻辑
- * 
- * 僵尸特性:
- * - 行走式移动（非跳跃）
- * - 遇到障碍物时跳跃
- * - 追踪目标时若目标在高处则跳跃
- * - 目标跳起时延迟反应后跟着跳
- * - 支持自定义帧序列动画
- */
-class ZombieCreatorBase : public IMonsterCreator {
-public:
-  ecs::EntityId create(ecs::World &world, const MonsterConfig &config,
-                       float x, float y, cocos2d::Node *parentNode) override;
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override;
-
-protected:
-  /**
-   * @brief 创建精灵和物理体（通用）
-   */
-  cocos2d::Sprite* createSprite(const MonsterConfig &config, float x, float y,
-                                 cocos2d::Node *parentNode);
-  
-  /**
-   * @brief 添加基础组件（通用）
-   */
-  void addBaseComponents(ecs::World &world, ecs::EntityId entity,
-                         const MonsterConfig &config, cocos2d::Sprite *sprite);
-  
-  /**
-   * @brief 添加特有组件（子类重写）
-   */
-  virtual void addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                    const MonsterConfig &config) {}
-};
-
-/**
- * @brief 普通僵尸创建器
- */
-class ZombieCreator : public ZombieCreatorBase {
-public:
-  cocos2d::Color3B getFallbackColor(const std::string &monsterId) override {
-    return cocos2d::Color3B(139, 90, 43); // 棕色（僵尸肤色）
-  }
-};
-
 // ==================== 怪物工厂 ====================
 
 /**
  * @class MonsterFactory
- * @brief 怪物工厂 - 根据JSON配置创建ECS实体
+ * @brief 怪物工厂 - 根据JSON配置创建ECS实体（使用EnTT框架）
  *
- * 支持多种怪物类型，每种怪物有独立的创建器：
- * 
- * 史莱姆类:
- * - GreenSlime: 基础史莱姆
- * - BlueSlime: 蓝色史莱姆
- * - RedSlime: 红色史莱姆
- * - YellowSlime: 黄色史莱姆
- * - PurpleSlime: 紫色史莱姆
- * - IceSlime: 冰雪史莱姆 (攻击有概率赋予冷冻减益)
- * 
- * 其他类型 (待实现):
- * - Zombie: 行走式移动的僵尸
- * - Bat: 飞行式移动的蝙蝠
- * - Boss: Boss类怪物
+ * 支持多种怪物类型:
+ * - Slime: 史莱姆类（跳跃移动）
+ * - Zombie: 僵尸类（行走移动）
+ * - Bat: 蝙蝠类（飞行移动，待实现）
  *
  * 使用示例:
  * @code
  * auto& factory = MonsterFactory::getInstance();
- * factory.loadConfig("config/monsters.json");
+ * factory.loadConfigsFromDir("config/slimes");
  *
  * // 创建史莱姆
- * EntityId slime = factory.createMonster(world, "GreenSlime", x, y, parent);
- *
- * // 创建僵尸 (需要先在JSON中配置)
- * EntityId zombie = factory.createMonster(world, "BasicZombie", x, y, parent);
+ * entt::registry registry;
+ * EntityId slime = factory.createMonster(registry, "GreenSlime", x, y, parent);
  * @endcode
  */
 class MonsterFactory {
@@ -459,38 +187,17 @@ public:
   bool loadSingleConfig(const std::string &filePath);
 
   /**
-   * @brief 根据配置创建怪物实体（旧版ECS）
-   * @param world ECS世界
+   * @brief 根据配置创建怪物实体
+   * @param registry EnTT注册表
    * @param monsterId 怪物ID (如 "GreenSlime")
    * @param x X坐标
    * @param y Y坐标
    * @param parentNode 父节点
    * @return 实体ID
    */
-  ecs::EntityId createMonster(ecs::World &world, const std::string &monsterId,
+  ecs::EntityId createMonster(entt::registry &registry, const std::string &monsterId,
                               float x, float y,
                               cocos2d::Node *parentNode = nullptr);
-
-  /**
-   * @brief 根据配置创建怪物实体（EnTT版本）
-   * @param registry EnTT注册表
-   * @param monsterId 怪物ID (如 "GreenSlime")
-   * @param x X坐标
-   * @param y Y坐标
-   * @param parentNode 父节点
-   * @return 实体ID (使用entt::to_integral转换)
-   */
-  ecs::EntityId createMonsterEntt(entt::registry &registry, const std::string &monsterId,
-                                  float x, float y,
-                                  cocos2d::Node *parentNode = nullptr);
-
-  /**
-   * @brief 注册怪物类型创建器
-   * @param type 怪物类型名称 (如 "Slime", "Zombie")
-   * @param creator 创建器实例
-   */
-  void registerCreator(const std::string &type,
-                       std::shared_ptr<IMonsterCreator> creator);
 
   /**
    * @brief 获取怪物配置
@@ -514,16 +221,22 @@ public:
    */
   bool isLoaded() const { return _loaded; }
 
+  /**
+   * @brief 清空所有已加载的配置（用于场景切换）
+   */
+  void clearConfigs() {
+    _configs.clear();
+    _loaded = false;
+  }
+
 private:
-  MonsterFactory();
+  MonsterFactory() = default;
   MonsterFactory(const MonsterFactory &) = delete;
   MonsterFactory &operator=(const MonsterFactory &) = delete;
 
-  void registerDefaultCreators();
   bool parseMonsterConfig(const rapidjson::Value &json, MonsterConfig &config);
 
   std::unordered_map<std::string, MonsterConfig> _configs;
-  std::unordered_map<std::string, std::shared_ptr<IMonsterCreator>> _creators;
   bool _loaded = false;
 };
 

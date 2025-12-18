@@ -1,0 +1,71 @@
+{
+  "id": "Bigger-PincushionZombie",
+  "type": "Zombie",
+  "description": "大型针垫僵尸 - 体型巨大且浑身尖刺，极高的攻击力和防御力",
+
+  "display": {
+    "spriteFolder": "Minor monster/Bigger-PincushionZombie",
+    "spritePrefix": "Bigger-PincushionZombie",
+    "frameCount": 3,
+    "frameSequence": [ 1, 2, 3, 2 ],
+    "frameTime": 0.18,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 34.0,
+    "bodyHeight": 46.0,
+    "bodyHeightOffset": -5,
+    "mass": 1.6,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 60.0,
+    "jumpForce": 490.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.12,
+    "patrolDirectionChangeInterval": 3.5,
+    "patrolDirectionChangeChance": 0.25
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 400.0,
+    "deaggroRange": 500.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 100.0,
+    "attackDamage": 22.0,
+    "attackRange": 38.0,
+    "attackCooldown": 1.15,
+    "defense": 5.0
+  },
+  
+  "loot": [
+    {
+      "itemId": "RottenFlesh",
+      "minCount": 1,
+      "maxCount": 3,
+      "dropChance": 0.85
+    },
+    {
+      "itemId": "IronNeedle",
+      "minCount": 3,
+      "maxCount": 7,
+      "dropChance": 0.6
+    },
+    {
+      "itemId": "ZombieArm",
+      "minCount": 1,
+      "maxCount": 1,
+      "dropChance": 0.05
+    }
+  ]
+}

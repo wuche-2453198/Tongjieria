@@ -2,20 +2,20 @@
   "id": "BabySlime",
   "type": "Slime",
   "description": "史莱姆宝宝，由史莱姆母体死亡时生成",
-  
+
   "display": {
     "spriteFolder": "Minor monster/BabySlime",
     "spritePrefix": "Baby_Slime",
     "frameCount": 2,
     "frameTime": 0.1,
-    "scale": 0.8
+    "scale": 1.0
   },
-  
+
   "physics": {
     "bodyWidth": 30.0,
     "bodyHeight": 21.0,
-    "bodyHeightOffset": -5.0,
-    "mass": 0.6,
+    "bodyHeightOffset": -4,  //正低负高
+    "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,
     "collisionGroup": -1

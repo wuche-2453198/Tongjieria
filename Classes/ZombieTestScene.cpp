@@ -2,6 +2,7 @@
 #include "MainMenuScene.h"
 #include "MonsterFactory.h"
 #include "ecs/SpriteComponent.h"
+#include "ecs/PhysicsContactHandler.h"
 
 USING_NS_CC;
 
@@ -78,6 +79,7 @@ bool ZombieTestScene::init()
 void ZombieTestScene::setupEcsSystems()
 {
   auto &factory = MonsterFactory::getInstance();
+  factory.clearConfigs();  // 清空之前场景的配置
   factory.loadConfigsFromDir("config/zombies");
 
   // ==================== 使用EnTT版本Systems（僵尸专用）====================
@@ -88,7 +90,7 @@ void ZombieTestScene::setupEcsSystems()
   // 按优先级顺序添加Systems（仅僵尸相关）
   _systemManager.addSystem<ecs::AggroSystemEntt>();
   _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
-  _systemManager.addSystem<ecs::WalkMovementSystemEntt>();
+  _systemManager.addSystem<ecs::WarriorAISystemEntt>();
   _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();
   _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();
   _systemManager.addSystem<ecs::HealthSystemEntt>();
@@ -276,154 +278,57 @@ void ZombieTestScene::createEcsZombie()
   auto &factory = MonsterFactory::getInstance();
   
   float groundTop = origin.y + 50.0f;
-  float spacing = visibleSize.width / 5.0f;
   
-  // 生成混合的僵尸：普通僵尸和31px小僵尸
-  for (int i = 0; i < 6; i++) {
-    float x = origin.x + spacing * (i + 0.5f);
+  // 所有僵尸类型
+  const char* zombieTypes[] = {
+    "Zombie",
+    "31px-Zombie",
+    "Bigger-Zombie",
+    "BaldZombie",
+    "29px-BaldZombie",
+    "Bigger-BaldZombie",
+    "PincushionZombie",
+    "32px-PincushionZombie",
+    "Bigger-PincushionZombie"
+  };
+  int numTypes = sizeof(zombieTypes) / sizeof(zombieTypes[0]);
+  
+  float spacing = visibleSize.width / (numTypes + 1);
+  
+  // 生成所有类型的僵尸
+  for (int i = 0; i < numTypes; i++) {
+    float x = origin.x + spacing * (i + 1);
     float y = groundTop + 100.0f;
-    
-    // 交替生成普通僵尸和小型僵尸
-    const char* zombieType = (i % 2 == 0) ? "Zombie" : "31px-Zombie";
-    factory.createMonsterEntt(_registry, zombieType, x, y, this);
+    factory.createMonster(_registry, zombieTypes[i], x, y, this);
   }
 }
 
 void ZombieTestScene::setupSharedContactListener()
 {
-  _sharedContactListener = EventListenerPhysicsContact::create();
-
-  _sharedContactListener->onContactBegin = [this](PhysicsContact &contact) {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-
-    // 地面检测 - 检查碰撞法线，只有向上的接触才算地面
-    PhysicsBody *dynamicBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      dynamicIsA = false;
-    } else {
-      return true;
-    }
-
-    Node *dynamicNode = dynamicBody->getNode();
-    if (!dynamicNode) return true;
-    
-    // 获取接触法线（指向动态物体的方向）
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    
-    // 地面法线实际是向下的(0, -1)，墙壁法线是水平的
-    // 检查normal.y < -0.3，即向下的法线才算地面
-    bool isGroundContact = (normal.y < -0.3f);
-    
-    if (isGroundContact) {
-      if (dynamicNode == _fakePlayer) {
+  // 使用PhysicsContactHandler创建碰撞监听器，自定义玩家地面检测逻辑
+  _sharedContactListener = ecs::PhysicsContactHandler::createContactListener(
+    _registry,
+    // 自定义碰撞开始处理：玩家地面检测
+    [this](PhysicsContact& contact, const ecs::PhysicsContactHandler::ContactInfo& info) -> bool {
+      // 处理玩家地面检测（不在NodeEntityMap中）
+      if (info.isValid && info.isGroundContact && info.dynamicNode == _fakePlayer) {
         _playerOnGround = true;
         _playerGroundContactCount++;
       }
-
-      ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
-      if (entity != ecs::INVALID_ENTITY) {
-        auto enttEntity = static_cast<entt::entity>(entity);
-        if (_registry.valid(enttEntity)) {
-          auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
-          if (ground) {
-            ground->isOnGround = true;
-            ground->groundContactCount++;
-          }
+      return true;  // 继续执行默认地面检测
+    },
+    // 自定义碰撞分离处理：玩家地面检测
+    [this](PhysicsContact& contact, const ecs::PhysicsContactHandler::ContactInfo& info) {
+      // 处理玩家地面检测（不在NodeEntityMap中）
+      if (info.isValid && info.isGroundContact && info.dynamicNode == _fakePlayer) {
+        _playerGroundContactCount--;
+        if (_playerGroundContactCount <= 0) {
+          _playerOnGround = false;
+          _playerGroundContactCount = 0;
         }
       }
     }
-    return true;
-  };
-
-  _sharedContactListener->onContactSeparate = [this](PhysicsContact &contact) {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    PhysicsBody *dynamicBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      dynamicIsA = false;
-    } else {
-      return;
-    }
-
-    Node *dynamicNode = dynamicBody->getNode();
-    if (!dynamicNode) return;
-    
-    // 检查法线，只有地面接触分离时才减少计数
-    // 这样可以避免墙角bug（墙壁接触没有增加计数，分离时也不应减少）
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    bool wasGroundContact = (normal.y < -0.3f);
-    
-    if (!wasGroundContact) {
-      // 这不是地面接触，直接返回，不减少计数
-      return;
-    }
-
-    if (dynamicNode == _fakePlayer) {
-      _playerGroundContactCount--;
-      if (_playerGroundContactCount <= 0) {
-        _playerOnGround = false;
-        _playerGroundContactCount = 0;
-      }
-    }
-
-    ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
-    if (entity != ecs::INVALID_ENTITY) {
-      auto enttEntity = static_cast<entt::entity>(entity);
-      if (_registry.valid(enttEntity)) {
-        auto* ground = _registry.try_get<ecs::GroundDetectorComponent>(enttEntity);
-        if (ground) {
-          ground->groundContactCount--;
-          if (ground->groundContactCount <= 0) {
-            ground->isOnGround = false;
-            ground->groundContactCount = 0;
-          }
-        }
-      }
-    }
-  };
-
-  // 预处理回调：防止撞墙时产生向上的滑动
-  _sharedContactListener->onContactPreSolve = [this](PhysicsContact &contact, PhysicsContactPreSolve &solve) {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    
-    PhysicsBody *dynamicBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      dynamicIsA = false;
-    } else {
-      return true;
-    }
-
-    // 获取接触法线
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    
-    // 如果是侧面碰撞（墙壁），阻止垂直方向的反弹
-    if (std::abs(normal.x) > 0.7f && std::abs(normal.y) < 0.3f) {
-      // 这是侧面碰撞，设置弹性为0防止滑上去
-      solve.setRestitution(0.0f);
-      solve.setFriction(0.0f);
-    }
-    return true;
-  };
+  );
 
   _eventDispatcher->addEventListenerWithSceneGraphPriority(_sharedContactListener, this);
 }
@@ -481,8 +386,6 @@ void ZombieTestScene::updateFakePlayerPosition(float delta)
   }
   
   body->setVelocity(velocity);
-  // 射线预测，防止玩家物理体穿入静态障碍
-  ecs::performRaycastCorrection(body, delta);
   
   if (_playerLabel) {
     _playerLabel->setPosition(Vec2(_fakePlayer->getPositionX(), _fakePlayer->getPositionY() + 40));

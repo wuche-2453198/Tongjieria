@@ -1,0 +1,55 @@
+{
+  "id": "DemonEye",
+  "type": "DemonEye",
+  "description": "飞行追踪类怪物，缓慢转向追踪玩家",
+  
+  "display": {
+    "spriteFolder": "Minor monster/DemonEye",
+    "spritePrefix": "DemonEye",
+    "frameCount": 2,
+    "frameTime": 0.15,
+    "scale": 1.0
+  },
+  
+  "physics": {
+    "bodyWidth": 38.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": -10.0,
+    "mass": 1.5,
+    "friction": 0.0,
+    "restitution": 0.95,
+    "collisionGroup": -1,
+    "useGravity": false
+  },
+  
+  "movement": {
+    "type": "fly",
+    "flySpeed": 180.0,
+    "maxSpeed": 400.0,
+    "acceleration": 200.0,
+    "turnRate": 1.2,
+    "bounceArcDuration": 0.8,
+    "wobbleAmplitude": 0.3,
+    "wobbleFrequency": 2.0
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 1200.0,
+    "deaggroRange": 1400.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 60.0,
+    "attackDamage": 18.0,
+    "attackRange": 40.0,
+    "attackCooldown": 1.0,
+    "defense": 2.0
+  },
+  
+  "loot": [
+    {"itemId": "lens", "minCount": 1, "maxCount": 1, "dropChance": 0.33},
+    {"itemId": "coin", "minCount": 10, "maxCount": 30, "dropChance": 0.6}
+  ]
+}

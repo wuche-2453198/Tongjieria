@@ -3,7 +3,6 @@
 #include <entt/entt.hpp>
 #include "Components.h"
 #include "SpriteComponent.h"
-#include "System.h"  // 使用System.h中的SystemPriority定义
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -11,16 +10,24 @@
 /**
  * @file SystemsEntt.h
  * @brief EnTT版本的System实现
- * 
- * 渐进式迁移策略：
- * 1. 保留ISystemEntt基类接口（兼容原有结构）
- * 2. 将World替换为Registry
- * 3. 逐个迁移System到此文件
  */
 
 namespace ecs {
 
-// SystemPriority已在System.h中定义，无需重复
+// ==================== 系统优先级定义 ====================
+
+/**
+ * @brief 系统执行优先级（数值越小越先执行）
+ */
+namespace SystemPriority {
+constexpr int INPUT = 0;
+constexpr int PHYSICS = 100;
+constexpr int COLLISION = 200;
+constexpr int AI = 300;
+constexpr int MOVEMENT = 400;
+constexpr int ANIMATION = 500;
+constexpr int RENDER = 600;
+}
 
 // ==================== EnTT System基类 ====================
 
@@ -67,7 +74,7 @@ public:
     }
 };
 
-// ==================== 生命值系统（EnTT版本） ====================
+// ==================== 生命值系统 ====================
 
 /**
  * @brief 生命值系统 - 处理无敌时间和死亡
@@ -89,6 +96,9 @@ public:
             // 更新无敌时间
             if (health.invincibleTimer > 0) {
                 health.invincibleTimer -= delta;
+                if (health.invincibleTimer < 0.0f) {
+                    health.invincibleTimer = 0.0f;
+                }
             }
         });
     }
@@ -110,6 +120,9 @@ public:
         view.each([delta](auto entity, CombatComponent& combat) {
             if (combat.attackTimer > 0) {
                 combat.attackTimer -= delta;
+                if (combat.attackTimer < 0.0f) {
+                    combat.attackTimer = 0.0f;
+                }
             }
         });
     }
@@ -207,7 +220,7 @@ public:
     }
 };
 
-// ==================== 减益系统（EnTT版本） ====================
+// ==================== 减益系统 ====================
 
 /**
  * @brief 减益效果系统 - 处理冷冻、冰冻和中毒减益的计时
@@ -267,7 +280,7 @@ public:
     }
 };
 
-// ==================== 史莱姆同步系统（EnTT版本） ====================
+// ==================== 史莱姆同步系统 ====================
 
 /**
  * @brief 史莱姆同步系统 - 从精灵读取位置到Transform（物理引擎驱动精灵位置）
@@ -285,13 +298,13 @@ public:
             if (!sprite.sprite)
                 return;
 
-            // 物理引擎自动更新精灵位置，我们只需要读取它
+            // 物理引擎自动更新精灵位置
             transform.position = sprite.sprite->getPosition();
         });
     }
 };
 
-// ==================== 怪物同步系统（EnTT版本） ====================
+// ==================== 怪物同步系统 ====================
 
 /**
  * @brief 怪物同步系统 - 同步Transform位置到精灵（从物理体读取）
@@ -320,15 +333,21 @@ public:
     }
 };
 
-// ==================== 地面检测系统（EnTT版本） ====================
+// ==================== 地面检测系统 ====================
 
 /**
  * @brief 地面检测系统 - 根据物理体速度判断地面和静止状态
+ * 
+ * 动态阻尼：地面时高阻尼快速停止，空中低阻尼保持灵活
  */
 class GroundDetectorSystemEntt : public ISystemEntt {
 public:
     const char* getName() const override { return "GroundDetectorSystem"; }
     int getPriority() const override { return SystemPriority::PHYSICS + 10; }
+
+    // 阻尼配置
+    static constexpr float GROUND_DAMPING = 8.0f;  // 地面高阻尼，快速停止
+    static constexpr float AIR_DAMPING = 0.3f;     // 空中低阻尼，保持灵活
 
     void update(float delta) override {
         auto view = _registry->view<GroundDetectorComponent, SlimeSpriteComponent>();
@@ -340,11 +359,21 @@ public:
             // 判断是否静止
             ground.isStill = std::abs(velocity.x) < ground.stillThreshold &&
                            std::abs(velocity.y) < ground.stillThreshold;
+            
+            // 动态切换阻尼：地面高阻尼防止滑行，空中低阻尼保持跳跃灵活性
+            auto* body = sprite.getPhysicsBody();
+            if (body) {
+                if (ground.isOnGround) {
+                    body->setLinearDamping(GROUND_DAMPING);
+                } else {
+                    body->setLinearDamping(AIR_DAMPING);
+                }
+            }
         });
     }
 };
 
-// ==================== 怪物地面检测系统（EnTT版本） ====================
+// ==================== 怪物地面检测系统 ====================
 
 /**
  * @brief 怪物地面检测系统 - 根据物理体速度判断MonsterSpriteComponent的地面状态
@@ -368,7 +397,7 @@ public:
     }
 };
 
-// ==================== 缓降系统（EnTT版本） ====================
+// ==================== 缓降系统 ====================
 
 /**
  * @brief 缓降系统 - 处理伞史莱姆等下落时的空气阻力
@@ -423,13 +452,10 @@ public:
     }
 };
 
-// ==================== 仇恨检测系统（EnTT版本） ====================
+// ==================== 仇恨检测系统 ====================
 
 /**
  * @brief 仇恨检测系统 - 检测目标并更新仇恨状态
- * 
- * EnTT优化：使用view直接获取玩家实体，O(1)复杂度
- * 原版：遍历所有实体查找tag，O(N)复杂度
  */
 class AggroSystemEntt : public ISystemEntt {
 public:
@@ -481,11 +507,7 @@ public:
 
 private:
     /**
-     * @brief 根据tag查找目标实体（EnTT高效版本）
-     * 
-     * 性能对比：
-     * - 旧版：O(N) 遍历所有实体
-     * - EnTT：O(1) 直接从view获取
+     * @brief 根据tag查找目标实体
      */
     entt::entity findTargetByTag(const std::string& tag) {
         // 目前只支持查找玩家
@@ -506,7 +528,7 @@ private:
     }
 };
 
-// ==================== 跳跃移动系统（EnTT版本） ====================
+// ==================== 跳跃移动系统 ====================
 
 /**
  * @brief 跳跃移动系统 - 管理跳跃冷却和执行跳跃
@@ -579,60 +601,84 @@ public:
 // ==================== 行走移动系统（EnTT版本） ====================
 
 /**
- * @brief 行走移动系统 - 管理僵尸等行走类怪物的移动逻辑
+ * @brief 战士AI系统 - 管理僵尸等行走类怪物的移动和AI逻辑
+ * 
+ * 行为特点：
+ * - 行走追踪玩家
+ * - 跳过洞和障碍物
+ * - 尝试垂直对齐目标高度
+ * - 追击失败时后退重试
  */
-class WalkMovementSystemEntt : public ISystemEntt {
+class WarriorAISystemEntt : public ISystemEntt {
 public:
-    const char* getName() const override { return "WalkMovementSystem"; }
+    const char* getName() const override { return "WarriorAISystem"; }
     int getPriority() const override { return SystemPriority::MOVEMENT; }
 
     void update(float delta) override {
-        auto view = _registry->view<WalkMovementComponent, GroundDetectorComponent,
+        auto view = _registry->view<WarriorMovementComponent, GroundDetectorComponent,
                                      AggroComponent, MonsterSpriteComponent, TransformComponent>();
         
-        view.each([delta, this](auto entity, WalkMovementComponent& walk,
+        view.each([delta, this](auto entity, WarriorMovementComponent& warrior,
                                GroundDetectorComponent& ground, AggroComponent& aggro,
                                MonsterSpriteComponent& sprite, TransformComponent& transform) {
             
-            // 检测落地
-            if (ground.isOnGround && walk.isJumping) {
-                walk.onLand();
+            // 检测落地并判断跳跃是否成功
+            if (ground.isOnGround && warrior.isJumping) {
+                warrior.onLand();
+                
+                // 检测跳跃是否失败（水平位移很小）
+                if (warrior.wasJumping) {
+                    if (warrior.checkJumpFailed(transform.position)) {
+                        warrior.onJumpFailed();
+                        CCLOG("Entity %u: Jump failed (fail count: %d)", 
+                              entt::to_integral(entity), warrior.jumpFailCount);
+                    } else {
+                        warrior.onJumpSuccess();
+                    }
+                }
             }
+            warrior.wasJumping = warrior.isJumping;
             
             // 更新跳跃冷却
             if (ground.isOnGround) {
-                walk.updateJumpCooldown(delta);
+                warrior.updateJumpCooldown(delta);
             }
             
             // 更新障碍物跳跃冷却
-            if (ground.isOnGround && walk.obstacleJumpTimer > 0) {
-                walk.obstacleJumpTimer -= delta;
+            if (ground.isOnGround && warrior.obstacleJumpTimer > 0) {
+                warrior.obstacleJumpTimer -= delta;
             }
+            
+            // 更新后退状态
+            warrior.updateRetreat(delta);
             
             cocos2d::Vec2 currentVelocity = sprite.getVelocity();
             bool shouldJump = false;
             float targetHeightDiff = 0.0f;
             float horizontalDistToTarget = 9999.0f;
+            float totalDistToTarget = 9999.0f;
             
-            // 计算与目标的水平距离
+            // 计算与目标的距离
             if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
                 auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
                 auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
                 if (targetTransform) {
                     horizontalDistToTarget = std::abs(targetTransform->position.x - transform.position.x);
+                    float verticalDist = std::abs(targetTransform->position.y - transform.position.y);
+                    totalDistToTarget = std::sqrt(horizontalDistToTarget * horizontalDistToTarget + 
+                                                  verticalDist * verticalDist);
                 }
             }
             
             // 更新反应跳跃计时器
-            if (walk.pendingReactionJump) {
-                walk.targetJumpReactionTimer += delta;
-                if (walk.targetJumpReactionTimer >= walk.targetJumpReactionTime) {
-                    walk.pendingReactionJump = false;
-                    walk.targetJumpReactionTimer = 0.0f;
-                    if (ground.isOnGround && walk.canJump() && 
-                        horizontalDistToTarget < walk.jumpDetectionRange) {
-                        executeJump(walk, sprite, ground);
-                        CCLOG("Entity %u: Reaction jump (target jumped)", entt::to_integral(entity));
+            if (warrior.pendingReactionJump) {
+                warrior.targetJumpReactionTimer += delta;
+                if (warrior.targetJumpReactionTimer >= warrior.targetJumpReactionTime) {
+                    warrior.pendingReactionJump = false;
+                    warrior.targetJumpReactionTimer = 0.0f;
+                    if (ground.isOnGround && warrior.canJump() && 
+                        horizontalDistToTarget < warrior.jumpDetectionRange) {
+                        executeJump(warrior, sprite, ground, transform.position);
                     }
                 }
             }
@@ -643,110 +689,152 @@ public:
                 auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
                 if (targetTransform) {
                     
-                    // 设置移动方向
-                    float dirX = targetTransform->position.x - transform.position.x;
-                    if (std::abs(dirX) > 5.0f) {
-                        walk.currentDirection = dirX > 0 ? 1 : -1;
-                    }
-                    
                     // 计算高度差
                     targetHeightDiff = targetTransform->position.y - transform.position.y;
                     
-                    // 检测目标是否刚跳起来
-                    if (walk.targetJumpEnabled && !walk.pendingReactionJump &&
-                        horizontalDistToTarget < walk.jumpDetectionRange) {
-                        float targetCurrentY = targetTransform->position.y;
-                        float targetYDelta = targetCurrentY - walk.targetLastY;
+                    // ===== 战士AI：后退重试机制（只在连续跳跃失败时触发） =====
+                    if (warrior.isRetreating) {
+                        // 后退时反向移动
+                        float dirX = targetTransform->position.x - transform.position.x;
+                        warrior.currentDirection = dirX > 0 ? -1 : 1;  // 反向
+                    } else {
+                        // 正常追击
+                        float dirX = targetTransform->position.x - transform.position.x;
+                        if (std::abs(dirX) > 5.0f) {
+                            warrior.currentDirection = dirX > 0 ? 1 : -1;
+                        }
                         
-                        if (targetYDelta > 20.0f && walk.targetLastY > 0) {
-                            walk.pendingReactionJump = true;
-                            walk.targetJumpReactionTimer = 0.0f;
-                            CCLOG("Entity %u: Detected target jump, will react in %.1fs", 
-                                  entt::to_integral(entity), walk.targetJumpReactionTime);
+                        // 检测是否需要后退（连续多次跳跃失败）
+                        if (warrior.shouldRetreat() && ground.isOnGround) {
+                            warrior.startRetreat();
+                            CCLOG("Entity %u: Multiple jump failures, retreating to retry", entt::to_integral(entity));
                         }
                     }
-                    walk.targetLastY = targetTransform->position.y;
                     
-                    // 目标在高处，需要跳跃追击
-                    if (targetHeightDiff > walk.targetHeightThreshold && 
-                        ground.isOnGround && walk.canJump() &&
-                        horizontalDistToTarget < walk.jumpDetectionRange) {
+                    // 检测目标是否刚跳起来（跟随跳跃）
+                    if (warrior.targetJumpEnabled && !warrior.pendingReactionJump &&
+                        horizontalDistToTarget < warrior.jumpDetectionRange && !warrior.isRetreating) {
+                        float targetCurrentY = targetTransform->position.y;
+                        float targetYDelta = targetCurrentY - warrior.targetLastY;
+                        
+                        if (targetYDelta > 20.0f && warrior.targetLastY > 0) {
+                            warrior.pendingReactionJump = true;
+                            warrior.targetJumpReactionTimer = 0.0f;
+                        }
+                    }
+                    warrior.targetLastY = targetTransform->position.y;
+                    
+                    // ===== 战士AI：垂直对齐 - 目标在高处时跳跃 =====
+                    if (warrior.verticalAlignEnabled && !warrior.isRetreating &&
+                        targetHeightDiff > warrior.verticalAlignThreshold && 
+                        ground.isOnGround && warrior.canJump() &&
+                        horizontalDistToTarget < warrior.jumpDetectionRange) {
                         shouldJump = true;
                     }
                 }
             } else {
-                // 无仇恨目标：巡逻模式
-                walk.patrolTimer += delta;
-                if (walk.patrolTimer >= walk.patrolDirectionChangeInterval) {
-                    walk.patrolTimer = 0.0f;
-                    if ((float)rand() / RAND_MAX < walk.patrolDirectionChangeChance) {
-                        walk.patrolDirection *= -1;
-                    }
+                // 无仇恨目标：巡逻模式（只在遇到障碍物跳跃失败时换向）
+                warrior.currentDirection = warrior.patrolDirection;
+                sprite.setFacing(warrior.currentDirection > 0);
+                
+                // 巡逻时如果连续跳跃失败，换方向
+                if (warrior.shouldRetreat() && ground.isOnGround) {
+                    warrior.patrolDirection *= -1;
+                    warrior.currentDirection = warrior.patrolDirection;
+                    warrior.jumpFailCount = 0;
+                    warrior.retreatCooldownTimer = warrior.retreatCooldown;
+                    CCLOG("Entity %u: Patrol direction changed due to obstacle", entt::to_integral(entity));
                 }
-                walk.currentDirection = walk.patrolDirection;
-                sprite.setFacing(walk.currentDirection > 0);
                 
-                walk.targetLastY = 0.0f;
-                walk.pendingReactionJump = false;
+                warrior.targetLastY = 0.0f;
+                warrior.pendingReactionJump = false;
             }
             
-            // 检测障碍物卡住
-            if (walk.shouldObstacleJump(transform.position, delta) && ground.isOnGround) {
+            // 检测障碍物卡住（也用于跳过洞）
+            if (warrior.shouldObstacleJump(transform.position, delta) && ground.isOnGround) {
                 shouldJump = true;
-                CCLOG("Entity %u: Obstacle detected (stuck), jumping", entt::to_integral(entity));
             }
             
-            // 即时障碍物检测
-            if (walk.useInstantObstacleDetection && ground.isOnGround && 
-                walk.initialized && walk.canJump() && !shouldJump) {
+            // ===== 战士AI：即时障碍物/洞检测 =====
+            if (warrior.gapJumpEnabled && ground.isOnGround && 
+                warrior.initialized && warrior.canJump() && !shouldJump && !warrior.isRetreating) {
                 float actualVelX = std::abs(currentVelocity.x);
-                float expectedVelX = walk.walkSpeed;
+                float expectedVelX = warrior.walkSpeed;
                 
-                if (walk.isWalking && expectedVelX > 10.0f && 
-                    actualVelX < expectedVelX * walk.actualSpeedRatio) {
+                // 速度差检测（卡住或前方有洞）
+                if (warrior.isWalking && expectedVelX > 10.0f && 
+                    actualVelX < expectedVelX * warrior.actualSpeedRatio) {
                     shouldJump = true;
-                    CCLOG("Entity %u: Obstacle detected (speed diff), jumping", entt::to_integral(entity));
                 }
             }
             
             // 执行跳跃
-            if (shouldJump && ground.isOnGround && walk.canJump()) {
-                executeJump(walk, sprite, ground);
+            if (shouldJump && ground.isOnGround && warrior.canJump()) {
+                executeJump(warrior, sprite, ground, transform.position);
             }
+            
+            // 计算目标水平速度
+            float moveSpeed = warrior.isRetreating ? warrior.walkSpeed * 0.6f : warrior.walkSpeed;
+            float targetVelX = moveSpeed * warrior.currentDirection;
             
             // 应用水平移动和朝向
             if (ground.isOnGround) {
-                walk.expectedSpeed = walk.walkSpeed;
-                currentVelocity.x = walk.walkSpeed * walk.currentDirection;
+                // 地面：直接设置速度
+                warrior.expectedSpeed = warrior.walkSpeed;
+                currentVelocity.x = targetVelX;
                 sprite.setVelocity(currentVelocity);
-                walk.isWalking = true;
-                if (std::abs(currentVelocity.x) > 1.0f) {
-                    bool movingRight = currentVelocity.x > 0;
-                    sprite.setFacing(!movingRight);
+                warrior.isWalking = true;
+            } else {
+                // 空中：持续控制水平速度，确保能越过障碍
+                currentVelocity = sprite.getVelocity();
+                // 如果空中水平速度不足，强制设置为目标速度
+                if (std::abs(currentVelocity.x) < std::abs(targetVelX) * 0.5f) {
+                    currentVelocity.x = targetVelX;
+                    sprite.setVelocity(currentVelocity);
                 }
             }
             
+            // 更新朝向
+            if (std::abs(targetVelX) > 1.0f) {
+                bool movingRight = targetVelX > 0;
+                sprite.setFacing(!movingRight);
+            }
+            
             // 更新跳跃状态
-            walk.isJumping = !ground.isOnGround;
+            warrior.isJumping = !ground.isOnGround;
         });
     }
 
 private:
-    void executeJump(WalkMovementComponent& walk, MonsterSpriteComponent& sprite,
-                    GroundDetectorComponent& ground) {
+    void executeJump(WarriorMovementComponent& warrior, MonsterSpriteComponent& sprite,
+                    GroundDetectorComponent& ground, const cocos2d::Vec2& currentPos) {
         cocos2d::Vec2 currentVel = sprite.getVelocity();
-        cocos2d::Vec2 jumpVel(currentVel.x, walk.jumpForce);
+        
+        // 记录跳跃前位置，用于后续判断跳跃是否成功
+        warrior.onJumpStart(currentPos);
+        
+        // 如果当前水平速度很小（被卡住），使用AI期望的方向速度
+        float jumpHorizontalVel = currentVel.x;
+        if (std::abs(jumpHorizontalVel) < warrior.walkSpeed * 0.3f) {
+            // 被卡住时，给予AI期望方向的水平速度
+            jumpHorizontalVel = warrior.walkSpeed * warrior.currentDirection;
+        }
+        
+        cocos2d::Vec2 jumpVel(jumpHorizontalVel, warrior.jumpForce);
         sprite.setVelocity(jumpVel);
         
-        walk.onJump();
-        walk.obstacleJumpTimer = walk.obstacleJumpCooldown;
-        walk.stuckTime = 0.0f;
+        warrior.onJump();
+        warrior.obstacleJumpTimer = warrior.obstacleJumpCooldown;
+        warrior.stuckTime = 0.0f;
         ground.isOnGround = false;
-        walk.isJumping = true;
+        warrior.isJumping = true;
     }
 };
 
-// ==================== 投射物系统（EnTT版本） ====================
+// 为了向后兼容，保留别名
+using WalkMovementSystemEntt = WarriorAISystemEntt;
+
+// ==================== 投射物系统 ====================
 
 /**
  * @brief 投射物系统 - 更新投射物位置、旋转和生命周期
@@ -761,14 +849,15 @@ public:
         
         auto view = _registry->view<ProjectileComponent, ProjectileSpriteComponent, TransformComponent>();
         
-        view.each([delta, &toDestroy](auto entity, ProjectileComponent& proj,
-                                      ProjectileSpriteComponent& sprite,
-                                      TransformComponent& transform) {
+        for (auto entity : view) {
+            auto& proj = view.get<ProjectileComponent>(entity);
+            auto& sprite = view.get<ProjectileSpriteComponent>(entity);
+            auto& transform = view.get<TransformComponent>(entity);
             // 更新生命周期
             proj.lifetime -= delta;
             if (proj.lifetime <= 0 || proj.hasHit) {
                 toDestroy.push_back(entity);
-                return;
+                continue;
             }
             
             // 从物理体同步位置和旋转
@@ -782,7 +871,7 @@ public:
                     sprite.sprite->setRotation(-rotAngle + 90.0f);
                 }
             }
-        });
+        }
         
         // 销毁过期的投射物
         for (auto entity : toDestroy) {
@@ -791,7 +880,7 @@ public:
     }
 };
 
-// ==================== 投射物攻击系统（EnTT版本） ====================
+// ==================== 投射物攻击系统 ====================
 
 /**
  * @brief 投射物攻击系统 - 处理投射物发射
@@ -869,7 +958,7 @@ private:
             velocity.x = cos(radians) * attack.projectileSpeed;
             velocity.y = sin(radians) * attack.verticalImpulse;
             
-            // 创建投射物实体（EnTT方式）
+            // 创建投射物实体
             auto projectile = _registry->create();
             
             // 添加变换组件
@@ -897,6 +986,16 @@ private:
             // 创建投射物精灵
             auto& projSprite = _registry->emplace<ProjectileSpriteComponent>(projectile);
             projSprite.sprite = cocos2d::Sprite::create(attack.projectileSpritePath);
+            
+            // 如果贴图加载失败，使用纯色方块
+            if (!projSprite.sprite || !projSprite.sprite->getTexture()) {
+                CCLOG("Failed to load projectile sprite '%s', using fallback", 
+                      attack.projectileSpritePath.c_str());
+                projSprite.sprite = cocos2d::Sprite::create();
+                projSprite.sprite->setTextureRect(
+                    cocos2d::Rect(0, 0, attack.projectileSpriteWidth, attack.projectileSpriteHeight));
+                projSprite.sprite->setColor(cocos2d::Color3B(100, 200, 255)); // 蓝色冰刺
+            }
             
             if (projSprite.sprite) {
                 projSprite.sprite->retain();
@@ -931,7 +1030,7 @@ private:
                 float rotAngle = atan2(velocity.y, velocity.x) * 180.0f / M_PI;
                 projSprite.sprite->setRotation(-rotAngle + 90.0f);
                 
-                // 注册到NodeEntityMap（使用EntityId）
+                // 注册到NodeEntityMap
                 NodeEntityMap::getInstance().registerNode(projSprite.sprite, 
                                                          entt::to_integral(projectile));
             }
@@ -944,7 +1043,296 @@ private:
     }
 };
 
-// ==================== System管理器（EnTT版本） ====================
+// ==================== 恶魔眼AI系统 ====================
+
+/**
+ * @brief 恶魔眼AI系统 - 飞行追踪类怪物AI
+ * 
+ * 行为特点：
+ * - 飞行追踪玩家（无重力）
+ * - 缓慢转向，转弯速率较慢
+ * - 撞墙/物块时弧形回弹
+ * - 被击退时弧形轨迹回弹
+ */
+class DemonEyeAISystemEntt : public ISystemEntt {
+public:
+    const char* getName() const override { return "DemonEyeAISystem"; }
+    int getPriority() const override { return SystemPriority::MOVEMENT; }
+
+    void update(float delta) override {
+        auto view = _registry->view<DemonEyeMovementComponent, AggroComponent,
+                                     MonsterSpriteComponent, TransformComponent>();
+        
+        view.each([delta, this](auto entity, DemonEyeMovementComponent& demon,
+                               AggroComponent& aggro, MonsterSpriteComponent& sprite,
+                               TransformComponent& transform) {
+            
+            if (!sprite.sprite) return;
+
+            // 获取目标位置（如果有仇恨）
+            cocos2d::Vec2 targetPos = cocos2d::Vec2::ZERO;
+            bool hasTarget = false;
+            
+            // 验证aggro组件状态
+            if (aggro.hasAggro && aggro.targetEntity != INVALID_ENTITY) {
+                targetPos = transform.position + aggro.directionToTarget * aggro.distanceToTarget;
+                hasTarget = true;
+            }
+
+            // 更新冲刺冷却
+            if (demon.dashCooldownTimer > 0.0f) {
+                demon.dashCooldownTimer -= delta;
+            }
+            
+            if (!hasTarget) {
+                // 无目标：巡逻
+                if (demon.aiState != DemonEyeMovementComponent::HOVERING) {
+                    demon.aiState = DemonEyeMovementComponent::HOVERING;
+                }
+                updatePatrol(demon, delta);
+                demon.smoothTurn(delta);
+            } else {
+                // 有目标：根据状态执行AI
+                cocos2d::Vec2 toTarget = targetPos - transform.position;
+                float dist = toTarget.length();
+                
+                switch (demon.aiState) {
+                    case DemonEyeMovementComponent::HOVERING: {
+                        // 盘旋状态：更激进地追踪玩家
+                        // 惯性期检查：只有当aiTimer >= 0时才重新计算目标角度
+                        if (demon.aiTimer >= 0.0f) {
+                            // 直接朝向目标移动，更具攻击性
+                            cocos2d::Vec2 desiredDir = toTarget;
+                            if (!desiredDir.isZero()) desiredDir.normalize();
+                            demon.targetAngle = atan2(desiredDir.y, desiredDir.x);
+                            
+                            // 检查是否满足冲刺条件（优化触发范围和预判）
+                            bool isAbove = transform.position.y > targetPos.y + 30.0f;
+                            bool horizontalInRange = abs(toTarget.x) < 250.0f; // 增加水平触发范围
+                            bool verticalInRange = toTarget.y < -30.0f && toTarget.y > -300.0f; // 优化垂直范围
+                            
+                            if (isAbove && horizontalInRange && verticalInRange && demon.dashCooldownTimer <= 0.0f) {
+                                demon.aiTimer += delta;
+                                if (demon.aiTimer > 0.6f) { // 减少蓄力时间，提高反应速度
+                                    demon.aiState = DemonEyeMovementComponent::DASHING;
+                                    demon.aiTimer = 0.0f;
+                                    // 预判玩家位置：考虑玩家当前移动趋势
+                                    auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
+                                    auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
+                                    if (targetTransform) {
+                                        // 简单预判：假设玩家保持当前速度0.5秒
+                                        cocos2d::Vec2 predictedPos = targetPos + aggro.directionToTarget * 100.0f;
+                                        cocos2d::Vec2 dashDirection = (predictedPos - transform.position).getNormalized();
+                                        demon.targetAngle = atan2(dashDirection.y, dashDirection.x);
+                                        demon.currentAngle = demon.targetAngle; // 立即对准目标
+                                    }
+                                }
+                            } else {
+                                demon.aiTimer = 0.0f;
+                            }
+                        } else {
+                            // 惯性期内：保持当前方向
+                            demon.aiTimer += delta;
+                        }
+                        
+                        // 动态调整转弯速率：准备冲刺时增加角速度
+                        float originalTurnRate = demon.turnRate;
+                        bool isPreparingDash = (demon.aiTimer > 0.0f && demon.aiTimer < 0.6f);
+                        bool closeToTarget = hasTarget && aggro.distanceToTarget < 400.0f;
+                        
+                        if (isPreparingDash && closeToTarget) {
+                            // 冲刺准备期：大幅提高转弯速率，快速调整到最佳攻击角度
+                            demon.turnRate *= 3.0f; 
+                        } else if (closeToTarget) {
+                            // 接近目标时：适度提高转弯速率，增强追踪能力
+                            demon.turnRate *= 2.0f;
+                        }
+                        
+                        demon.smoothTurn(delta);
+                        
+                        // 恢复原始转弯速率
+                        demon.turnRate = originalTurnRate;
+                        break;
+                    }
+                    
+                    case DemonEyeMovementComponent::DASHING: {
+                        // 俯冲攻击 - 改进的追踪逻辑
+                        demon.aiTimer += delta;
+                        
+                        // 冲刺分为三个阶段：加速阶段、追踪阶段、收尾阶段
+                        if (demon.aiTimer < 0.2f) {
+                            // 阶段1（0-0.2s）：加速阶段，保持初始方向
+                            // 不转向，专注加速
+                        } else if (demon.aiTimer < 1.2f) {
+                            // 阶段2（0.2-1.2s）：主要追踪阶段，积极修正方向
+                            float angleToPlayer = atan2(toTarget.y, toTarget.x);
+                            float currentDiff = DemonEyeMovementComponent::angleDifference(angleToPlayer, demon.currentAngle);
+                            float dashTurnRate = demon.turnRate * 1.0f; // 提高追踪灵敏度
+                            
+                            // 距离越近，转向越快（提高近距离命中率）
+                            if (dist < 150.0f) {
+                                dashTurnRate *= 2.0f;
+                            }
+                            
+                            if (abs(currentDiff) < dashTurnRate * delta) {
+                                demon.currentAngle = angleToPlayer;
+                            } else {
+                                demon.currentAngle += (currentDiff > 0 ? 1 : -1) * dashTurnRate * delta;
+                            }
+                        } else {
+                            // 阶段3（1.2s+）：收尾阶段，轻微追踪
+                            float angleToPlayer = atan2(toTarget.y, toTarget.x);
+                            float currentDiff = DemonEyeMovementComponent::angleDifference(angleToPlayer, demon.currentAngle);
+                            float dashTurnRate = demon.turnRate * 0.3f;
+                            if (abs(currentDiff) < dashTurnRate * delta) demon.currentAngle = angleToPlayer;
+                            else demon.currentAngle += (currentDiff > 0 ? 1 : -1) * dashTurnRate * delta;
+                        }
+                        
+                        // 优化冲刺结束条件
+                        bool passedPlayer = (transform.position.y < targetPos.y - 80.0f); // 减少穿透距离
+                        bool tooFar = dist > 500.0f; // 增加追击距离
+                        bool tooClose = dist < 30.0f && demon.aiTimer > 0.3f; // 添加近距离命中检测
+                        
+                        if (passedPlayer || demon.aiTimer > 2.5f || tooFar || tooClose) {
+                            demon.aiState = DemonEyeMovementComponent::HOVERING;
+                            demon.aiTimer = 0.0f;
+                            demon.dashCooldownTimer = demon.dashCooldown; // 设置冷却
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            // 更新并添加摆动效果使飞行更自然
+            demon.wobblePhase += demon.wobbleFrequency * delta;
+            float wobbleOffset = sin(demon.wobblePhase) * demon.wobbleAmplitude;
+            float effectiveAngle = demon.currentAngle + wobbleOffset;
+            
+            // ===== 关键修复：先读取物理引擎速度，再施加控制力 =====
+            auto* body = sprite.getPhysicsBody();
+            if (!body) return;
+            
+            // 从物理体读取当前速度（包含碰撞反弹结果）
+            cocos2d::Vec2 physicsVelocity = body->getVelocity();
+            demon.currentVelocity = physicsVelocity;
+            float currentSpeedSq = demon.currentVelocity.lengthSquared();
+            
+            // 如果速度过低（初始化或卡住），强制给予初始速度
+            if (currentSpeedSq < 100.0f) { // 10^2 = 100
+                demon.currentVelocity.x = cos(demon.currentAngle) * demon.flySpeed;
+                demon.currentVelocity.y = sin(demon.currentAngle) * demon.flySpeed;
+                body->setVelocity(demon.currentVelocity);
+                return;
+            }
+            
+            // 计算期望速度方向和大小
+            // 盘旋和冲刺使用相同的最大速度，保持一致的威胁感
+            float targetSpeed = demon.maxSpeed;
+            
+            // 根据角速度降低最大速度：角速度越高，最大速度越低
+            float angularVelocity = std::abs(body->getAngularVelocity());
+            if (angularVelocity > 0.1f) {
+                // 使用二次函数降低速度：速度 = maxSpeed * (1 - angularVelocity^2 / factor)
+                // 当角速度为0.5时，速度降低到50%；当角速度为1.0时，速度降低到0%
+                float speedReduction = std::min(1.0f, (angularVelocity * angularVelocity) / 0.25f);
+                targetSpeed *= (1.0f - speedReduction);
+            }
+            
+            // 转弯时略微减速以保持控制
+            float angleDiff = std::abs(DemonEyeMovementComponent::angleDifference(
+                demon.targetAngle, demon.currentAngle));
+            if (angleDiff > 1.0f) targetSpeed *= 0.85f;
+            
+            // 计算期望速度向量
+            cocos2d::Vec2 desiredVelocity;
+            desiredVelocity.x = cos(effectiveAngle) * targetSpeed;
+            desiredVelocity.y = sin(effectiveAngle) * targetSpeed;
+            
+            // 关键修复：使用速度插值而非applyForce，防止震荡
+            // 计算插值系数：根据加速度和delta时间
+            float lerpFactor = std::min(1.0f, demon.acceleration * delta / demon.flySpeed);
+            
+            // 对当前速度和期望速度进行插值
+            cocos2d::Vec2 newVelocity;
+            newVelocity.x = demon.currentVelocity.x + (desiredVelocity.x - demon.currentVelocity.x) * lerpFactor;
+            newVelocity.y = demon.currentVelocity.y + (desiredVelocity.y - demon.currentVelocity.y) * lerpFactor;
+            
+            // 限制最大速度
+            float newSpeed = newVelocity.length();
+            if (newSpeed > demon.maxSpeed * 1.5f) {
+                newVelocity.normalize();
+                newVelocity *= demon.maxSpeed * 1.5f;
+            }
+            
+            // 保证最小速度，防止卡住
+            if (newSpeed < 50.0f && newSpeed > 0.1f) {
+                newVelocity.normalize();
+                newVelocity *= 50.0f;
+            }
+            
+            // 直接设置速度（AI控制，但保留了物理碰撞的影响）
+            body->setVelocity(newVelocity);
+            
+            // 同步位置
+            transform.position = sprite.sprite->getPosition();
+            demon.currentVelocity = body->getVelocity();
+            
+            // ===== 更新精灵旋转（贴图朝向移动方向） =====
+            // 只有速度足够大时才更新朝向，防止微小震荡
+            if (demon.currentVelocity.lengthSquared() > 100.0f) {
+                // 使用实际速度方向，使碰撞回弹时朝向正确
+                float velocityAngle = atan2(demon.currentVelocity.y, demon.currentVelocity.x);
+                
+                // 碰撞后同步更新AI角度，使后续追踪从新方向开始
+                // 检测速度方向与AI角度的差异，如果较大则可能是碰撞
+                float angleDiff = std::abs(DemonEyeMovementComponent::angleDifference(velocityAngle, demon.currentAngle));
+                if (angleDiff > 1.57f) { // 90度 = 1.57弧度，说明发生了大角度偏转（碰撞）
+                    demon.currentAngle = velocityAngle;
+                    // 在碰撞瞬间，重置targetAngle为当前反弹方向，避免AI立即强行扭回原方向
+                    demon.targetAngle = velocityAngle;
+                    
+                    // 碰撞反应：
+                    // 1. 如果正在冲刺，立即中断并回到盘旋状态
+                    if (demon.aiState == DemonEyeMovementComponent::DASHING) {
+                        demon.aiState = DemonEyeMovementComponent::HOVERING;
+                        demon.dashCooldownTimer = demon.dashCooldown; // 触发冷却
+                    }
+                    
+                    // 2. 给予短暂的惯性期（例如0.4秒），期间不重新索敌，让物理反弹自然发生
+                    demon.aiTimer = -0.4f;
+                }
+                
+                float displayAngle = velocityAngle * 180.0f / M_PI;
+                // 恶魔眼贴图默认朝左，需要加180度让它朝向移动方向
+                sprite.sprite->setRotation(-displayAngle + 180.0f);
+                
+                // 根据移动方向翻转精灵（当向左飞行时翻转，避免上下颠倒）
+                bool movingLeft = demon.currentVelocity.x < 0;
+                sprite.sprite->setFlippedY(movingLeft);
+            }
+        });
+    }
+
+private:
+
+    /**
+     * @brief 更新巡逻行为
+     */
+    void updatePatrol(DemonEyeMovementComponent& demon, float delta) {
+        demon.patrolTimer += delta;
+        
+        if (demon.patrolTimer >= demon.patrolChangeInterval) {
+            demon.patrolTimer = 0.0f;
+            // 随机选择新的巡逻方向
+            demon.patrolAngle = ((float)rand() / RAND_MAX) * 2 * M_PI;
+            CCLOG("DemonEye: New patrol angle: %.2f", demon.patrolAngle);
+        }
+        
+        demon.targetAngle = demon.patrolAngle;
+    }
+};
+
+// ==================== System管理器 ====================
 
 /**
  * @brief System管理器

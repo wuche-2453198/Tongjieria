@@ -1,9 +1,10 @@
 #ifndef __ECS_SPRITE_COMPONENT_H__
 #define __ECS_SPRITE_COMPONENT_H__
 
-#include "Component.h"
+#include "Entity.h"
 #include "cocos2d.h"
 #include <string>
+#include <unordered_map>
 
 namespace ecs {
 

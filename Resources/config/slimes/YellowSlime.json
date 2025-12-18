@@ -2,19 +2,19 @@
   "id": "YellowSlime",
   "type": "Slime",
   "description": "黄色史莱姆",
-  
+
   "display": {
     "spriteFolder": "Minor monster/YellowSlime",
     "spritePrefix": "Yellow_Slime",
     "frameCount": 2,
     "frameTime": 0.12,
-    "scale": 1.1
+    "scale": 1.0
   },
-  
+
   "physics": {
     "bodyWidth": 32.0,
     "bodyHeight": 24.0,
-    "bodyHeightOffset": -5.0,
+    "bodyHeightOffset": -2.0,
     "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,

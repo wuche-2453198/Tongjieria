@@ -1,45 +1,9 @@
 #include "MonsterFactory.h"
 #include "platform/CCFileUtils.h"
-#include "ecs/SpriteComponent.h"
 
 USING_NS_CC;
 
 // ==================== MonsterFactory 实现 ====================
-
-MonsterFactory::MonsterFactory() {
-  registerDefaultCreators();
-}
-
-void MonsterFactory::registerDefaultCreators() {
-  // 注册各色史莱姆创建器 (每种史莱姆独立创建器)
-  registerCreator("GreenSlime", std::make_shared<GreenSlimeCreator>());
-  registerCreator("BlueSlime", std::make_shared<BlueSlimeCreator>());
-  registerCreator("RedSlime", std::make_shared<RedSlimeCreator>());
-  registerCreator("YellowSlime", std::make_shared<YellowSlimeCreator>());
-  registerCreator("PurpleSlime", std::make_shared<PurpleSlimeCreator>());
-  registerCreator("PinkSlime", std::make_shared<PinkSlimeCreator>());
-  registerCreator("IceSlime", std::make_shared<IceSlimeCreator>());
-  registerCreator("SpikedIceSlime", std::make_shared<SpikedIceSlimeCreator>());
-  registerCreator("SpikedJungleSlime", std::make_shared<SpikedJungleSlimeCreator>());
-  registerCreator("UmbrellaSlime", std::make_shared<UmbrellaSlimeCreator>());
-  registerCreator("MotherSlime", std::make_shared<MotherSlimeCreator>());
-  registerCreator("BabySlime", std::make_shared<BabySlimeCreator>());
-  
-  // 注册僵尸创建器
-  registerCreator("Zombie", std::make_shared<ZombieCreator>());
-  registerCreator("31px-Zombie", std::make_shared<ZombieCreator>());
-  
-  // 未来可以在这里注册更多创建器:
-  // registerCreator("VampireBat", std::make_shared<BatCreator>());
-  
-  CCLOG("MonsterFactory: Default creators registered");
-}
-
-void MonsterFactory::registerCreator(const std::string &type,
-                                     std::shared_ptr<IMonsterCreator> creator) {
-  _creators[type] = creator;
-  CCLOG("MonsterFactory: Registered creator for type '%s'", type.c_str());
-}
 
 bool MonsterFactory::loadConfig(const std::string &configPath) {
   // 读取JSON文件
@@ -128,12 +92,9 @@ bool MonsterFactory::loadSingleConfig(const std::string &filePath) {
 int MonsterFactory::loadConfigsFromDir(const std::string &dirPath) {
   int loadedCount = 0;
   
-  // 获取目录下所有json文件
-  std::string fullDirPath = FileUtils::getInstance()->fullPathForFilename(dirPath);
   std::vector<std::string> knownFiles;
   
   // 根据目录名选择已知文件列表
-  // (cocos2d-x 没有直接的目录遍历API，这里使用预定义列表)
   if (dirPath.find("slimes") != std::string::npos) {
     knownFiles = {
       "GreenSlime.json",
@@ -152,12 +113,26 @@ int MonsterFactory::loadConfigsFromDir(const std::string &dirPath) {
   } else if (dirPath.find("zombies") != std::string::npos) {
     knownFiles = {
       "Zombie.json",
-      "31px-Zombie.json"
+      "31px-Zombie.json",
+      "Bigger-Zombie.json",
+      "BaldZombie.json",
+      "29px-BaldZombie.json",
+      "Bigger-BaldZombie.json",
+      "PincushionZombie.json",
+      "32px-PincushionZombie.json",
+      "Bigger-PincushionZombie.json"
+    };
+  } else if (dirPath.find("eyes") != std::string::npos) {
+    knownFiles = {
+      "DemonEye.json",
+      "Bigger-DemonEye.json",
+      "PurpleEye.json",
+      "GreenEye.json",
+      "CataractEye.json",
+      "DilatedEye.json"
     };
   } else {
-    // 默认尝试常见文件名
-    CCLOG("MonsterFactory: Unknown directory type '%s', trying common patterns", 
-          dirPath.c_str());
+    CCLOG("MonsterFactory: Unknown directory type '%s'", dirPath.c_str());
   }
   
   for (const auto &filename : knownFiles) {
@@ -251,6 +226,19 @@ bool MonsterFactory::parseMonsterConfig(const rapidjson::Value &json,
       config.movement.targetJumpReactionTime = movement["targetJumpReactionTime"].GetFloat();
     if (movement.HasMember("patrolDirectionChangeInterval"))
       config.movement.patrolDirectionChangeInterval = movement["patrolDirectionChangeInterval"].GetFloat();
+    // 飞行类型专用参数
+    if (movement.HasMember("flySpeed"))
+      config.movement.flySpeed = movement["flySpeed"].GetFloat();
+    if (movement.HasMember("maxSpeed"))
+      config.movement.maxSpeed = movement["maxSpeed"].GetFloat();
+    if (movement.HasMember("acceleration"))
+      config.movement.acceleration = movement["acceleration"].GetFloat();
+    if (movement.HasMember("turnRate"))
+      config.movement.turnRate = movement["turnRate"].GetFloat();
+    if (movement.HasMember("wobbleAmplitude"))
+      config.movement.wobbleAmplitude = movement["wobbleAmplitude"].GetFloat();
+    if (movement.HasMember("wobbleFrequency"))
+      config.movement.wobbleFrequency = movement["wobbleFrequency"].GetFloat();
   }
 
   // 解析ai
@@ -369,33 +357,9 @@ bool MonsterFactory::parseMonsterConfig(const rapidjson::Value &json,
   return true;
 }
 
-ecs::EntityId MonsterFactory::createMonster(ecs::World &world,
-                                            const std::string &monsterId,
-                                            float x, float y,
-                                            cocos2d::Node *parentNode) {
-  // 查找配置
-  auto configIt = _configs.find(monsterId);
-  if (configIt == _configs.end()) {
-    CCLOG("MonsterFactory: Unknown monster ID: %s", monsterId.c_str());
-    return ecs::INVALID_ENTITY;
-  }
+// ==================== 怪物创建 ====================
 
-  const MonsterConfig &cfg = configIt->second;
-
-  // 查找对应ID的创建器
-  auto creatorIt = _creators.find(monsterId);
-  if (creatorIt == _creators.end()) {
-    CCLOG("MonsterFactory: No creator registered for '%s'", monsterId.c_str());
-    return ecs::INVALID_ENTITY;
-  }
-
-  // 使用创建器创建怪物
-  return creatorIt->second->create(world, cfg, x, y, parentNode);
-}
-
-// ==================== EnTT版本的怪物创建 ====================
-
-ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
+ecs::EntityId MonsterFactory::createMonster(entt::registry &registry,
                                                const std::string &monsterId,
                                                float x, float y,
                                                cocos2d::Node *parentNode) {
@@ -432,21 +396,48 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
     parentNode->addChild(sprite, 1);
     
     // ==================== 通用：设置物理体 ====================
-    // 史莱姆需要更高的摩擦力来防止滑行，完全无弹力
-    float friction = (cfg.type == "Slime") ? 0.9f : cfg.physics.friction;
-    float restitution = (cfg.type == "Slime") ? 0.0f : cfg.physics.restitution;  // 完全无弹力
+    PhysicsBody* body = nullptr;
     
-    PhysicsMaterial material(cfg.physics.mass, friction, restitution);
-    auto body = PhysicsBody::createBox(Size(cfg.physics.bodyWidth, cfg.physics.bodyHeight), material);
-    body->setDynamic(true);
-    body->setMass(cfg.physics.mass);
-    body->setRotationEnable(false);
-    body->setGravityEnable(cfg.physics.useGravity);
-    body->setVelocityLimit(500.0f);
-    
-    // 史莱姆添加线性阻尼，快速停止滑行
-    if (cfg.type == "Slime") {
-      body->setLinearDamping(0.8f);  // 高阻尼快速停止
+    if (cfg.type == "DemonEye") {
+      // 恶魔眼：圆形物理体，无重力，有弹性 - 提供更自然的碰撞回弹
+      // 物理体大小需要考虑精灵的缩放因子
+      PhysicsMaterial material(cfg.physics.mass, cfg.physics.restitution, cfg.physics.friction);
+      float scaledWidth = cfg.physics.bodyWidth * cfg.display.scale;
+      float scaledHeight = cfg.physics.bodyHeight * cfg.display.scale;
+      float scaledHeightOffset = cfg.physics.bodyHeightOffset * cfg.display.scale;
+      // 使用圆形物理体，半径为贴图短边长度的一半（确保圆形物理体不超出贴图边界）
+      float radius = std::min(scaledWidth, scaledHeight) / 2.0f;
+      body = PhysicsBody::createCircle(radius, material, Vec2(scaledHeightOffset, 0));
+      body->setDynamic(true);
+      body->setMass(cfg.physics.mass);
+      body->setRotationEnable(false);
+      body->setGravityEnable(false);  // 关键：无重力
+      body->setVelocityLimit(500.0f);  // 提高速度上限
+      body->setLinearDamping(0.05f);   // 降低阻尼，保持惯性
+      body->setAngularDamping(0.3f);   // 允许适度旋转，提高转弯灵活性
+    } else {
+      // 史莱姆需要更高的摩擦力来防止滑行，完全无弹力
+      float friction = (cfg.type == "Slime") ? 0.9f : cfg.physics.friction;
+      float restitution = (cfg.type == "Slime") ? 0.0f : cfg.physics.restitution;
+      
+      // PhysicsMaterial参数顺序: (density, restitution, friction)
+      PhysicsMaterial material(cfg.physics.mass, restitution, friction);
+      // 物理体大小需要考虑精灵的缩放因子
+      float scaledWidth = cfg.physics.bodyWidth * cfg.display.scale;
+      float scaledHeight = cfg.physics.bodyHeight * cfg.display.scale;
+      float scaledHeightOffset = cfg.physics.bodyHeightOffset * cfg.display.scale;
+      body = PhysicsBody::createBox(Size(scaledWidth, scaledHeight), material, Vec2(0, scaledHeightOffset));
+      body->setDynamic(true);
+      body->setMass(cfg.physics.mass);
+      body->setRotationEnable(false);
+      body->setGravityEnable(cfg.physics.useGravity);
+      body->setVelocityLimit(500.0f);
+      
+      // 史莱姆阻尼由GroundDetectorSystem动态管理
+      if (cfg.type == "Slime") {
+        body->setLinearDamping(0.3f);
+        body->setAngularDamping(0.9f);
+      }
     }
     
     body->setCategoryBitmask(0x0002);        // 敌人类别
@@ -506,15 +497,59 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
         }
       }
       
-      // 设置帧序列
+      // 设置帧序列：如果配置中有自定义序列则使用，否则按顺序播放
       if (!cfg.display.frameSequence.empty()) {
         spriteComp.frameSequence = cfg.display.frameSequence;
+      } else if (spriteComp.animFrames.size() > 0) {
+        // 自动生成帧序列：1, 2, 3, ..., frameCount
+        for (int i = 1; i <= cfg.display.frameCount; i++) {
+          spriteComp.frameSequence.push_back(i);
+        }
       }
       
-      spriteComp.animationLoaded = spriteComp.animFrames.size() >= 2;
+      spriteComp.animationLoaded = spriteComp.animFrames.size() > 0 && !spriteComp.frameSequence.empty();
       
-      CCLOG("  Loaded %d animation frames for %s", 
-            (int)spriteComp.animFrames.size(), monsterId.c_str());
+      CCLOG("  Loaded %d animation frames for %s (sequence size: %zu, animationLoaded: %s)", 
+            (int)spriteComp.animFrames.size(), monsterId.c_str(), spriteComp.frameSequence.size(),
+            spriteComp.animationLoaded ? "true" : "false");
+    } else if (cfg.type == "DemonEye") {
+      // 恶魔眼：使用MonsterSpriteComponent
+      auto &spriteComp = registry.emplace<ecs::MonsterSpriteComponent>(entity);
+      spriteComp.sprite = sprite;
+      spriteComp.monsterType = monsterId;
+      spriteComp.frameTime = cfg.display.frameTime;
+      spriteComp.baseScale = cfg.display.scale;
+      
+      // 加载所有动画帧
+      for (int i = 1; i <= cfg.display.frameCount; i++) {
+        std::string framePath = cfg.display.spriteFolder + "/" +
+                                cfg.display.spritePrefix + std::to_string(i) + ".png";
+        auto texture = Director::getInstance()->getTextureCache()->addImage(framePath);
+        if (texture) {
+          auto frame = SpriteFrame::createWithTexture(
+              texture, Rect(0, 0, texture->getContentSize().width,
+                            texture->getContentSize().height));
+          if (frame) {
+            spriteComp.animFrames.pushBack(frame);
+          }
+        }
+      }
+      
+      // 设置帧序列：如果配置中有自定义序列则使用，否则按顺序播放
+      if (!cfg.display.frameSequence.empty()) {
+        spriteComp.frameSequence = cfg.display.frameSequence;
+      } else if (spriteComp.animFrames.size() > 0) {
+        // 自动生成帧序列：1, 2, 3, ..., frameCount
+        for (int i = 1; i <= cfg.display.frameCount; i++) {
+          spriteComp.frameSequence.push_back(i);
+        }
+      }
+      
+      spriteComp.animationLoaded = spriteComp.animFrames.size() > 0 && !spriteComp.frameSequence.empty();
+      
+      CCLOG("  Loaded %d animation frames for DemonEye %s (sequence size: %zu, animationLoaded: %s)", 
+            (int)spriteComp.animFrames.size(), monsterId.c_str(), spriteComp.frameSequence.size(),
+            spriteComp.animationLoaded ? "true" : "false");
     }
     
     // ==================== 通用：添加基础组件 ====================
@@ -530,8 +565,11 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
     aggro.aggroRange = cfg.ai.aggroRange;
     aggro.deaggroRange = cfg.ai.deaggroRange;
     
-    auto &ground = registry.emplace<ecs::GroundDetectorComponent>(entity);
-    ground.isOnGround = true;
+    // 飞行类怪物不需要地面检测组件
+    if (cfg.type != "DemonEye") {
+      auto &ground = registry.emplace<ecs::GroundDetectorComponent>(entity);
+      ground.isOnGround = true;
+    }
     
     // ==================== 根据移动类型添加移动组件 ====================
     if (cfg.movement.type == "walk") {
@@ -551,6 +589,17 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
       jump.patrolImpulseRatio = cfg.movement.patrolImpulseRatio;
       jump.randomDirectionChangeChance = cfg.movement.directionChangeChance;
       jump.jumpTimer = cfg.movement.jumpCooldown;  // 初始化为冷却完成
+    } else if (cfg.movement.type == "fly") {
+      // 飞行类型：恶魔眼等
+      auto &fly = registry.emplace<ecs::DemonEyeMovementComponent>(entity);
+      fly.flySpeed = cfg.movement.flySpeed;
+      fly.maxSpeed = cfg.movement.maxSpeed;
+      fly.acceleration = cfg.movement.acceleration;
+      fly.turnRate = cfg.movement.turnRate;
+      fly.wobbleAmplitude = cfg.movement.wobbleAmplitude;
+      fly.wobbleFrequency = cfg.movement.wobbleFrequency;
+      CCLOG("  Added DemonEyeMovementComponent (flySpeed=%.1f, turnRate=%.2f)", 
+            fly.flySpeed, fly.turnRate);
     }
     
     // ==================== 特殊史莱姆：添加特殊组件 ====================
@@ -567,35 +616,39 @@ ecs::EntityId MonsterFactory::createMonsterEntt(entt::registry &registry,
         CCLOG("  Added SlowFallComponent for UmbrellaSlime");
       }
       
-      // 尖刺史莱姆：投射物攻击能力
-      if (monsterId.find("Spiked") != std::string::npos) {
+      // 尖刺史莱姆：投射物攻击能力（使用配置文件中的参数）
+      if (cfg.projectile.enabled || monsterId.find("Spiked") != std::string::npos) {
         auto &projectileAttack = registry.emplace<ecs::ProjectileAttackComponent>(entity);
-        projectileAttack.projectileSpritePath = "Minor monster/ice_spike.png";  // 设置投射物贴图
-        projectileAttack.projectileSpriteWidth = 15.0f;
-        projectileAttack.projectileSpriteHeight = 30.0f;
-        projectileAttack.projectileCount = 4;
-        projectileAttack.fireInterval = 2.5f;
-        projectileAttack.fireRange = 300.0f;
-        projectileAttack.projectileSpeed = 200.0f;
-        projectileAttack.projectileDamage = 10.0f;
-        projectileAttack.projectileLifetime = 3.0f;
         
-        // 冰刺史莱姆有冰冻效果
-        if (monsterId.find("Ice") != std::string::npos) {
-          projectileAttack.chillChance = 0.5f;
-          projectileAttack.chillDuration = 2.0f;
-          projectileAttack.chillSpeedReduction = 0.5f;
-          CCLOG("  Added ProjectileAttackComponent with chill for SpikedIceSlime");
-        }
-        // 丛林尖刺史莱姆有毒效果
-        else if (monsterId.find("Jungle") != std::string::npos) {
-          projectileAttack.poisonChance1 = 0.6f;
-          projectileAttack.poisonDuration1 = 3.0f;
-          projectileAttack.poisonDamage1 = 5.0f;
-          CCLOG("  Added ProjectileAttackComponent with poison for SpikedJungleSlime");
-        } else {
-          CCLOG("  Added ProjectileAttackComponent for SpikedSlime");
-        }
+        // 使用配置文件中的投射物参数
+        projectileAttack.projectileSpritePath = cfg.projectile.spritePath;
+        projectileAttack.projectileSpriteWidth = cfg.projectile.spriteWidth;
+        projectileAttack.projectileSpriteHeight = cfg.projectile.spriteHeight;
+        projectileAttack.projectileCount = cfg.projectile.count;
+        projectileAttack.fireInterval = cfg.projectile.fireInterval;
+        projectileAttack.fireRange = cfg.projectile.fireRange;
+        projectileAttack.projectileSpeed = cfg.projectile.speed;
+        projectileAttack.projectileDamage = cfg.projectile.damage;
+        projectileAttack.projectileLifetime = cfg.projectile.lifetime;
+        projectileAttack.horizontalSpread = cfg.projectile.horizontalSpread;
+        projectileAttack.verticalImpulse = cfg.projectile.verticalImpulse;
+        projectileAttack.useGravity = cfg.projectile.useGravity;
+        
+        // 使用配置文件中的减益效果参数
+        projectileAttack.chillChance = cfg.debuff.chillChance;
+        projectileAttack.chillDuration = cfg.debuff.chillDuration;
+        projectileAttack.chillSpeedReduction = cfg.debuff.chillSpeedReduction;
+        projectileAttack.freezeChance = cfg.debuff.freezeChance;
+        projectileAttack.freezeDuration = cfg.debuff.freezeDuration;
+        projectileAttack.poisonChance1 = cfg.debuff.poisonChance1;
+        projectileAttack.poisonDuration1 = cfg.debuff.poisonDuration1;
+        projectileAttack.poisonDamage1 = cfg.debuff.poisonDamage1;
+        projectileAttack.poisonChance2 = cfg.debuff.poisonChance2;
+        projectileAttack.poisonDuration2 = cfg.debuff.poisonDuration2;
+        projectileAttack.poisonDamage2 = cfg.debuff.poisonDamage2;
+        
+        CCLOG("  Added ProjectileAttackComponent for %s (sprite=%s)",
+              monsterId.c_str(), cfg.projectile.spritePath.c_str());
       }
     }
     
@@ -623,548 +676,4 @@ std::vector<std::string> MonsterFactory::getMonsterIdsByType(const std::string &
     }
   }
   return ids;
-}
-
-// ==================== SlimeCreatorBase 实现 ====================
-
-cocos2d::Color3B SlimeCreatorBase::getFallbackColor(const std::string &monsterId) {
-  // 默认白色，子类会重写
-  return Color3B::WHITE;
-}
-
-cocos2d::Sprite* SlimeCreatorBase::createSprite(const MonsterConfig &config,
-                                                 float x, float y,
-                                                 cocos2d::Node *parentNode) {
-  Sprite *sprite = nullptr;
-  std::string firstFramePath =
-      config.display.spriteFolder + "/" + config.display.spritePrefix + "1.png";
-
-  CCLOG("Creating sprite for %s, path: %s", config.id.c_str(), firstFramePath.c_str());
-  
-  sprite = Sprite::create(firstFramePath);
-  if (!sprite) {
-    // 使用备用方块
-    CCLOG("  Failed to load sprite, using fallback color");
-    sprite = Sprite::create();
-    sprite->setTextureRect(Rect(0, 0, 40, 40));
-    sprite->setColor(getFallbackColor(config.id));
-  } else {
-    CCLOG("  Sprite loaded successfully");
-  }
-
-  if (sprite) {
-    sprite->retain();
-    
-    // 根据物理体宽度计算精灵缩放比例，使贴图完全贴合物理体
-    float originalWidth = sprite->getContentSize().width;
-    float originalHeight = sprite->getContentSize().height;
-    float bodyWidth = config.physics.bodyWidth;
-    float bodyHeight = config.physics.bodyHeight;
-    
-    // 计算缩放：让精灵宽度匹配物理体宽度
-    float scale = bodyWidth / originalWidth;
-    sprite->setScale(scale);
-    
-    // 保持默认锚点在中心(0.5, 0.5)
-    sprite->setPosition(Vec2(x, y));
-
-    // 加载动画帧
-    Vector<SpriteFrame *> animFrames;
-    for (int i = 1; i <= config.display.frameCount; i++) {
-      std::string framePath = config.display.spriteFolder + "/" +
-                              config.display.spritePrefix + std::to_string(i) +
-                              ".png";
-      auto texture =
-          Director::getInstance()->getTextureCache()->addImage(framePath);
-      if (texture) {
-        auto frame = SpriteFrame::createWithTexture(
-            texture, Rect(0, 0, texture->getContentSize().width,
-                          texture->getContentSize().height));
-        if (frame)
-          animFrames.pushBack(frame);
-      }
-    }
-
-    // 播放动画
-    if (animFrames.size() >= 2) {
-      auto animation =
-          Animation::createWithSpriteFrames(animFrames, config.display.frameTime);
-      sprite->runAction(RepeatForever::create(Animate::create(animation)));
-    }
-
-    // 添加到父节点
-    if (parentNode) {
-      parentNode->addChild(sprite, 1);
-    }
-
-    // 设置物理体 - 使用配置中的bodyWidth/bodyHeight
-    // 使用配置的摩擦力，让史莱姆落地后能停下来
-    PhysicsMaterial material(config.physics.mass, config.physics.restitution, 
-                             config.physics.friction);
-    // 计算偏移量：使物理体底部与贴图底部对齐
-    float scaledHeight = originalHeight * scale;
-    float spriteHalfHeight = scaledHeight / 2.0f;
-    float bodyHalfHeight = bodyHeight / 2.0f;
-    float offsetY = -(spriteHalfHeight - bodyHalfHeight) + config.physics.bodyHeightOffset;
-    Vec2 bodyOffset(0, offsetY);
-    auto body = PhysicsBody::createBox(
-        Size(bodyWidth, bodyHeight), material, bodyOffset);
-    body->setDynamic(true);
-    body->setMass(config.physics.mass);
-    body->setRotationEnable(false);
-    body->setVelocityLimit(500.0f);          // 限制最大速度防止穿透障碍物
-    body->setCategoryBitmask(0x0002);        // 敌人类别
-    body->setContactTestBitmask(0xFFFFFFFF); // 检测所有接触
-    body->setCollisionBitmask(0xFFFFFFFD);   // 与所有物体碰撞，除了其他敌人(0x0002)
-    body->setGroup(-1);                       // 负数组：同组不碰撞，与地形(组0)正常碰撞
-    sprite->setPhysicsBody(body);
-    CCLOG("Slime physics body created: category=0x%X, collision=0x%X, group=-1", 
-          0x0002, 0xFFFFFFFD);
-  }
-
-  return sprite;
-}
-
-void SlimeCreatorBase::addBaseComponents(ecs::World &world, ecs::EntityId entity,
-                                          const MonsterConfig &config,
-                                          cocos2d::Sprite *sprite) {
-  // 变换组件
-  world.addComponent<ecs::TransformComponent>(entity,
-      sprite->getPositionX(), sprite->getPositionY());
-
-  // 精灵组件
-  if (sprite) {
-    auto &slimeSprite = world.addComponent<ecs::SlimeSpriteComponent>(entity);
-    slimeSprite.sprite = sprite;
-    slimeSprite.baseScale = sprite->getScale(); // 使用实际计算的缩放值
-    slimeSprite.slimeType = config.id;
-    slimeSprite.animationLoaded = true;
-
-    ecs::NodeEntityMap::getInstance().registerNode(sprite, entity);
-  }
-
-  // 仇恨组件
-  auto &aggro = world.addComponent<ecs::AggroComponent>(
-      entity, config.ai.aggroRange, config.ai.deaggroRange);
-  aggro.targetTag = config.ai.targetTag;
-
-  // 地面检测组件 - 初始设为false，等实际落地后由物理回调设为true
-  auto &ground = world.addComponent<ecs::GroundDetectorComponent>(entity);
-  ground.isOnGround = false;
-  ground.groundContactCount = 0;
-
-  // 跳跃移动组件 - 初始计时器设为负值，延迟第一次跳跃
-  auto &jump = world.addComponent<ecs::JumpMovementComponent>(
-      entity, config.movement.jumpCooldown, config.movement.horizontalImpulse,
-      config.movement.verticalImpulse);
-  jump.patrolImpulseRatio = config.movement.patrolImpulseRatio;
-  jump.randomDirectionChangeChance = config.movement.directionChangeChance;
-  jump.jumpTimer = -1.0f; // 延迟1秒再开始计时，给史莱姆时间落地
-
-  // 生命值组件
-  world.addComponent<ecs::HealthComponent>(entity, config.stats.maxHealth);
-
-  // 战斗组件
-  world.addComponent<ecs::CombatComponent>(
-      entity, config.stats.attackRange, config.stats.attackDamage,
-      config.stats.attackCooldown);
-
-  // 敌人标记
-  world.addComponent<ecs::EnemyTag>(entity, config.type);
-
-  // 掉落物组件
-  auto &loot = world.addComponent<ecs::LootComponent>(entity);
-  for (const auto &item : config.loot) {
-    loot.addDrop(item.itemId, item.minCount, item.maxCount, item.dropChance);
-  }
-}
-
-ecs::EntityId SlimeCreatorBase::create(ecs::World &world, const MonsterConfig &config,
-                                        float x, float y, cocos2d::Node *parentNode) {
-  ecs::EntityId entity = world.createEntity();
-
-  // 创建精灵
-  Sprite *sprite = createSprite(config, x, y, parentNode);
-
-  // 添加基础组件
-  addBaseComponents(world, entity, config, sprite);
-
-  // 添加特有组件 (子类重写)
-  addSpecialComponents(world, entity, config);
-
-  return entity;
-}
-
-// ==================== 冰雪史莱姆特有组件 ====================
-
-/**
- * 冰雪史莱姆 - 冷冻效果
- * - 描述: 你的移动速度已降低
- * - 几率: 8.3% (如果未被冰冻)
- * - 持续时间: 10秒
- */
-void IceSlimeCreator::addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                            const MonsterConfig &config) {
-  // TODO: 添加冷冻效果组件 (等待玩家AI设计完成后实现)
-  // world.addComponent<ChillEffectComponent>(entity, 0.083f, 10.0f);
-  // 
-  // ChillEffectComponent 预期字段:
-  // - chillChance: 0.083f (8.3%)
-  // - chillDuration: 10.0f (10秒)
-  // - speedReduction: 0.5f (移动速度降低50%)
-  // - canStack: false (不可叠加，未被冰冻时才触发)
-}
-
-/**
- * 史莱姆母体 - 死亡时生成1-3只史莱姆宝宝
- */
-void MotherSlimeCreator::addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                               const MonsterConfig &config) {
-  // 添加死亡生成组件
-  world.addComponent<ecs::DeathSpawnComponent>(entity, "BabySlime", 1, 3);
-  CCLOG("MotherSlime: Added DeathSpawnComponent (spawns 1-3 BabySlime on death)");
-}
-
-/**
- * 冰雪尖刺史莱姆 - 发射冰雪尖刺攻击
- * 
- * 特性:
- * - 当目标进入发射范围时，向周围发射4个冰雪尖刺
- * - 尖刺以抛物线轨迹飞行（受重力影响）
- * - 发射期间不会跳跃
- * - 必然造成冷冻减益，有几率造成冰冻减益
- */
-void SpikedIceSlimeCreator::addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                                  const MonsterConfig &config) {
-  // 添加投射物攻击组件
-  auto &projAttack = world.addComponent<ecs::ProjectileAttackComponent>(entity);
-  
-  // 从配置加载投射物参数
-  if (config.projectile.enabled) {
-    projAttack.projectileSpritePath = config.projectile.spritePath;
-    projAttack.projectileSpriteWidth = config.projectile.spriteWidth;
-    projAttack.projectileSpriteHeight = config.projectile.spriteHeight;
-    projAttack.projectileCount = config.projectile.count;
-    projAttack.projectileDamage = config.projectile.damage;
-    projAttack.projectileSpeed = config.projectile.speed;
-    projAttack.projectileLifetime = config.projectile.lifetime;
-    projAttack.fireInterval = config.projectile.fireInterval;
-    projAttack.fireRange = config.projectile.fireRange;
-    projAttack.horizontalSpread = config.projectile.horizontalSpread;
-    projAttack.verticalImpulse = config.projectile.verticalImpulse;
-    projAttack.useGravity = config.projectile.useGravity;
-  }
-  
-  // 加载减益效果参数
-  projAttack.chillChance = config.debuff.chillChance;
-  projAttack.chillDuration = config.debuff.chillDuration;
-  projAttack.chillSpeedReduction = config.debuff.chillSpeedReduction;
-  projAttack.freezeChance = config.debuff.freezeChance;
-  projAttack.freezeDuration = config.debuff.freezeDuration;
-  
-  CCLOG("SpikedIceSlime: Added ProjectileAttackComponent");
-  CCLOG("  - Fires %d spikes every %.1fs when target within %.1f range",
-        projAttack.projectileCount, projAttack.fireInterval, projAttack.fireRange);
-  CCLOG("  - Chill: %.0f%% chance, %.1fs duration, %.0f%% slow",
-        projAttack.chillChance * 100, projAttack.chillDuration, 
-        projAttack.chillSpeedReduction * 100);
-  CCLOG("  - Freeze: %.0f%% chance, %.1fs duration",
-        projAttack.freezeChance * 100, projAttack.freezeDuration);
-}
-
-/**
- * 丛林尖刺史莱姆特化组件添加
- * 
- * 特殊行为:
- * - 当目标进入发射范围时，向周围发射4个丛林尖刺
- * - 尖刺以抛物线轨迹飞行（受重力影响）
- * - 发射期间不会跳跃
- * - 37.5%几率造成长时间中毒，25%几率造成短时间中毒
- */
-void SpikedJungleSlimeCreator::addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                                     const MonsterConfig &config) {
-  // 添加投射物攻击组件
-  auto &projAttack = world.addComponent<ecs::ProjectileAttackComponent>(entity);
-  
-  // 从配置加载投射物参数
-  if (config.projectile.enabled) {
-    projAttack.projectileSpritePath = config.projectile.spritePath;
-    projAttack.projectileSpriteWidth = config.projectile.spriteWidth;
-    projAttack.projectileSpriteHeight = config.projectile.spriteHeight;
-    projAttack.projectileCount = config.projectile.count;
-    projAttack.projectileDamage = config.projectile.damage;
-    projAttack.projectileSpeed = config.projectile.speed;
-    projAttack.projectileLifetime = config.projectile.lifetime;
-    projAttack.fireInterval = config.projectile.fireInterval;
-    projAttack.fireRange = config.projectile.fireRange;
-    projAttack.horizontalSpread = config.projectile.horizontalSpread;
-    projAttack.verticalImpulse = config.projectile.verticalImpulse;
-    projAttack.useGravity = config.projectile.useGravity;
-  }
-  
-  // 加载毒素减益效果参数
-  projAttack.poisonChance1 = config.debuff.poisonChance1;
-  projAttack.poisonDuration1 = config.debuff.poisonDuration1;
-  projAttack.poisonDamage1 = config.debuff.poisonDamage1;
-  projAttack.poisonChance2 = config.debuff.poisonChance2;
-  projAttack.poisonDuration2 = config.debuff.poisonDuration2;
-  projAttack.poisonDamage2 = config.debuff.poisonDamage2;
-  
-  CCLOG("SpikedJungleSlime: Added ProjectileAttackComponent");
-  CCLOG("  - Fires %d spikes every %.1fs when target within %.1f range",
-        projAttack.projectileCount, projAttack.fireInterval, projAttack.fireRange);
-  CCLOG("  - Poison1: %.1f%% chance, %.1fs duration, %.1f dps",
-        projAttack.poisonChance1 * 100, projAttack.poisonDuration1, projAttack.poisonDamage1);
-  CCLOG("  - Poison2: %.1f%% chance, %.1fs duration, %.1f dps",
-        projAttack.poisonChance2 * 100, projAttack.poisonDuration2, projAttack.poisonDamage2);
-}
-
-/**
- * 伞史莱姆特化组件添加
- * 
- * 特殊行为:
- * - 下落时有空气阻力，像撑着伞一样缓缓飘落
- * - 最大下落速度受限
- */
-void UmbrellaSlimeCreator::addSpecialComponents(ecs::World &world, ecs::EntityId entity,
-                                                 const MonsterConfig &config) {
-  // 添加缓降组件
-  auto &slowFall = world.addComponent<ecs::SlowFallComponent>(entity);
-  
-  if (config.slowFall.enabled) {
-    slowFall.maxFallSpeed = config.slowFall.maxFallSpeed;
-    slowFall.fallDamping = config.slowFall.fallDamping;
-    slowFall.horizontalDamping = config.slowFall.horizontalDamping;
-  }
-  slowFall.isActive = true;
-  
-  CCLOG("UmbrellaSlime: Added SlowFallComponent");
-  CCLOG("  - Max fall speed: %.1f", slowFall.maxFallSpeed);
-  CCLOG("  - Fall damping: %.2f, Horizontal damping: %.2f", 
-        slowFall.fallDamping, slowFall.horizontalDamping);
-}
-
-const MonsterConfig *
-MonsterFactory::getConfig(const std::string &monsterId) const {
-  auto it = _configs.find(monsterId);
-  return it != _configs.end() ? &it->second : nullptr;
-}
-
-std::vector<std::string> MonsterFactory::getAllMonsterIds() const {
-  std::vector<std::string> ids;
-  for (const auto &pair : _configs) {
-    ids.push_back(pair.first);
-  }
-  return ids;
-}
-
-// ==================== ZombieCreatorBase 实现 ====================
-
-cocos2d::Color3B ZombieCreatorBase::getFallbackColor(const std::string &monsterId) {
-  return Color3B(139, 90, 43); // 棕色
-}
-
-cocos2d::Sprite* ZombieCreatorBase::createSprite(const MonsterConfig &config,
-                                                  float x, float y,
-                                                  cocos2d::Node *parentNode) {
-  Sprite *sprite = nullptr;
-  std::string firstFramePath =
-      config.display.spriteFolder + "/" + config.display.spritePrefix + "1.png";
-
-  CCLOG("Creating zombie sprite for %s, path: %s", config.id.c_str(), firstFramePath.c_str());
-  
-  sprite = Sprite::create(firstFramePath);
-  if (!sprite) {
-    // 使用备用方块
-    CCLOG("  Failed to load sprite, using fallback color");
-    sprite = Sprite::create();
-    sprite->setTextureRect(Rect(0, 0, 34, 46)); // 僵尸像素尺寸
-    sprite->setColor(getFallbackColor(config.id));
-  } else {
-    CCLOG("  Sprite loaded successfully");
-  }
-
-  if (sprite) {
-    sprite->retain();
-    
-    // 根据物理体宽度计算精灵缩放比例
-    float originalWidth = sprite->getContentSize().width;
-    float originalHeight = sprite->getContentSize().height;
-    float bodyWidth = config.physics.bodyWidth;
-    float bodyHeight = config.physics.bodyHeight;
-    
-    // 计算缩放
-    float scale = bodyWidth / originalWidth;
-    sprite->setScale(scale);
-    
-    sprite->setPosition(Vec2(x, y));
-
-    // 加载所有动画帧
-    Vector<SpriteFrame *> animFrames;
-    for (int i = 1; i <= config.display.frameCount; i++) {
-      std::string framePath = config.display.spriteFolder + "/" +
-                              config.display.spritePrefix + std::to_string(i) +
-                              ".png";
-      auto texture =
-          Director::getInstance()->getTextureCache()->addImage(framePath);
-      if (texture) {
-        auto frame = SpriteFrame::createWithTexture(
-            texture, Rect(0, 0, texture->getContentSize().width,
-                          texture->getContentSize().height));
-        if (frame)
-          animFrames.pushBack(frame);
-      }
-    }
-
-    // 如果有自定义帧序列，按序列创建动画
-    if (!config.display.frameSequence.empty() && animFrames.size() >= 2) {
-      Vector<SpriteFrame *> sequenceFrames;
-      for (int idx : config.display.frameSequence) {
-        int frameIdx = idx - 1; // 转换为0-indexed
-        if (frameIdx >= 0 && frameIdx < (int)animFrames.size()) {
-          sequenceFrames.pushBack(animFrames.at(frameIdx));
-        }
-      }
-      if (sequenceFrames.size() >= 2) {
-        auto animation =
-            Animation::createWithSpriteFrames(sequenceFrames, config.display.frameTime);
-        sprite->runAction(RepeatForever::create(Animate::create(animation)));
-        CCLOG("  Playing animation with custom sequence (%zu frames)", 
-              sequenceFrames.size());
-      }
-    } else if (animFrames.size() >= 2) {
-      // 普通顺序播放
-      auto animation =
-          Animation::createWithSpriteFrames(animFrames, config.display.frameTime);
-      sprite->runAction(RepeatForever::create(Animate::create(animation)));
-    }
-
-    // 添加到父节点
-    if (parentNode) {
-      parentNode->addChild(sprite, 1);
-    }
-
-    // 设置物理体 - 使用0摩擦力，避免贴墙时产生粘滞和嵌入
-    PhysicsMaterial material(config.physics.mass, config.physics.restitution, 0.0f);
-    float scaledHeight = originalHeight * scale;
-    float spriteHalfHeight = scaledHeight / 2.0f;
-    float bodyHalfHeight = bodyHeight / 2.0f;
-    // 物理体居中，不做额外偏移
-    float offsetY = -(spriteHalfHeight - bodyHalfHeight) + config.physics.bodyHeightOffset;
-    Vec2 bodyOffset(0, offsetY);
-    auto body = PhysicsBody::createBox(
-        Size(bodyWidth, bodyHeight), material, bodyOffset);
-    body->setDynamic(true);
-    body->setMass(config.physics.mass);
-    body->setRotationEnable(false);
-    body->setVelocityLimit(500.0f);          // 限制最大速度防止穿透障碍物
-    body->setCategoryBitmask(0x0002);        // 敌人类别
-    body->setContactTestBitmask(0xFFFFFFFF); // 检测所有接触
-    body->setCollisionBitmask(0xFFFFFFFB);   // 和所有物体碰撞
-    body->setGroup(config.physics.collisionGroup);
-    sprite->setPhysicsBody(body);
-  }
-
-  return sprite;
-}
-
-void ZombieCreatorBase::addBaseComponents(ecs::World &world, ecs::EntityId entity,
-                                           const MonsterConfig &config,
-                                           cocos2d::Sprite *sprite) {
-  // 变换组件
-  world.addComponent<ecs::TransformComponent>(entity,
-      sprite->getPositionX(), sprite->getPositionY());
-
-  // 怪物精灵组件（使用MonsterSpriteComponent而非SlimeSpriteComponent）
-  if (sprite) {
-    auto &monsterSprite = world.addComponent<ecs::MonsterSpriteComponent>(entity);
-    monsterSprite.sprite = sprite;
-    monsterSprite.baseScale = sprite->getScale();
-    monsterSprite.monsterType = config.id;
-    monsterSprite.frameTime = config.display.frameTime;
-    
-    // 加载帧序列
-    if (!config.display.frameSequence.empty()) {
-      monsterSprite.frameSequence = config.display.frameSequence;
-    } else {
-      // 默认顺序播放
-      for (int i = 1; i <= config.display.frameCount; i++) {
-        monsterSprite.frameSequence.push_back(i);
-      }
-    }
-    
-    // 加载动画帧
-    for (int i = 1; i <= config.display.frameCount; i++) {
-      std::string framePath = config.display.spriteFolder + "/" +
-                              config.display.spritePrefix + std::to_string(i) +
-                              ".png";
-      auto texture =
-          Director::getInstance()->getTextureCache()->addImage(framePath);
-      if (texture) {
-        auto frame = SpriteFrame::createWithTexture(
-            texture, Rect(0, 0, texture->getContentSize().width,
-                          texture->getContentSize().height));
-        if (frame)
-          monsterSprite.animFrames.pushBack(frame);
-      }
-    }
-    monsterSprite.animationLoaded = monsterSprite.animFrames.size() >= 2;
-
-    ecs::NodeEntityMap::getInstance().registerNode(sprite, entity);
-  }
-
-  // 仇恨组件
-  auto &aggro = world.addComponent<ecs::AggroComponent>(
-      entity, config.ai.aggroRange, config.ai.deaggroRange);
-  aggro.targetTag = config.ai.targetTag;
-
-  // 地面检测组件 - 初始设为true，跳跃时会设为false
-  auto &ground = world.addComponent<ecs::GroundDetectorComponent>(entity);
-  ground.isOnGround = true;
-  ground.groundContactCount = 1; // 假设初始在地面上
-
-  // 行走移动组件（而非跳跃移动组件）
-  auto &walk = world.addComponent<ecs::WalkMovementComponent>(
-      entity, config.movement.walkSpeed, config.movement.jumpForce);
-  walk.obstacleJumpEnabled = config.movement.obstacleJumpEnabled;
-  walk.targetJumpEnabled = config.movement.targetJumpEnabled;
-  walk.targetJumpReactionTime = config.movement.targetJumpReactionTime;
-  walk.patrolDirectionChangeInterval = config.movement.patrolDirectionChangeInterval;
-  walk.patrolDirectionChangeChance = config.movement.directionChangeChance;
-
-  // 生命值组件
-  world.addComponent<ecs::HealthComponent>(entity, config.stats.maxHealth);
-
-  // 战斗组件
-  world.addComponent<ecs::CombatComponent>(
-      entity, config.stats.attackRange, config.stats.attackDamage,
-      config.stats.attackCooldown);
-
-  // 敌人标记
-  world.addComponent<ecs::EnemyTag>(entity, config.type);
-
-  // 掉落物组件
-  auto &loot = world.addComponent<ecs::LootComponent>(entity);
-  for (const auto &item : config.loot) {
-    loot.addDrop(item.itemId, item.minCount, item.maxCount, item.dropChance);
-  }
-  
-  CCLOG("Zombie created: %s with walk speed %.1f, jump force %.1f",
-        config.id.c_str(), walk.walkSpeed, walk.jumpForce);
-}
-
-ecs::EntityId ZombieCreatorBase::create(ecs::World &world, const MonsterConfig &config,
-                                         float x, float y, cocos2d::Node *parentNode) {
-  ecs::EntityId entity = world.createEntity();
-
-  // 创建精灵
-  Sprite *sprite = createSprite(config, x, y, parentNode);
-
-  // 添加基础组件
-  addBaseComponents(world, entity, config, sprite);
-
-  // 添加特有组件 (子类重写)
-  addSpecialComponents(world, entity, config);
-
-  return entity;
 }

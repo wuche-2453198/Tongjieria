@@ -1,6 +1,7 @@
 #include "MainMenuScene.h"
 #include "SlimeTestScene.h"
 #include "ZombieTestScene.h"
+#include "DemonEyeTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -61,7 +62,7 @@ bool MainMenuScene::init() {
 
   if (slimeTestItem != nullptr) {
     slimeTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                    origin.y + visibleSize.height / 2 + 40));
+                                    origin.y + visibleSize.height / 2 + 40 + 40));
   }
 
   // 添加僵尸测试按钮
@@ -73,7 +74,19 @@ bool MainMenuScene::init() {
 
   if (zombieTestItem != nullptr) {
     zombieTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                     origin.y + visibleSize.height / 2 - 40));
+                                     origin.y + visibleSize.height / 2));
+  }
+
+  // 添加恶魔眼测试按钮
+  auto demonEyeTestLabel =
+      Label::createWithTTF("Demon Eye Test", "fonts/Marker Felt.ttf", 28);
+  demonEyeTestLabel->setColor(Color3B(150, 100, 200));
+  auto demonEyeTestItem = MenuItemLabel::create(
+      demonEyeTestLabel, CC_CALLBACK_1(MainMenuScene::menuDemonEyeTestCallback, this));
+
+  if (demonEyeTestItem != nullptr) {
+    demonEyeTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                       origin.y + visibleSize.height / 2 - 40));
   }
 
   // 添加关闭按钮
@@ -87,7 +100,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(slimeTestItem, zombieTestItem, closeItem, nullptr);
+    auto menu = Menu::create(slimeTestItem, zombieTestItem, demonEyeTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -112,4 +125,11 @@ void MainMenuScene::menuZombieTestCallback(Ref *pSender) {
   auto zombieTestScene = ZombieTestScene::createScene();
   Director::getInstance()->replaceScene(
       TransitionFade::create(0.5f, zombieTestScene));
+}
+
+void MainMenuScene::menuDemonEyeTestCallback(Ref *pSender) {
+  // 进入恶魔眼测试场景
+  auto demonEyeTestScene = DemonEyeTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, demonEyeTestScene));
 }

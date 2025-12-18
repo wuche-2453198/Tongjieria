@@ -10,13 +10,13 @@
     "frameTime": 0.25,
     "scale": 1.0
   },
-  
+
   "physics": {
     "bodyWidth": 45.0,
-    "bodyHeight": 50.0,
-    "bodyHeightOffset": -5.0,
-    "mass": 0.8,
-    "friction": 0.6,
+    "bodyHeight": 60.0,
+    "bodyHeightOffset": -4.0,
+    "mass": 1.0,
+    "friction": 1.0,
     "restitution": 0.0,
     "collisionGroup": -1
   },

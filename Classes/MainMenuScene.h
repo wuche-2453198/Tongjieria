@@ -18,6 +18,9 @@ public:
   // 僵尸测试场景按钮回调
   void menuZombieTestCallback(cocos2d::Ref *pSender);
 
+  // 恶魔眼测试场景按钮回调
+  void menuDemonEyeTestCallback(cocos2d::Ref *pSender);
+
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);
 };

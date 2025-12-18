@@ -3,80 +3,44 @@
 
 /**
  * @file ECS.h
- * @brief 轻量级ECS框架 - 统一包含头文件
+ * @brief ECS框架统一头文件（使用EnTT库）
  *
  * 设计原则:
- * 1. Entity - 只是一个ID，不包含任何数据
+ * 1. Entity - 由EnTT管理的实体
  * 2. Component - 纯数据结构，不包含逻辑
- * 3. System - 处理特定组件组合的逻辑
- * 4. World - 管理所有实体、组件和系统
+ * 3. System - 处理特定组件组合的逻辑（使用ISystemEntt接口）
  *
  * 使用示例:
  * @code
  * #include "ecs/ECS.h"
- * using namespace ecs;
+ * #include "ecs/SystemsEntt.h"
+ * #include <entt/entt.hpp>
  *
- * // 创建世界
- * World world;
+ * // 创建注册表
+ * entt::registry registry;
+ * ecs::SystemManagerEntt systemManager;
+ * systemManager.setRegistry(&registry);
  *
  * // 添加系统
- * world.addSystem<SlimeRenderSystem>();
- * world.addSystem<JumpMovementSystem>();
+ * systemManager.addSystem<ecs::SlimeRenderSystemEntt>();
+ * systemManager.addSystem<ecs::JumpMovementSystemEntt>();
  *
  * // 创建实体
- * EntityId player = world.createEntity("Player");
- * world.addComponent<TransformComponent>(player, 100.0f, 200.0f);
- * world.addComponent<PlayerTag>(player);
+ * auto entity = registry.create();
+ * registry.emplace<ecs::TransformComponent>(entity, 100.0f, 200.0f);
+ * registry.emplace<ecs::PlayerTag>(entity);
  *
  * // 每帧更新
- * world.update(deltaTime);
+ * systemManager.update(deltaTime);
+ * @endcode
  */
 
-// 核心类型
-#include "Component.h"
+// 核心类型和组件
 #include "Entity.h"
-#include "EntityHandle.h"
-#include "System.h"
-#include "World.h"
-
-// 组件系统
 #include "Components.h"
 #include "SpriteComponent.h"
 
-// 游戏系统
-#include "Systems.h"
-
 namespace ecs {
-
-// ==================== 便捷工厂函数 ====================
-
-/**
- * @brief 创建全局世界单例 (可选使用)
- */
-class GameWorld {
-public:
-  static World &getInstance() {
-    static World instance;
-    return instance;
-  }
-
-  // 禁止拷贝
-  GameWorld(const GameWorld &) = delete;
-  GameWorld &operator=(const GameWorld &) = delete;
-
-private:
-  GameWorld() = default;
-};
-
-// EntityBuilder 已移动到 EntityHandle.h
-// 使用示例:
-// @code
-// EntityBuilder(world)
-//     .withTag("Player")
-//     .with<TransformComponent>(100, 200)
-//     .with<HealthComponent>(100)
-//     .build();
-// @endcode
 
 // ==================== 预定义碰撞层 ====================
 

@@ -10,13 +10,13 @@
     "frameTime": 0.2,
     "scale": 1.0
   },
-  
+
   "physics": {
     "bodyWidth": 40.0,
     "bodyHeight": 30.0,
-    "bodyHeightOffset": -5.0,
-    "mass": 1.3,
-    "friction": 0.8,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
     "restitution": 0.0,
     "collisionGroup": -1
   },
@@ -54,9 +54,9 @@
     "speed": 300.0,
     "lifetime": 3.0,
     "fireInterval": 0.8,
-    "fireRange": 200.0,
-    "horizontalSpread": 80.0,
-    "verticalImpulse": 350.0,
+    "fireRange": 100.0,
+    "horizontalSpread": 40.0,
+    "verticalImpulse": 280.0,
     "useGravity": true
   },
   

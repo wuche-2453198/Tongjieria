@@ -5,8 +5,7 @@ set(APP_NAME Mygame)
 
 project(${APP_NAME})
 
-# Enable C++17 for ECS framework features
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(XCODE)
@@ -34,32 +33,9 @@ if(APPLE OR WINDOWS)
     cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
 
-# add cross-platforms source files and header files 
-list(APPEND GAME_SOURCE
-     Classes/AppDelegate.cpp
-     Classes/SplashScene.cpp
-     Classes/MainMenuScene.cpp
-     Classes/SlimeTestScene.cpp
-     Classes/ZombieTestScene.cpp
-     Classes/MonsterFactory.cpp
-     )
-list(APPEND GAME_HEADER
-     Classes/AppDelegate.h
-     Classes/SplashScene.h
-     Classes/MainMenuScene.h
-     Classes/SlimeTestScene.h
-     Classes/ZombieTestScene.h
-     Classes/MonsterFactory.h
-     Classes/ecs/ECS.h
-     Classes/ecs/Entity.h
-     Classes/ecs/EntityHandle.h
-     Classes/ecs/Component.h
-     Classes/ecs/System.h
-     Classes/ecs/World.h
-     Classes/ecs/Components.h
-     Classes/ecs/SpriteComponent.h
-     Classes/ecs/Systems.h
-     )
+# add cross-platforms source files and header files (auto-scan)
+file(GLOB_RECURSE GAME_SOURCE "Classes/*.cpp")
+file(GLOB_RECURSE GAME_HEADER "Classes/*.h")
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
@@ -128,8 +104,8 @@ endif()
 
 target_link_libraries(${APP_NAME} cocos2d)
 
-# Set C++17 standard for the game target (required for ECS framework)
-set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+# Set C++20 standard for the game target (required for ECS framework)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(${APP_NAME}

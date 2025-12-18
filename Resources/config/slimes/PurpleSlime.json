@@ -8,14 +8,14 @@
     "spritePrefix": "Purple_Slime",
     "frameCount": 2,
     "frameTime": 0.14,
-    "scale": 1.21
+    "scale": 1
   },
-  
+
   "physics": {
     "bodyWidth": 32.0,
     "bodyHeight": 24.0,
-    "bodyHeightOffset": -5.0,
-    "mass": 1.2,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,
     "collisionGroup": -1

@@ -2,6 +2,7 @@
 #include "MainMenuScene.h"
 #include "MonsterFactory.h"
 #include "ecs/SpriteComponent.h"
+#include "ecs/PhysicsContactHandler.h"
 
 USING_NS_CC;
 
@@ -10,7 +11,9 @@ Scene *SlimeTestScene::createScene()
   auto scene = Scene::createWithPhysics();
   auto physicsWorld = scene->getPhysicsWorld();
   physicsWorld->setGravity(Vec2(0, -980));
-  physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+
+  //调试物理体
+  // physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 
   // 提高物理引擎精度，减少穿透问题
   physicsWorld->setSpeed(1.0f);
@@ -77,9 +80,10 @@ bool SlimeTestScene::init()
 void SlimeTestScene::setupEcsSystems()
 {
   auto &factory = MonsterFactory::getInstance();
+  factory.clearConfigs();  // 清空之前场景的配置
   factory.loadConfigsFromDir("config/slimes");
 
-  // ==================== 使用EnTT版本Systems（史莱姆专用）====================
+  // ==================== 使用EnTTSystems（史莱姆专用）====================
   CCLOG("========== Setting up EnTT Systems for Slimes ==========");
   
   _systemManager.setRegistry(&_registry);
@@ -147,8 +151,8 @@ void SlimeTestScene::createPhysicsEnvironment()
   topWallBody->setContactTestBitmask(0xFFFFFFFF);
   topWall->setPhysicsBody(topWallBody);
 
-  // 地面 - 高摩擦力+零弹性，完全防止史莱姆滑行和弹跳
-  PhysicsMaterial groundMaterial(1.0f, 0.9f, 0.0f);  // density, friction, restitution(完全无弹性)
+  // 地面 - 高摩擦力+零弹性
+  PhysicsMaterial groundMaterial(1.0f, 5.0f, 0.0f);  // density, friction, restitution(完全无弹性)
   auto ground = Sprite::create();
   ground->setTextureRect(Rect(0, 0, visibleSize.width, 50));
   ground->setColor(Color3B(139, 90, 43));
@@ -211,7 +215,7 @@ void SlimeTestScene::createFakePlayerEntity()
     this->addChild(_playerLabel, 1);
   }
 
-  // 创建玩家实体（EnTT版本）
+  // 创建玩家实体
   auto playerEntity = _registry.create();
   
   auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
@@ -222,12 +226,14 @@ void SlimeTestScene::createFakePlayerEntity()
   
   _fakePlayerEntity = entt::to_integral(playerEntity);
   
-  // 注册到NodeEntityMap（关键！让史莱姆能找到玩家）
+  // 注册到NodeEntityMap (让史莱姆能锁定玩家)
   ecs::NodeEntityMap::getInstance().registerNode(_fakePlayer, _fakePlayerEntity);
   
   CCLOG("SlimeTestScene: Fake player created (EnTT entity %u) and registered to NodeEntityMap", _fakePlayerEntity);
 }
 
+
+//在测试场景中生成各种史莱姆
 void SlimeTestScene::createEcsSlime()
 {
   auto visibleSize = Director::getInstance()->getVisibleSize();
@@ -251,202 +257,88 @@ void SlimeTestScene::createEcsSlime()
     float X = origin.x + 100.0f + i * (visibleSize.width - 200.0f) / (slimeCount - 1);
     float Y = groundTop + 100.0f;
     CCLOG("SlimeTestScene: Spawning %s at (%.1f, %.1f) [i=%d]", slimeTypes[i], X, Y, i);
-    factory.createMonsterEntt(_registry, slimeTypes[i], X, Y, this);
+    factory.createMonster(_registry, slimeTypes[i], X, Y, this);
   }
   CCLOG("SlimeTestScene: All slimes spawned (EnTT version)");
 }
 
 void SlimeTestScene::setupSharedContactListener()
 {
-  _sharedContactListener = EventListenerPhysicsContact::create();
-
-  _sharedContactListener->onContactBegin = [this](PhysicsContact &contact)
-  {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    
-    Node *nodeA = bodyA->getNode();
-    Node *nodeB = bodyB->getNode();
-    
-    ecs::EntityId entityA = nodeA ? ecs::NodeEntityMap::getInstance().findEntity(nodeA) : ecs::INVALID_ENTITY;
-    ecs::EntityId entityB = nodeB ? ecs::NodeEntityMap::getInstance().findEntity(nodeB) : ecs::INVALID_ENTITY;
-    
-    // 投射物碰撞处理（EnTT版本）
-    ecs::ProjectileComponent *projA = nullptr;
-    ecs::ProjectileComponent *projB = nullptr;
-    
-    if (entityA != ecs::INVALID_ENTITY) {
-      auto entA = static_cast<entt::entity>(entityA);
-      if (_registry.valid(entA)) projA = _registry.try_get<ecs::ProjectileComponent>(entA);
-    }
-    if (entityB != ecs::INVALID_ENTITY) {
-      auto entB = static_cast<entt::entity>(entityB);
-      if (_registry.valid(entB)) projB = _registry.try_get<ecs::ProjectileComponent>(entB);
-    }
-    
-    if (projA || projB) {
-      ecs::ProjectileComponent *proj = projA ? projA : projB;
-      ecs::EntityId otherEntity = projA ? entityB : entityA;
-      PhysicsBody *otherBody = projA ? bodyB : bodyA;
+  // 使用PhysicsContactHandler创建碰撞监听器，自定义投射物处理逻辑
+  _sharedContactListener = ecs::PhysicsContactHandler::createContactListener(
+    _registry,
+    // 自定义碰撞开始处理：投射物碰撞
+    [this](PhysicsContact& contact, const ecs::PhysicsContactHandler::ContactInfo& info) -> bool {
+      auto bodyA = contact.getShapeA()->getBody();
+      auto bodyB = contact.getShapeB()->getBody();
+      Node *nodeA = bodyA->getNode();
+      Node *nodeB = bodyB->getNode();
       
-      if (proj->hasHit) return true;
-      if (otherEntity == proj->owner) return true;
+      ecs::EntityId entityA = nodeA ? ecs::NodeEntityMap::getInstance().findEntity(nodeA) : ecs::INVALID_ENTITY;
+      ecs::EntityId entityB = nodeB ? ecs::NodeEntityMap::getInstance().findEntity(nodeB) : ecs::INVALID_ENTITY;
       
-      if (!otherBody->isDynamic()) {
-        proj->hasHit = true;
-        return true;
+      // 投射物碰撞处理
+      ecs::ProjectileComponent *projA = nullptr;
+      ecs::ProjectileComponent *projB = nullptr;
+      
+      if (entityA != ecs::INVALID_ENTITY) {
+        auto entA = static_cast<entt::entity>(entityA);
+        if (_registry.valid(entA)) projA = _registry.try_get<ecs::ProjectileComponent>(entA);
+      }
+      if (entityB != ecs::INVALID_ENTITY) {
+        auto entB = static_cast<entt::entity>(entityB);
+        if (_registry.valid(entB)) projB = _registry.try_get<ecs::ProjectileComponent>(entB);
       }
       
-      if (otherEntity != ecs::INVALID_ENTITY) {
-        auto otherEnt = static_cast<entt::entity>(otherEntity);
-        if (_registry.valid(otherEnt)) {
-          auto *playerTag = _registry.try_get<ecs::PlayerTag>(otherEnt);
-          if (playerTag) {
-            auto *health = _registry.try_get<ecs::HealthComponent>(otherEnt);
-            if (health) health->takeDamage(proj->damage);
-            
-            auto *debuff = _registry.try_get<ecs::DebuffComponent>(otherEnt);
-            if (!debuff) debuff = &_registry.emplace<ecs::DebuffComponent>(otherEnt);
-            
-            if (proj->chillChance > 0 && (float)rand() / RAND_MAX < proj->chillChance) {
-              debuff->applyChillDebuff(proj->chillDuration, proj->chillSpeedReduction);
+      if (projA || projB) {
+        ecs::ProjectileComponent *proj = projA ? projA : projB;
+        ecs::EntityId otherEntity = projA ? entityB : entityA;
+        PhysicsBody *otherBody = projA ? bodyB : bodyA;
+        
+        if (proj->hasHit) return true;
+        if (otherEntity == proj->owner) return true;
+        
+        if (!otherBody->isDynamic()) {
+          proj->hasHit = true;
+          return true;
+        }
+        
+        if (otherEntity != ecs::INVALID_ENTITY) {
+          auto otherEnt = static_cast<entt::entity>(otherEntity);
+          if (_registry.valid(otherEnt)) {
+            auto *playerTag = _registry.try_get<ecs::PlayerTag>(otherEnt);
+            if (playerTag) {
+              auto *health = _registry.try_get<ecs::HealthComponent>(otherEnt);
+              if (health) health->takeDamage(proj->damage);
+              
+              auto *debuff = _registry.try_get<ecs::DebuffComponent>(otherEnt);
+              if (!debuff) debuff = &_registry.emplace<ecs::DebuffComponent>(otherEnt);
+              
+              if (proj->chillChance > 0 && (float)rand() / RAND_MAX < proj->chillChance) {
+                debuff->applyChillDebuff(proj->chillDuration, proj->chillSpeedReduction);
+              }
+              if (proj->freezeChance > 0 && (float)rand() / RAND_MAX < proj->freezeChance) {
+                debuff->applyFreezeDebuff(proj->freezeDuration);
+              }
+              if (proj->poisonChance1 > 0 && (float)rand() / RAND_MAX < proj->poisonChance1) {
+                debuff->applyPoisonDebuff(proj->poisonDuration1, proj->poisonDamage1);
+              } else if (proj->poisonChance2 > 0 && (float)rand() / RAND_MAX < proj->poisonChance2) {
+                debuff->applyPoisonDebuff(proj->poisonDuration2, proj->poisonDamage2);
+              }
+              
+              proj->hasHit = true;
             }
-            if (proj->freezeChance > 0 && (float)rand() / RAND_MAX < proj->freezeChance) {
-              debuff->applyFreezeDebuff(proj->freezeDuration);
-            }
-            if (proj->poisonChance1 > 0 && (float)rand() / RAND_MAX < proj->poisonChance1) {
-              debuff->applyPoisonDebuff(proj->poisonDuration1, proj->poisonDamage1);
-            } else if (proj->poisonChance2 > 0 && (float)rand() / RAND_MAX < proj->poisonChance2) {
-              debuff->applyPoisonDebuff(proj->poisonDuration2, proj->poisonDamage2);
-            }
-            
-            proj->hasHit = true;
-            return true;
           }
         }
+        return true;  // 投射物已处理，跳过默认地面检测
       }
-      return true;
-    }
-
-    // 地面检测 - 检查碰撞法线，只有向上的接触才算地面
-    PhysicsBody *dynamicBody = nullptr;
-    PhysicsBody *staticBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      staticBody = bodyB;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      staticBody = bodyA;
-      dynamicIsA = false;
-    } else {
-      return true;
-    }
-
-    Node *dynamicNode = dynamicBody->getNode();
-    Node *staticNode = staticBody->getNode();
-    if (!dynamicNode) return true;
-
-    // 获取接触法线（指向动态物体的方向）
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    
-    // 地面法线实际是向下的(0, -1)，墙壁法线是水平的
-    // 检查normal.y < -0.3，即向下的法线才算地面
-    bool isGroundContact = (normal.y < -0.3f);
-
-    if (isGroundContact) {
-      ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
-      if (entity != ecs::INVALID_ENTITY) {
-        auto ent = static_cast<entt::entity>(entity);
-        if (_registry.valid(ent)) {
-          auto *ground = _registry.try_get<ecs::GroundDetectorComponent>(ent);
-          if (ground) {
-            ground->isOnGround = true;
-            ground->groundContactCount++;
-          }
-        }
-      }
-    }
-    return true;
-  };
-
-  _sharedContactListener->onContactSeparate = [this](PhysicsContact &contact)
-  {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    PhysicsBody *dynamicBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      dynamicIsA = false;
-    } else {
-      return;
-    }
-
-    Node *dynamicNode = dynamicBody->getNode();
-    if (!dynamicNode) return;
-
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    bool wasGroundContact = (normal.y < -0.3f);
-    
-    if (!wasGroundContact) {
-      return;
-    }
-
-    ecs::EntityId entity = ecs::NodeEntityMap::getInstance().findEntity(dynamicNode);
-    if (entity != ecs::INVALID_ENTITY) {
-      auto ent = static_cast<entt::entity>(entity);
-      if (_registry.valid(ent)) {
-        auto *ground = _registry.try_get<ecs::GroundDetectorComponent>(ent);
-        if (ground) {
-          ground->groundContactCount--;
-          if (ground->groundContactCount <= 0) {
-            ground->isOnGround = false;
-            ground->groundContactCount = 0;
-          }
-        }
-      }
-    }
-  };
-
-  // 预处理回调：防止撞墙时产生向上的滑动
-  _sharedContactListener->onContactPreSolve = [this](PhysicsContact &contact, PhysicsContactPreSolve &solve) {
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    
-    PhysicsBody *dynamicBody = nullptr;
-    bool dynamicIsA = false;
-    if (bodyA->isDynamic() && !bodyB->isDynamic()) {
-      dynamicBody = bodyA;
-      dynamicIsA = true;
-    } else if (bodyB->isDynamic() && !bodyA->isDynamic()) {
-      dynamicBody = bodyB;
-      dynamicIsA = false;
-    } else {
-      return true;
-    }
-
-    // 获取接触法线
-    cocos2d::Vec2 normal = contact.getContactData()->normal;
-    if (!dynamicIsA) normal = -normal;
-    
-    // 如果是侧面碰撞（墙壁），阻止垂直方向的反弹
-    if (std::abs(normal.x) > 0.7f && std::abs(normal.y) < 0.3f) {
-      // 这是侧面碰撞，设置弹性为0防止滑上去
-      solve.setRestitution(0.0f);
-      solve.setFriction(0.0f);
-    }
-    return true;
-  };
+      return true;  // 继续执行默认地面检测
+    },
+    nullptr  // 无自定义分离处理
+  );
 
   _eventDispatcher->addEventListenerWithSceneGraphPriority(_sharedContactListener, this);
-  CCLOG("SlimeTestScene: Contact listener initialized");
+  CCLOG("SlimeTestScene: Contact listener initialized (using PhysicsContactHandler)");
 }
 
 void SlimeTestScene::menuBackCallback(Ref *pSender)

@@ -2,20 +2,20 @@
   "id": "31px-Zombie",
   "type": "Zombie",
   "description": "小型僵尸 - 体型较小但移动速度较快的僵尸",
-  
+
   "display": {
     "spriteFolder": "Minor monster/31px-Zombie",
     "spritePrefix": "31px-Zombie",
     "frameCount": 3,
-    "frameSequence": [1, 2, 3, 2],
+    "frameSequence": [ 1, 2, 3, 2 ],
     "frameTime": 0.15,
-    "scale": 0.9
+    "scale": 1.0
   },
-  
+
   "physics": {
-    "bodyWidth": 24.0,
-    "bodyHeight": 40.0,
-    "bodyHeightOffset": -6.0,
+    "bodyWidth": 31.0,
+    "bodyHeight": 42.0,
+    "bodyHeightOffset": -4,
     "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,
