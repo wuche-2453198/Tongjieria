@@ -1,5 +1,6 @@
 #include "PlayerFactory.h"
 #include "PlayerComponents.h"
+#include "PlayerAnimationLoader.h"
 
 USING_NS_CC;
 
@@ -38,8 +39,26 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
         hotbar.slots[i] = i;
     }
 
-    // 8. 添加动画组件
-    registry.emplace<ecs::PlayerAnimationComponent>(player);
+    // 8. 添加动画组件并加载动画资源
+    auto& animation = registry.emplace<ecs::PlayerAnimationComponent>(player);
+
+    // 初始化动画加载器（只需要初始化一次）
+    static bool animLoaderInitialized = false;
+    if (!animLoaderInitialized) {
+        PlayerAnimationLoader::initialize(parentNode);
+        animLoaderInitialized = true;
+    }
+
+    // 加载初始动画（IDLE）
+    const auto* idleAnim = PlayerAnimationLoader::getAnimation(
+        ecs::PlayerAnimationComponent::AnimState::IDLE
+    );
+    if (idleAnim) {
+        animation.currentFrames = idleAnim->frames;
+        animation.totalFrames = idleAnim->getFrameCount();
+        animation.frameTime = idleAnim->frameTime;
+        CCLOG("PlayerFactory: Loaded IDLE animation with %d frames", animation.totalFrames);
+    }
 
     // 9. 添加Buff组件
     registry.emplace<ecs::PlayerBuffComponent>(player);
@@ -72,21 +91,18 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
 Sprite* PlayerFactory::createPlayerSprite(const Vec2& spawnPos, Node* parentNode) {
     Sprite* sprite = nullptr;
 
-    // Cocos2d 不直接支持 GIF，使用备用方案创建玩家精灵
-    // 最终方案：创建彩色矩形作为玩家（暂时使用，后续可以换成 PNG 序列帧）
-    CCLOG("PlayerFactory: Creating player sprite as colored rectangle (GIF not supported by Cocos2d)");
-    sprite = Sprite::create();
-    sprite->setTextureRect(Rect(0, 0, 40, 50)); // 40x50 像素的玩家
-    sprite->setColor(Color3B(255, 200, 100)); // 金黄色（类似泰拉瑞亚玩家颜色）
+    // 使用站立动画的第一帧作为主精灵（仅用于物理体和位置定位）
+    sprite = Sprite::create("player/站立/Style_1_male.png");
 
     if (sprite) {
         sprite->setPosition(spawnPos);
+        sprite->setVisible(false);  // 隐藏主精灵，使用动画帧精灵显示
         parentNode->addChild(sprite, 10); // 较高的Z-order，确保在前景
 
         // 添加物理体
         addPhysicsBody(sprite);
 
-        CCLOG("PlayerFactory: Player sprite created at (%.1f, %.1f)",
+        CCLOG("PlayerFactory: Player sprite created at (%.1f, %.1f) with animation frame",
               spawnPos.x, spawnPos.y);
     } else {
         CCLOG("PlayerFactory: ERROR - Failed to create player sprite!");

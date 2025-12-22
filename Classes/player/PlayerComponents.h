@@ -7,10 +7,13 @@
 namespace ecs {
 
 // ==================== Player Tag ====================
+//作为玩家标签
+//在创建玩家时添加标签
 struct PlayerTag {};
 
 // ==================== Transform Component ====================
 // 注意：如果你的项目已经有 TransformComponent，可以复用
+//存储玩家坐标
 struct TransformComponent {
     float x = 0.0f;
     float y = 0.0f;
@@ -20,6 +23,7 @@ struct TransformComponent {
 };
 
 // ==================== Player Stats Component ====================
+//存储玩家的所有属性值
 struct PlayerStatsComponent {
     // 生命值
     float maxHealth = 100.0f;
@@ -64,6 +68,7 @@ struct PlayerStatsComponent {
 };
 
 // ==================== Player Movement Component ====================
+//存储物理数据
 struct PlayerMovementComponent {
     cocos2d::Vec2 velocity = {0, 0};
     cocos2d::Vec2 acceleration = {0, 0};
@@ -89,6 +94,7 @@ struct PlayerMovementComponent {
 };
 
 // ==================== Player Equipment Component ====================
+//装备与饰品的结构体
 struct PlayerEquipmentComponent {
     // 装备槽位结构
     struct EquipmentSlot {
@@ -173,8 +179,11 @@ struct PlayerAnimationComponent {
 
     float animationTime = 0.0f;
     int currentFrame = 0;
-    int totalFrames = 2;
-    float frameTime = 0.2f;
+    int totalFrames = 1;               // 当前动画的总帧数
+    float frameTime = 0.07f;           // 当前动画的每帧时间
+
+    // 动画帧精灵列表（每个状态对应不同的帧列表）
+    std::vector<cocos2d::Sprite*> currentFrames;
 
     // 使用物品动画
     bool isUsingItem = false;
@@ -187,6 +196,7 @@ struct PlayerAnimationComponent {
 };
 
 // ==================== Player Buff Component ====================
+//定义buff
 struct PlayerBuffComponent {
     struct Buff {
         int buffId = 0;                    // Buff ID
@@ -269,6 +279,7 @@ struct PlayerBuffComponent {
 };
 
 // ==================== Player Ability Component ====================
+//功能部分
 struct PlayerAbilityComponent {
     // 钩爪
     bool hasHook = false;
@@ -314,6 +325,7 @@ struct PlayerAbilityComponent {
 };
 
 // ==================== Player Combat Component ====================
+//当前装备
 struct PlayerCombatComponent {
     // 当前装备的武器
     int equippedWeaponId = 0;

@@ -1,5 +1,6 @@
 #include "PlayerSystems.h"
 #include "PlayerInput.h"
+#include "PlayerAnimationLoader.h"
 #include <cmath>
 
 USING_NS_CC;
@@ -319,8 +320,49 @@ void PlayerAnimationSystem::update(entt::registry& registry, float dt) {
         // 更新动画时间
         animation.animationTime += dt;
 
-        // TODO: 实际播放动画帧（需要加载动画资源）
-        // 目前使用单张图片，暂时跳过帧动画
+        // 播放帧动画
+        if (!animation.currentFrames.empty() && animation.totalFrames > 0) {
+            // 计算当前应该显示的帧
+            int targetFrame = static_cast<int>(animation.animationTime / animation.frameTime);
+
+            // 循环播放
+            if (targetFrame >= animation.totalFrames) {
+                targetFrame = targetFrame % animation.totalFrames;
+                animation.animationTime = targetFrame * animation.frameTime;
+            }
+
+            // 切换帧
+            if (targetFrame != animation.currentFrame) {
+                // 隐藏当前帧
+                if (animation.currentFrame >= 0 &&
+                    animation.currentFrame < animation.currentFrames.size()) {
+                    animation.currentFrames[animation.currentFrame]->setVisible(false);
+                }
+
+                // 显示新帧
+                animation.currentFrame = targetFrame;
+                if (animation.currentFrame >= 0 &&
+                    animation.currentFrame < animation.currentFrames.size()) {
+                    auto frameSprite = animation.currentFrames[animation.currentFrame];
+                    frameSprite->setVisible(true);
+
+                    // 同步位置和朝向到主精灵
+                    if (sprite.sprite) {
+                        frameSprite->setPosition(sprite.sprite->getPosition());
+                        frameSprite->setFlippedX(sprite.sprite->isFlippedX());
+                    }
+                }
+            } else {
+                // 即使不切换帧，也要同步位置
+                if (animation.currentFrame >= 0 &&
+                    animation.currentFrame < animation.currentFrames.size() &&
+                    sprite.sprite) {
+                    auto frameSprite = animation.currentFrames[animation.currentFrame];
+                    frameSprite->setPosition(sprite.sprite->getPosition());
+                    frameSprite->setFlippedX(sprite.sprite->isFlippedX());
+                }
+            }
+        }
     }
 }
 
@@ -360,18 +402,43 @@ void PlayerAnimationSystem::transitionToState(
     ecs::PlayerAnimationComponent& animation,
     ecs::PlayerAnimationComponent::AnimState newState)
 {
+    // 隐藏旧动画的所有帧
+    for (auto* frame : animation.currentFrames) {
+        if (frame) {
+            frame->setVisible(false);
+        }
+    }
+
     animation.previousState = animation.currentState;
     animation.currentState = newState;
     animation.animationTime = 0.0f;
     animation.currentFrame = 0;
 
+    // 加载新动画的帧
+    const auto* newAnim = PlayerAnimationLoader::getAnimation(newState);
+    if (newAnim) {
+        animation.currentFrames = newAnim->frames;
+        animation.totalFrames = newAnim->getFrameCount();
+        animation.frameTime = newAnim->frameTime;
+
+        // 显示第一帧
+        if (!animation.currentFrames.empty()) {
+            animation.currentFrames[0]->setVisible(true);
+        }
+    } else {
+        CCLOG("PlayerAnimationSystem: Failed to load animation for state %d", static_cast<int>(newState));
+        animation.currentFrames.clear();
+        animation.totalFrames = 0;
+    }
+
     // 输出调试信息
     static const char* stateNames[] = {
         "IDLE", "WALK", "RUN", "JUMP", "FALL", "USE_ITEM", "HURT", "DEATH", "SWIM"
     };
-    CCLOG("Animation state changed: %s -> %s",
+    CCLOG("Animation state changed: %s -> %s (%d frames)",
           stateNames[static_cast<int>(animation.previousState)],
-          stateNames[static_cast<int>(newState)]);
+          stateNames[static_cast<int>(newState)],
+          animation.totalFrames);
 }
 
 // ==================== PlayerHealthSystem ====================
