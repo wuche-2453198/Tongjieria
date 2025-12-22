@@ -92,7 +92,7 @@ Sprite* PlayerFactory::createPlayerSprite(const Vec2& spawnPos, Node* parentNode
     Sprite* sprite = nullptr;
 
     // 使用站立动画的第一帧作为主精灵（仅用于物理体和位置定位）
-    sprite = Sprite::create("player/站立/Style_1_male.png");
+    sprite = Sprite::create("player/idle/Style_1_male.png");
 
     if (sprite) {
         sprite->setPosition(spawnPos);

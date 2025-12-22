@@ -82,18 +82,22 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadWalkAnimation(
     anim.frameTime = 0.07f;  // 70ms per frame
     anim.loop = true;
 
-    // 加载 14 帧行走动画
+    CCLOG("PlayerAnimationLoader: Starting to load WALK animation (14 frames)...");
+
+    // for循环加载动画
+    int successCount = 0;
     for (int i = 0; i <= 13; i++) {
-        std::string path = StringUtils::format("player/行走/frame_%02d_delay-0.07s.png", i);
+        std::string path = StringUtils::format("player/walk/frame_%02d_delay-0.07s.png", i);
         auto sprite = createFrameSprite(path, parentNode);
         if (sprite) {
             anim.frames.push_back(sprite);
+            successCount++;
         } else {
-            CCLOG("PlayerAnimationLoader: Failed to load walk frame %d", i);
+            CCLOG("PlayerAnimationLoader: [FAILED] walk frame %d at path: %s", i, path.c_str());
         }
     }
 
-    CCLOG("PlayerAnimationLoader: Loaded WALK animation with %d frames", anim.getFrameCount());
+    CCLOG("PlayerAnimationLoader: Loaded WALK animation: %d/%d frames successful", successCount, 14);
     return anim;
 }
 
@@ -103,7 +107,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadIdleAnimation(
     anim.loop = true;
 
     // 站立动画只有一帧
-    auto sprite = createFrameSprite("player/站立/Style_1_male.png", parentNode);
+    auto sprite = createFrameSprite("player/idle/Style_1_male.png", parentNode);
     if (sprite) {
         anim.frames.push_back(sprite);
     } else {
@@ -120,7 +124,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadJumpAnimation(
     anim.loop = false;  // 跳跃不循环
 
     // 跳跃使用站立姿势（泰拉瑞亚风格）
-    auto sprite = createFrameSprite("player/站立/Style_1_male.png", parentNode);
+    auto sprite = createFrameSprite("player/idle/Style_1_male.png", parentNode);
     if (sprite) {
         anim.frames.push_back(sprite);
     } else {
@@ -137,7 +141,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadFallAnimation(
     anim.loop = false;
 
     // 下落动画
-    auto sprite = createFrameSprite("player/下坠/Style_1_male_falling.png", parentNode);
+    auto sprite = createFrameSprite("player/fall/Style_1_male_falling.png", parentNode);
     if (sprite) {
         anim.frames.push_back(sprite);
     } else {
@@ -153,7 +157,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadSitAnimation(N
     anim.frameTime = 0.1f;
     anim.loop = true;
 
-    auto sprite = createFrameSprite("player/坐下/Style_1_male_sitting.png", parentNode);
+    auto sprite = createFrameSprite("player/sit/Style_1_male_sitting.png", parentNode);
     if (sprite) {
         anim.frames.push_back(sprite);
     }
@@ -162,11 +166,22 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadSitAnimation(N
 }
 
 Sprite* PlayerAnimationLoader::createFrameSprite(const std::string& path, Node* parentNode) {
+    CCLOG("PlayerAnimationLoader: Attempting to load sprite: %s", path.c_str());
+
     auto sprite = Sprite::create(path);
     if (!sprite) {
-        CCLOG("PlayerAnimationLoader: Failed to create sprite from: %s", path.c_str());
+        CCLOG("PlayerAnimationLoader: [ERROR] Failed to create sprite from: %s", path.c_str());
+
+        // 尝试获取完整路径来调试
+        auto fullPath = cocos2d::FileUtils::getInstance()->fullPathForFilename(path);
+        CCLOG("PlayerAnimationLoader: Full path resolved to: %s", fullPath.c_str());
+        CCLOG("PlayerAnimationLoader: File exists: %s",
+              cocos2d::FileUtils::getInstance()->isFileExist(path) ? "YES" : "NO");
+
         return nullptr;
     }
+
+    CCLOG("PlayerAnimationLoader: [SUCCESS] Loaded sprite: %s", path.c_str());
 
     // 默认隐藏（由动画系统控制显示）
     sprite->setVisible(false);

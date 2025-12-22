@@ -40,13 +40,13 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
         movement.wantsToJump = jumpPressed;
 
         // 额外调试：显示输入状态
-        static int inputDebugCounter = 0;
-        if (inputDebugCounter++ % 60 == 0) {
-            CCLOG("Input Debug: MoveLeft=%s, MoveRight=%s, Jump=%s",
-                  movement.isMovingLeft ? "YES" : "NO",
-                  movement.isMovingRight ? "YES" : "NO",
-                  movement.wantsToJump ? "YES" : "NO");
-        }
+        // static int inputDebugCounter = 0;
+        // if (inputDebugCounter++ % 60 == 0) {
+        //     CCLOG("Input Debug: MoveLeft=%s, MoveRight=%s, Jump=%s",
+        //           movement.isMovingLeft ? "YES" : "NO",
+        //           movement.isMovingRight ? "YES" : "NO",
+        //           movement.wantsToJump ? "YES" : "NO");
+        // }
 
         // ==================== 处理快捷栏切换 ====================
         // 数字键1-9切换快捷栏
@@ -250,11 +250,11 @@ void PlayerGroundDetectionSystem::update(entt::registry& registry, float dt) {
         }
 
         // 调试输出（每60帧输出一次，避免日志过多）
-        static int debugCounter = 0;
-        if (debugCounter++ % 60 == 0) {
-            CCLOG("Ground Detection: isOnGround=%s, velocityY=%.1f",
-                  stats.isOnGround ? "YES" : "NO", velocityY);
-        }
+        // static int debugCounter = 0;
+        // if (debugCounter++ % 60 == 0) {
+        //     CCLOG("Ground Detection: isOnGround=%s, velocityY=%.1f",
+        //           stats.isOnGround ? "YES" : "NO", velocityY);
+        // }
     }
 }
 

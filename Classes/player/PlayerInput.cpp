@@ -1,7 +1,7 @@
 #include "PlayerInput.h"
 
 USING_NS_CC;
-
+//输入部分
 PlayerInput::PlayerInput() {
     // 初始化默认按键映射
     setKeyMapping("MoveLeft", EventKeyboard::KeyCode::KEY_A);
