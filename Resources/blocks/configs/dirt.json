@@ -1,0 +1,7 @@
+{
+    "id": "dirt",
+    "name": "Dirt",
+    "texture": "blocks\\textures\\dirt.png",
+    "replaceable" : false,
+    "collision" : true
+}

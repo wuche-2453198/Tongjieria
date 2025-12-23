@@ -1,0 +1,8 @@
+{
+    "id": "air",
+    "name": "Air",
+    "texture": "blocks\\textures\\air.png",
+    "replaceable" : true,
+    "interacable" : false,
+    "collision" : false
+}

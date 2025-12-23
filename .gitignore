@@ -84,3 +84,7 @@ engine/
 *.backup
 DocumentLayout.json
 DocumentLayout.backup.json
+# 编辑器备份文件
+*.backup
+DocumentLayout.json
+DocumentLayout.backup.json
