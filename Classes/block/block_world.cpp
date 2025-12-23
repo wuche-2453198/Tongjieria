@@ -28,7 +28,7 @@ BlockState BlockWorld::getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const
     return getBlockAtBlockPos(BlockLayer::worldPosToBlockPos(worldPos));
 }
 
-bool BlockWorld::TryInteract(const Vec2i& pos, entt::entity interactor)
+bool BlockWorld::tryInteract(const Vec2i& pos, entt::entity interactor)
 {
     // 检查方块是否存在
     if (!_blockLayer.hasChunkExistAtBlockPos(pos))
@@ -45,12 +45,12 @@ bool BlockWorld::TryInteract(const Vec2i& pos, entt::entity interactor)
     return true;
 }
 
-bool BlockWorld::TryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor)
+bool BlockWorld::tryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor)
 {
-    return TryInteract(BlockLayer::worldPosToBlockPos(pos), interactor);
+    return tryInteract(BlockLayer::worldPosToBlockPos(pos), interactor);
 }
 
-bool BlockWorld::TryDestroy(const Vec2i& pos, entt::entity destroyer)
+bool BlockWorld::tryDestroy(const Vec2i& pos, entt::entity destroyer)
 {
     // 检查方块是否存在
     if (!_blockLayer.hasChunkExistAtBlockPos(pos))
@@ -66,9 +66,9 @@ bool BlockWorld::TryDestroy(const Vec2i& pos, entt::entity destroyer)
     return true;
 }
 
-bool BlockWorld::TryDestroyAtWorldPos(const cocos2d::Vec2& pos, entt::entity destroyer)
+bool BlockWorld::tryDestroyAtWorldPos(const cocos2d::Vec2& pos, entt::entity destroyer)
 {
-    return TryDestroy(BlockLayer::worldPosToBlockPos(pos), destroyer);
+    return tryDestroy(BlockLayer::worldPosToBlockPos(pos), destroyer);
 }
 
 bool BlockWorld::TryPlace(const Vec2i& blockPos, entt::id_type block_id, state block_state, entt::entity placer)

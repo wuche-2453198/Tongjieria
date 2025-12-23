@@ -102,7 +102,7 @@ public:
     * @param interactor 交互者实体
     * @return 是否成功交互
     */
-    bool TryInteract(const Vec2i& pos, entt::entity interactor);
+    bool tryInteract(const Vec2i& pos, entt::entity interactor);
 
     /**
     * @brief 尝试与指定位置的方块交互。
@@ -111,7 +111,7 @@ public:
     * @param interactor 交互者实体
     * @return 是否成功交互
     */
-    bool TryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor);
+    bool tryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor);
 
     /**
     * @brief 尝试破坏指定位置的方块。
@@ -120,7 +120,7 @@ public:
     * @param destroyer 破坏者实体
     * @return 是否成功破坏
     */
-    bool TryDestroy(const Vec2i& pos, entt::entity destroyer);
+    bool tryDestroy(const Vec2i& pos, entt::entity destroyer);
 
     /**
     * @brief 尝试破坏指定位置的方块。
@@ -129,7 +129,7 @@ public:
     * @param destroyer 破坏者实体
     * @return 是否成功破坏
     */
-    bool TryDestroyAtWorldPos(const cocos2d::Vec2& pos, entt::entity destroyer);
+    bool tryDestroyAtWorldPos(const cocos2d::Vec2& pos, entt::entity destroyer);
 
     /**
     * @brief 尝试放置方块到指定位置。
