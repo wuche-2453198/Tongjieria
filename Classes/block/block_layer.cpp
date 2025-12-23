@@ -66,7 +66,6 @@ BlockState BlockLayer::getBlockAtBlockPos(const Vec2i& blockPos) const
     BlockState state;
     state.blockPos = blockPos;
     state.id = chunk.getBlockAt(blockPosToChunkLocalPos(blockPos));
-    state.stateCode = 0;      // todo 设置方块状态码
     state.blockEntiy = entt::null; // todo 设置方块实体
     
     // todo 设置其他数据，如方块状态，方块实体
