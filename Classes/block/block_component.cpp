@@ -53,23 +53,10 @@ const BlockArray& const ChunkBlocks::getBlockView() const
 }
 
 WorldScene::WorldScene(World* world) : _world(world) {}
-
 WorldScene::~WorldScene() = default;
-
-World& WorldScene::operator*() const
-{
-    return *_world;
-}
-
-World* WorldScene::operator->() const
-{
-    return _world;
-}
-
-WorldScene::operator bool() const
-{
-    return _world != nullptr;
-}
+World& WorldScene::operator*() const { return *_world; }
+World* WorldScene::operator->() const { return _world; }
+WorldScene::operator bool() const { return _world != nullptr; }
 
 CustomcommandPack::CustomcommandPack() = default;
 

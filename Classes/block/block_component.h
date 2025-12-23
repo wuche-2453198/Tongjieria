@@ -48,6 +48,8 @@ using BlockArray = std::array<std::array<entt::id_type, CHUNK_SIZE>, CHUNK_SIZE>
 * 让玩家以外的实体持有永久加载票是危险的，需要谨慎使用。
 *
 * @see ChunkLoadingSystem
+* 
+* @tease 半径设为1000可以获得核弹。
 */
 struct LoadingTicket {
     LoadingTicket();
@@ -113,6 +115,11 @@ private:
     std::vector<entt::entity> _blockEntities; ///< 这个区块加载的方块实体列表
 };
 
+/**
+* @brief 物理票，任何希望可以与物理世界互动的实体都应该持有这个组件。
+* 
+* 这个组件本质是一个粗物理体，用于物理碰撞检测。使用者可以通过修改这个组件达到优化碰撞检测的目的。
+*/
 struct PhysicsTicket
 {
     PhysicsTicket() = default;
@@ -125,6 +132,18 @@ struct PhysicsTicket
 
 class World;
 
+/**
+* @brief 世界场景。
+* 
+* 这个类用于在registry中获取world对象。
+* 实际上是World的引用。
+* 
+* @note 这个类在registry中是单例的，所以不能使用entt::registry::view来获取。
+* 
+* @see World
+* 
+* @tease 瓦，还有指针组件。
+*/
 class WorldScene
 {
 public:
@@ -156,6 +175,13 @@ public:
     std::vector<RenderComponent*> commands; ///< 渲染命令列表
 };
 
+/**
+* @brief 脏方块标记。
+* 
+* 这个给标记不会在组件管线中直接使用。它会集成到DirtyChunkTag中。
+* 
+* @see DirtyChunkTag
+*/
 struct DirtyBlock
 {
     DirtyBlock(const Vec2i& pos)
@@ -166,6 +192,11 @@ struct DirtyBlock
     bool renderDirty = true;
 };
 
+/**
+* @brief 脏区块标记。
+* 
+* 这个组件用于标记一个区块内的方块是否需要重新计算碰撞和渲染。
+*/
 struct DirtyChunkTag
 {
     DirtyChunkTag();
