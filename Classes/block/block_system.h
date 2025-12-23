@@ -129,6 +129,7 @@ private:
 * 优先级 < 0 的方块会进入卸载流。
 * - 如果区块被修改过，推入保存流
 * - 如果区块没有被修改过，直接卸载。
+* 
 * 特别地，如果一个区块自生成以来没有被修改过，那么它将不会进入保存流。
 * 这意味着，这个区块在每次被加载的时候都会被世界系统从噪声中重新生成。
 * 但是性能仍然是可接受的，因为系统IO的性能消耗更高。
@@ -156,7 +157,6 @@ class BlockBehaviorRegistry;
 * 所有互动事件的处理过程如下：
 * - 系统会检查这个方块是否已经成为**方块实体**，如果没有
 * - 系统会读取这个方块的配置。生成对应的behavior组件。
-* - 系统根据事件
 */
 class BlockInteractSystem : public ISystem
 {
@@ -186,6 +186,17 @@ class AssetManager;
 class Position;
 class PhysicsTicket;
 
+/**
+* @brief 处理区块的物理属性。
+* 
+* 该类会自动处理脏标记，动态创建物理形状，维护物理形状索引表。
+* 
+* 任何有**位置**和**物理票**的实体才会触发物理形体更新。
+* - 在物理票内部的方块，会生成物理形体。
+* - 方块在离开物理票的时候，会移除物理形体。
+* - 物理形体会根据方块的配置生成。
+* 使用者可以合理设置物理票的偏移来优化性能，如根据速度设置偏移，省略掉一些不必要的物理形体。
+*/
 class BlockPhysicsSystem : public ISystem
 {
 public:
@@ -200,22 +211,50 @@ private:
     void updateDirtyBlock();
     bool isInside(const Vec2i& blockPos, const Vec2i& blockUpperLeft, const Vec2i& blockLowerRight);
     bool hasCollision(const Vec2i& blockPos);
+
+    /**
+    * @brief 获取区块左上角的坐标。
+    * 
+    * @param worldPos 世界坐标
+    * @param ticket 物理票
+    */
     Vec2i getUpperLeft(const Position& worldPos, const PhysicsTicket& ticket);
+
+    /**
+    * @brief 获取区块右下角的坐标。
+    * 
+    * @param worldPos 世界坐标
+    * @param ticket 物理票
+    */
     Vec2i getLowerRight(const Position& worldPos, const PhysicsTicket& ticket);
+
+    /**
+    * @brief 在区块的坐标上创建一个物理形状。
+    * 
+    * @param blockPos 方块坐标
+    * @return 物理形状，如果创建失败或方块没有碰撞，返回nullptr
+    */
     cocos2d::PhysicsShapeBox* createBoxAtBlockPos(const Vec2i& blockPos);
     cocos2d::Node* _physicsNode = nullptr;
     cocos2d::PhysicsBody* _body = nullptr;
 
-    AssetManager& _assetManager;
-    BlockLayer& _blockLayer;
-    BlockPhysicsLayer& _physicsLayer;
+    AssetManager& _assetManager;        ///< 资源管理器
+    BlockLayer& _blockLayer;            ///< 方块层
+    BlockPhysicsLayer& _physicsLayer;   ///< 物理层
 };
 
 class BlockCommand;
 class BlockState;
 
 /**
-* @brief 生成区块的渲染指令。
+* @brief 区块渲染系统。
+* 
+* 该系统负责生成区块渲染指令。
+* - 当区块被添加的时候，生成区块渲染指令。
+* - 当区块被移除的时候，移除区块渲染指令。
+* - 根据脏标记，动态地修改渲染指令。
+* 
+* 根据逻辑层的标记和数据来进行自动工作。
 */
 class ChunkRenderCommandSystem : public ISystem 
 {
@@ -231,6 +270,11 @@ private:
 
 /**
 * @brief 将所有自定义渲染指令提交给Renderer。
+* 
+* 任何有**位置**和**渲染指令**的实体都会触发渲染指令的提交。
+* 该系统本质是桥接器，将实体自定义的渲染指令包发送到cocos中。不参与直接的渲染工作。
+* 
+* @see CustomCommandPack
 */
 class CommandSystem : public ISystem , public cocos2d::Node 
 {

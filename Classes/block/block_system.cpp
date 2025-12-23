@@ -395,12 +395,14 @@ void BlockPhysicsSystem::updateDirtyBlock()
             {
                 const Vec2i blockPos = chunkPos * CHUNK_SIZE + dirtyBlock.localPos;
                 auto shape = createBoxAtBlockPos(blockPos);
-
+                
+                // 如果原有形体已经存在，则移除
                 if (_physicsLayer.hasPhysicsShapeTag(blockPos))
                 {
                     _body->removeShape(Vec2i::vec2ihash(blockPos));
                     _physicsLayer.removePhysicsShapeTag(blockPos);
                 }
+                // 如果新形体存在，则添加
                 if (shape)
                 {
                     _body->addShape(shape);
@@ -409,6 +411,8 @@ void BlockPhysicsSystem::updateDirtyBlock()
 
                 dirtyBlock.collisionDirty = false;
             }
+
+            // 如果所有方块都清理干净了，则移除脏块标记
             if (tag.isAllClean())
             {
                 _registry.remove<DirtyChunkTag>(chunkID);
@@ -427,12 +431,12 @@ bool BlockPhysicsSystem::isInside(const Vec2i& blockPos, const Vec2i& blockUpper
 bool BlockPhysicsSystem::hasCollision(const Vec2i& blockPos)
 {
     auto blockState = _blockLayer.getBlockAtBlockPos(blockPos);
-
+    
     bool collision = false;
     if (blockState.id.has_value())
     {
         auto config = _assetManager.getBlockConfig(blockState.id.value());
-        collision = tools::get_bool_or(*config, "collision", false);
+        collision = tools::get_bool_or(*config, "collision", false); // 获取碰撞配置
     }
     return collision;
 }
@@ -453,6 +457,7 @@ Vec2i BlockPhysicsSystem::getLowerRight(const Position& worldPos, const PhysicsT
 
 cocos2d::PhysicsShapeBox* BlockPhysicsSystem::createBoxAtBlockPos(const Vec2i& blockPos)
 {
+    // 如果没有碰撞，直接返回
     if (!hasCollision(blockPos))
     {
         return nullptr;
@@ -603,7 +608,7 @@ void DebugSystem::onMouseEvent(const MouseEvent& event)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.TryDestroy(blockPos, testEntites[0]);
+        blockWorld.tryDestroy(blockPos, testEntites[0]);
     }
 }
 
