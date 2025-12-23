@@ -1,8 +1,7 @@
 #include "ZombieTestScene.h"
 #include "MainMenuScene.h"
 #include "MonsterFactory.h"
-#include "ecs/SpriteComponent.h"
-#include "ecs/PhysicsContactHandler.h"
+#include "ecs/systems/PhysicsContactHandler.h"
 
 USING_NS_CC;
 
@@ -91,11 +90,16 @@ void ZombieTestScene::setupEcsSystems()
   _systemManager.addSystem<ecs::AggroSystemEntt>();
   _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
   _systemManager.addSystem<ecs::WarriorAISystemEntt>();
-  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();
-  _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>();
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
   _systemManager.addSystem<ecs::LifetimeSystemEntt>();
+  
+  // 新解耦渲染系统
+  _systemManager.addSystem<ecs::RenderSystem>();
+  _systemManager.addSystem<ecs::AnimationSystem>();
+  
+  // 注册Sprite销毁监听器
+  ecs::SpriteDestructionObserver::registerToRegistry(_registry);
   
   CCLOG("EnTT Systems initialized: %zu systems", _systemManager.getSystemCount());
   CCLOG("==========================================");
@@ -105,8 +109,8 @@ void ZombieTestScene::createPhysicsEnvironment()
 {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
-  // 墙壁使用0摩擦力，避免贴墙时产生粘滞和嵌入
-  PhysicsMaterial wallMaterial(1.0f, 0.0f, 0.0f);
+  // 统一墙壁材质：适度弹性支持各类怪物
+  PhysicsMaterial wallMaterial(1.0f, 0.3f, 0.0f);
 
   // 左边界
   auto leftWall = Sprite::create();
@@ -143,8 +147,8 @@ void ZombieTestScene::createPhysicsEnvironment()
   topWallBody->setContactTestBitmask(0xFFFFFFFF);
   topWall->setPhysicsBody(topWallBody);
 
-  // 地面（墓地风格）
-  PhysicsMaterial groundMaterial(1.0f, 0.0f, 1.0f);
+  // 统一地面材质：中等摩擦力+零弹性
+  PhysicsMaterial groundMaterial(1.0f, 0.0f, 2.0f);
   auto ground = Sprite::create();
   ground->setTextureRect(Rect(0, 0, visibleSize.width, 50));
   ground->setColor(Color3B(80, 60, 40));

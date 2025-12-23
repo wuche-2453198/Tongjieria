@@ -1,0 +1,52 @@
+{
+  "id": "Crimera_Large",
+  "type": "EaterOfSouls",
+  "description": "大型猩红喀迈拉 - 飞行敌怪，绕圈后周期性冲向玩家",
+  
+  "display": {
+    "spriteFolder": "Minor monster/Bigger-Crimera",
+    "spritePrefix": "Bigger-Crimera",
+    "frameCount": 2,
+    "frameTime": 0.1,
+    "scale": 1.0
+  },
+  
+  "physics": {
+    "bodyWidth": 47.0,
+    "bodyHeight": 89.0,
+    "bodyHeightOffset": 0.0,
+    "mass": 1.8,
+    "friction": 0.0,
+    "restitution": 0.8,
+    "collisionGroup": -1,
+    "useGravity": false
+  },
+  
+  "movement": {
+    "type": "circle",
+    "flySpeed": 70.0,
+    "maxSpeed": 180.0,
+    "acceleration": 150.0,
+    "turnRate": 3.0
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 1000.0,
+    "deaggroRange": 1200.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 80.0,
+    "attackDamage": 20.0,
+    "attackRange": 45.0,
+    "attackCooldown": 1.0,
+    "defense": 3.0
+  },
+  
+  "loot": [
+    {"itemId": "vertebrae", "minCount": 2, "maxCount": 4, "dropChance": 0.7},
+    {"itemId": "coin", "minCount": 15, "maxCount": 35, "dropChance": 0.7}
+  ]
+}

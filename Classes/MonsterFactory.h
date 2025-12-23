@@ -2,8 +2,7 @@
 #define __MONSTER_FACTORY_H__
 
 #include "cocos2d.h"
-#include "ecs/Components.h"
-#include "ecs/SpriteComponent.h"
+#include "ecs/AllComponents.h"
 #include <entt/entt.hpp>
 #include "json/document.h"
 #include <string>
@@ -26,6 +25,8 @@ struct MonsterConfig {
     std::vector<int> frameSequence; // 自定义帧序列，如 {1,2,3,2}，为空则按顺序播放
     float frameTime = 0.15f;
     float scale = 1.0f;
+    float anchorY = 0.5f; // Y轴锚点（0=底部，0.5=中心，1=顶部）
+    int zOrder = 1; // 渲染层级
     cocos2d::Color3B fallbackColor = cocos2d::Color3B::WHITE; // 备用颜色
   } display;
 
@@ -66,6 +67,12 @@ struct MonsterConfig {
     float turnRate = 1.5f;             // 转向速率（弧度/秒）
     float wobbleAmplitude = 0.3f;      // 摆动幅度
     float wobbleFrequency = 2.0f;      // 摆动频率
+    
+    // 蚁狮类型专用参数
+    float detectionRange = 300.0f;     // 检测范围
+    float shootInterval = 5.0f;        // 射击间隔
+    float projectileSpeed = 400.0f;    // 射弹速度
+    float rotationSpeed = 2.0f;        // 头部转向速度
   } movement;
 
   // AI属性
@@ -135,6 +142,19 @@ struct MonsterConfig {
     float fallDamping = 0.85f;        // 下落阻尼系数
     float horizontalDamping = 0.95f;  // 水平阻尼系数
   } slowFall;
+  
+  // 史莱姆王特定配置
+  struct KingSlimeConfig {
+    float baseScale = 2.0f;           // 基础缩放
+    float minScale = 0.8f;            // 最小缩放
+    int smallJumpsPerCycle = 3;       // 每周期小跳次数
+    float bigJumpMultiplier = 2.0f;   // 大跳倍率
+    float teleportInterval = 15.0f;   // 传送间隔
+    float teleportRange = 300.0f;     // 传送范围
+    int totalSlimesToSpawn = 80;      // 总生成史莱姆数
+    float spawnHealthInterval = 0.012f; // 生成间隔（血量百分比）
+    int maxSpawnPerInterval = 2;      // 每次最多生成数量
+  } kingSlime;
 };
 
 // ==================== 怪物工厂 ====================

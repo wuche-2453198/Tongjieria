@@ -3,7 +3,8 @@
 
 #include "cocos2d.h"
 #include "ecs/ECS.h"
-#include "ecs/SystemsEntt.h"
+#include "ecs/AllComponents.h"  // 使用拆分后的组件
+#include "ecs/AllSystems.h"     // 使用拆分后的系统
 #include <entt/entt.hpp>
 #include <map>
 

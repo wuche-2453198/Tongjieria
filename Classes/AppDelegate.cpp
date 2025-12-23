@@ -1,5 +1,5 @@
 #include "AppDelegate.h"
-#include "SplashScene.h"
+#include "SplashScene.h"  // 使用模块化测试场景测试所有拆分的组件
 
 #define USE_AUDIO_ENGINE 1
 

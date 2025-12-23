@@ -1,8 +1,7 @@
 #include "DemonEyeTestScene.h"
 #include "MainMenuScene.h"
 #include "MonsterFactory.h"
-#include "ecs/SpriteComponent.h"
-#include "ecs/PhysicsContactHandler.h"
+#include "ecs/systems/PhysicsContactHandler.h"
 
 USING_NS_CC;
 
@@ -100,12 +99,21 @@ void DemonEyeTestScene::setupEcsSystems()
   _systemManager.setRegistry(&_registry);
 
   // 按优先级顺序添加Systems
-  _systemManager.addSystem<ecs::AggroSystemEntt>();
-  _systemManager.addSystem<ecs::DemonEyeAISystemEntt>();       // 恶魔眼AI（已包含位置同步）
-  _systemManager.addSystem<ecs::MonsterAnimationSystemEntt>(); // 怪物动画
+  _systemManager.addSystem<ecs::AggroSystemEntt>();  // 必须：追踪玩家
+  _systemManager.addSystem<ecs::DemonEyeAISystemEntt>();
+  
+  // 新架构：使用RenderSystem和AnimationSystem
+  _systemManager.addSystem<ecs::RenderSystem>();
+  _systemManager.addSystem<ecs::AnimationSystem>();
+  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();  // 同步物理位置
+  
+  // 基础系统
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
   _systemManager.addSystem<ecs::LifetimeSystemEntt>();
+  
+  // 注册Sprite销毁监听器
+  ecs::SpriteDestructionObserver::registerToRegistry(_registry);
 
   CCLOG("EnTT Systems initialized: %zu systems", _systemManager.getSystemCount());
   CCLOG("==========================================");
@@ -116,8 +124,8 @@ void DemonEyeTestScene::createPhysicsEnvironment()
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // 墙壁材质：零摩擦、高弹性（让恶魔眼能弹开）
-  PhysicsMaterial wallMaterial(1.0f, 0.9f, 0.0f);
+  // 统一墙壁材质：适度弹性支持各类怪物
+  PhysicsMaterial wallMaterial(1.0f, 0.3f, 0.0f);
 
   // 左边界
   auto leftWall = Sprite::create();
@@ -161,8 +169,8 @@ void DemonEyeTestScene::createPhysicsEnvironment()
   topWallBody->setCollisionBitmask(0xFFFFFFFF);
   topWall->setPhysicsBody(topWallBody);
 
-  // 地面
-  PhysicsMaterial groundMaterial(1.0f, 0.5f, 0.0f);
+  // 统一地面材质：中等摩擦力+零弹性
+  PhysicsMaterial groundMaterial(1.0f, 0.0f, 2.0f);
   auto ground = Sprite::create();
   ground->setTextureRect(Rect(0, 0, visibleSize.width, 50));
   ground->setColor(Color3B(80, 60, 100));

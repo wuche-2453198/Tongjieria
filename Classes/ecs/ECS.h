@@ -37,8 +37,7 @@
 
 // 核心类型和组件
 #include "Entity.h"
-#include "Components.h"
-#include "SpriteComponent.h"
+#include "AllComponents.h"
 
 namespace ecs {
 

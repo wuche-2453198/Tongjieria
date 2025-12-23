@@ -3,7 +3,8 @@
 
 #include "cocos2d.h"
 #include "ecs/ECS.h"
-#include "ecs/SystemsEntt.h"
+#include "ecs/AllComponents.h"  // 使用拆分后的组件
+#include "ecs/AllSystems.h"     // 使用拆分后的系统
 #include <entt/entt.hpp>
 #include <map>
 
@@ -24,6 +25,7 @@ private:
   // ==================== ECS系统（EnTT版本） ====================
   entt::registry _registry;             // EnTT实体注册表
   ecs::SystemManagerEntt _systemManager; // EnTT System管理器
+  ecs::ProjectileCollisionSystemEntt* _projectileCollisionSystem; // 投射物碰撞系统
 
   // 虚拟玩家
   cocos2d::Sprite *_fakePlayer = nullptr;

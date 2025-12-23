@@ -1,8 +1,8 @@
 #include "SlimeTestScene.h"
 #include "MainMenuScene.h"
 #include "MonsterFactory.h"
-#include "ecs/SpriteComponent.h"
-#include "ecs/PhysicsContactHandler.h"
+#include "ecs/components/SpriteComponent.h"
+#include "ecs/systems/PhysicsContactHandler.h"
 
 USING_NS_CC;
 
@@ -88,6 +88,9 @@ void SlimeTestScene::setupEcsSystems()
   
   _systemManager.setRegistry(&_registry);
   
+  // 注册精灵销毁观察者（新架构）
+  ecs::SpriteDestructionObserver::registerToRegistry(_registry);
+  
   // 按优先级顺序添加Systems（仅史莱姆相关）
   _systemManager.addSystem<ecs::AggroSystemEntt>();
   _systemManager.addSystem<ecs::GroundDetectorSystemEntt>();
@@ -95,9 +98,14 @@ void SlimeTestScene::setupEcsSystems()
   _systemManager.addSystem<ecs::JumpMovementSystemEntt>();
   _systemManager.addSystem<ecs::ProjectileAttackSystemEntt>();
   _systemManager.addSystem<ecs::ProjectileSystemEntt>();
+  _projectileCollisionSystem = _systemManager.addSystem<ecs::ProjectileCollisionSystemEntt>();
   _systemManager.addSystem<ecs::DebuffSystemEntt>();
-  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();
-  _systemManager.addSystem<ecs::SlimeRenderSystemEntt>();
+  
+  // 新架构：使用RenderSystem和AnimationSystem替代旧的渲染系统
+  _systemManager.addSystem<ecs::RenderSystem>();
+  _systemManager.addSystem<ecs::AnimationSystem>();
+  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();  // 保留用于物理同步
+  
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
   _systemManager.addSystem<ecs::LifetimeSystemEntt>();
@@ -110,8 +118,8 @@ void SlimeTestScene::createPhysicsEnvironment()
 {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
-  // 墙壁使用0摩擦力，避免贴墙时产生粘滞和嵌入
-  PhysicsMaterial wallMaterial(1.0f, 0.0f, 0.0f);
+  // 统一墙壁材质：适度弹性支持各类怪物
+  PhysicsMaterial wallMaterial(1.0f, 0.3f, 0.0f);
 
   // 左边界 - 明确设置碰撞掩码
   auto leftWall = Sprite::create();
@@ -151,8 +159,8 @@ void SlimeTestScene::createPhysicsEnvironment()
   topWallBody->setContactTestBitmask(0xFFFFFFFF);
   topWall->setPhysicsBody(topWallBody);
 
-  // 地面 - 高摩擦力+零弹性
-  PhysicsMaterial groundMaterial(1.0f, 5.0f, 0.0f);  // density, friction, restitution(完全无弹性)
+  // 统一地面材质：中等摩擦力+零弹性
+  PhysicsMaterial groundMaterial(1.0f, 0.0f, 2.0f);  // density, restitution, friction
   auto ground = Sprite::create();
   ground->setTextureRect(Rect(0, 0, visibleSize.width, 50));
   ground->setColor(Color3B(139, 90, 43));
@@ -246,7 +254,7 @@ void SlimeTestScene::createEcsSlime()
   const char *slimeTypes[] = {
       "GreenSlime", "BlueSlime", "RedSlime",
       "YellowSlime", "PurpleSlime", "PinkSlime", "IceSlime",
-      "SpikedIceSlime", "SpikedJungleSlime", "UmbrellaSlime", "MotherSlime", "BabySlime"};
+      "SpikedSlime", "SpikedIceSlime", "SpikedJungleSlime", "UmbrellaSlime", "MotherSlime", "BabySlime"};
   int slimeCount = sizeof(slimeTypes) / sizeof(slimeTypes[0]);
 
   float groundTop = origin.y + 50.0f;
@@ -264,10 +272,10 @@ void SlimeTestScene::createEcsSlime()
 
 void SlimeTestScene::setupSharedContactListener()
 {
-  // 使用PhysicsContactHandler创建碰撞监听器，自定义投射物处理逻辑
+  // 使用PhysicsContactHandler创建碰撞监听器，使用ProjectileCollisionSystemEntt处理投射物碰撞
   _sharedContactListener = ecs::PhysicsContactHandler::createContactListener(
     _registry,
-    // 自定义碰撞开始处理：投射物碰撞
+    // 碰撞开始处理：使用ProjectileCollisionSystemEntt处理投射物
     [this](PhysicsContact& contact, const ecs::PhysicsContactHandler::ContactInfo& info) -> bool {
       auto bodyA = contact.getShapeA()->getBody();
       auto bodyB = contact.getShapeB()->getBody();
@@ -294,51 +302,22 @@ void SlimeTestScene::setupSharedContactListener()
         ecs::ProjectileComponent *proj = projA ? projA : projB;
         ecs::EntityId otherEntity = projA ? entityB : entityA;
         PhysicsBody *otherBody = projA ? bodyB : bodyA;
+        entt::entity projEntity = projA ? static_cast<entt::entity>(entityA) : static_cast<entt::entity>(entityB);
         
-        if (proj->hasHit) return true;
-        if (otherEntity == proj->owner) return true;
-        
-        if (!otherBody->isDynamic()) {
-          proj->hasHit = true;
-          return true;
-        }
-        
-        if (otherEntity != ecs::INVALID_ENTITY) {
-          auto otherEnt = static_cast<entt::entity>(otherEntity);
-          if (_registry.valid(otherEnt)) {
-            auto *playerTag = _registry.try_get<ecs::PlayerTag>(otherEnt);
-            if (playerTag) {
-              auto *health = _registry.try_get<ecs::HealthComponent>(otherEnt);
-              if (health) health->takeDamage(proj->damage);
-              
-              auto *debuff = _registry.try_get<ecs::DebuffComponent>(otherEnt);
-              if (!debuff) debuff = &_registry.emplace<ecs::DebuffComponent>(otherEnt);
-              
-              if (proj->chillChance > 0 && (float)rand() / RAND_MAX < proj->chillChance) {
-                debuff->applyChillDebuff(proj->chillDuration, proj->chillSpeedReduction);
-              }
-              if (proj->freezeChance > 0 && (float)rand() / RAND_MAX < proj->freezeChance) {
-                debuff->applyFreezeDebuff(proj->freezeDuration);
-              }
-              if (proj->poisonChance1 > 0 && (float)rand() / RAND_MAX < proj->poisonChance1) {
-                debuff->applyPoisonDebuff(proj->poisonDuration1, proj->poisonDamage1);
-              } else if (proj->poisonChance2 > 0 && (float)rand() / RAND_MAX < proj->poisonChance2) {
-                debuff->applyPoisonDebuff(proj->poisonDuration2, proj->poisonDamage2);
-              }
-              
-              proj->hasHit = true;
-            }
+        // 使用ProjectileCollisionSystemEntt处理碰撞
+        if (_projectileCollisionSystem) {
+          if (_projectileCollisionSystem->handleProjectileCollision(proj, projEntity, otherEntity, otherBody)) {
+            return true;
           }
         }
-        return true;  // 投射物已处理，跳过默认地面检测
       }
-      return true;  // 继续执行默认地面检测
+      return true;
     },
     nullptr  // 无自定义分离处理
   );
 
   _eventDispatcher->addEventListenerWithSceneGraphPriority(_sharedContactListener, this);
-  CCLOG("SlimeTestScene: Contact listener initialized (using PhysicsContactHandler)");
+  CCLOG("SlimeTestScene: Contact listener initialized (using ProjectileCollisionSystemEntt)");
 }
 
 void SlimeTestScene::menuBackCallback(Ref *pSender)

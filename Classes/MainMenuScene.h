@@ -21,6 +21,15 @@ public:
   // 恶魔眼测试场景按钮回调
   void menuDemonEyeTestCallback(cocos2d::Ref *pSender);
 
+  // 史莱姆王测试场景按钮回调
+  void menuKingSlimeTestCallback(cocos2d::Ref *pSender);
+
+  // 噬魂怪和猩红喀迈拉测试场景按钮回调
+  void menuEaterCrimeraTestCallback(cocos2d::Ref *pSender);
+
+  // 沙漠测试场景按钮回调
+  void menuDesertTestCallback(cocos2d::Ref *pSender);
+
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);
 };

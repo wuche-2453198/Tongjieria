@@ -1,0 +1,69 @@
+{
+  "id": "SpikedSlime",
+  "type": "Slime",
+  "description": "普通尖刺史莱姆，发射尖刺造成伤害",
+  
+  "display": {
+    "spriteFolder": "Minor monster/Spiked_Slime",
+    "spritePrefix": "Spiked_Slime",
+    "frameCount": 2,
+    "frameTime": 0.2,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 40.0,
+    "bodyHeight": 30.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.5,
+    "horizontalImpulse": 250.0,
+    "verticalImpulse": 450.0,
+    "patrolImpulseRatio": 0.4,
+    "directionChangeChance": 0.25
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 400.0,
+    "deaggroRange": 500.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 80.0,
+    "attackDamage": 10.0,
+    "attackRange": 200.0,
+    "attackCooldown": 0.8,
+    "defense": 2.0
+  },
+  
+  "projectile": {
+    "enabled": true,
+    "spritePath": "Projectile/Slime_Spike.png",
+    "spriteWidth": 10.0,
+    "spriteHeight": 20.0,
+    "count": 4,
+    "damage": 5.0,
+    "speed": 280.0,
+    "lifetime": 3.0,
+    "fireInterval": 0.8,
+    "fireRange": 100.0,
+    "horizontalSpread": 40.0,
+    "verticalImpulse": 280.0,
+    "useGravity": true
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 2, "maxCount": 4, "dropChance": 0.9},
+    {"itemId": "coin", "minCount": 8, "maxCount": 20, "dropChance": 0.7},
+    {"itemId": "slime_spike", "minCount": 1, "maxCount": 2, "dropChance": 0.2}
+  ]
+}

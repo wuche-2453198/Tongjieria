@@ -2,6 +2,9 @@
 #include "SlimeTestScene.h"
 #include "ZombieTestScene.h"
 #include "DemonEyeTestScene.h"
+#include "KingSlimeTestScene.h"
+#include "EaterCrimeraTestScene.h"
+#include "DesertTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -89,6 +92,42 @@ bool MainMenuScene::init() {
                                        origin.y + visibleSize.height / 2 - 40));
   }
 
+  // 添加史莱姆王测试按钮
+  auto kingSlimeTestLabel =
+      Label::createWithTTF("King Slime Arena", "fonts/Marker Felt.ttf", 28);
+  kingSlimeTestLabel->setColor(Color3B(220, 180, 100));
+  auto kingSlimeTestItem = MenuItemLabel::create(
+      kingSlimeTestLabel, CC_CALLBACK_1(MainMenuScene::menuKingSlimeTestCallback, this));
+
+  if (kingSlimeTestItem != nullptr) {
+    kingSlimeTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                        origin.y + visibleSize.height / 2 - 80));
+  }
+
+  // 添加噬魂怪和猩红喀迈拉测试按钮
+  auto eaterCrimeraTestLabel =
+      Label::createWithTTF("Eater & Crimera Test", "fonts/Marker Felt.ttf", 28);
+  eaterCrimeraTestLabel->setColor(Color3B(180, 100, 150));
+  auto eaterCrimeraTestItem = MenuItemLabel::create(
+      eaterCrimeraTestLabel, CC_CALLBACK_1(MainMenuScene::menuEaterCrimeraTestCallback, this));
+
+  if (eaterCrimeraTestItem != nullptr) {
+    eaterCrimeraTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                           origin.y + visibleSize.height / 2 - 120));
+  }
+
+  // 添加沙漠测试按钮
+  auto desertTestLabel =
+      Label::createWithTTF("Desert Test", "fonts/Marker Felt.ttf", 28);
+  desertTestLabel->setColor(Color3B(218, 165, 32)); // 金黄色沙漠色调
+  auto desertTestItem = MenuItemLabel::create(
+      desertTestLabel, CC_CALLBACK_1(MainMenuScene::menuDesertTestCallback, this));
+
+  if (desertTestItem != nullptr) {
+    desertTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                     origin.y + visibleSize.height / 2 - 160));
+  }
+
   // 添加关闭按钮
   auto closeItem = MenuItemImage::create(
       "CloseNormal.png", "CloseSelected.png",
@@ -100,7 +139,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(slimeTestItem, zombieTestItem, demonEyeTestItem, closeItem, nullptr);
+    auto menu = Menu::create(slimeTestItem, zombieTestItem, demonEyeTestItem, kingSlimeTestItem, eaterCrimeraTestItem, desertTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -132,4 +171,25 @@ void MainMenuScene::menuDemonEyeTestCallback(Ref *pSender) {
   auto demonEyeTestScene = DemonEyeTestScene::createScene();
   Director::getInstance()->replaceScene(
       TransitionFade::create(0.5f, demonEyeTestScene));
+}
+
+void MainMenuScene::menuKingSlimeTestCallback(Ref *pSender) {
+  // 进入史莱姆王测试场景
+  auto kingSlimeTestScene = KingSlimeTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, kingSlimeTestScene));
+}
+
+void MainMenuScene::menuEaterCrimeraTestCallback(Ref *pSender) {
+  // 进入噬魂怪和猩红喀迈拉测试场景
+  auto eaterCrimeraTestScene = EaterCrimeraTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, eaterCrimeraTestScene));
+}
+
+void MainMenuScene::menuDesertTestCallback(Ref *pSender) {
+  // 进入沙漠测试场景
+  auto desertTestScene = DesertTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, desertTestScene));
 }
