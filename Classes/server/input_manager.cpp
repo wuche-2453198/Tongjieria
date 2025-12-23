@@ -42,5 +42,6 @@ void InputManager::onMouseEvent(cocos2d::Event* event) {
     cocos2d::Vec3 worldPos3D;
     camera->unprojectGL(size, &screenPos3D, &worldPos3D);
     mevent.worldPos = cocos2d::Vec2(worldPos3D.x, worldPos3D.y);
+
     _dispatcher.trigger(mevent);
 }

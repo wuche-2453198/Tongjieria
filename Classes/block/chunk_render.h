@@ -42,44 +42,20 @@ public:
     */
     ChunkCommand(Buffer* shared_index_buffer);
     ~ChunkCommand();
-
-    /*
-    * @brief 刷新Z序
-    */
+    
     void init(float globalZOrder);
-    void setBlendFunc();
+    void createTextureArray();
 
-    /*
-    * @brief 刷新着色器并初始化。
-    */
-    void updateShaders();
-
-    /*
-    * @brief 设置顶点样式。
-    */
-    void setVertexLayout();
-
-    /*
-    * @brief 生成对应局部坐标下的顶点数据。
-    */
-    void generateBlockVertexAt(std::vector<V3F_C4B_T2F>& vertex, const Vec2i& local_pos);
-
-    /*
-    * @brief 若没有顶点缓冲区则创建并生成顶点数据。
-    */
-    void generateVertex();
-
-    /*
-    * @brief 若没有索引缓冲区则创建并生成索引数据
-    */
-    void generateIndex();
-
-    /*
-    * @brief 刷新空间变换
-    */
-    void updateUniforms(const cocos2d::Mat4& transform);
 private:
     ProgramState* _programState = nullptr;
+};
+
+class BlockBatchCommandComponent
+{
+public:
+    BlockBatchCommandComponent() = default;
+    virtual ~BlockBatchCommandComponent() = default;
+
 };
 
 class BlockCommand: public cocos2d::CustomCommand, public RenderComponent {
