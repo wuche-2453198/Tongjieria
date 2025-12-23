@@ -26,7 +26,7 @@
     "type": "antlion",
     "detectionRange": 500.0,
     "shootInterval": 5.0,
-    "projectileSpeed": 1000.0,
+    "projectileSpeed": 800.0,
     "rotationSpeed": 2.0
   },
   "ai": {
