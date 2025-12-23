@@ -3,6 +3,13 @@
 #include "utils/vec2i.h"
 #include "cocos2d.h"
 
+/*
+* @brief 方块物理世界的高级容器。
+* 
+* 存储启用了碰撞的方块坐标和对应的它们的碰撞形状标签。
+* 
+* 不直接参与逻辑。
+*/
 class BlockPhysicsLayer
 {
 public:

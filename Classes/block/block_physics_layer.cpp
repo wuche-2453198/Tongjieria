@@ -2,13 +2,13 @@
 
 void BlockPhysicsLayer::addPhysicsShapeTag(const Vec2i& pos, int tag)
 {
-    assert(!hasPhysicsShapeTag(pos));
+    assert(!hasPhysicsShapeTag(pos), "不能重复添加");
     _physicsBodies[pos] = tag;
 }
 
 void BlockPhysicsLayer::removePhysicsShapeTag(const Vec2i& pos)
 {
-    assert(hasPhysicsShapeTag(pos));
+    assert(hasPhysicsShapeTag(pos), "不存在该位置的物理形状标记");
     _physicsBodies.erase(pos);
 }
 
