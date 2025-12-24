@@ -1,14 +1,16 @@
 #include "ItemsTestScene.h"
 #include "MainMenuScene.h"
-#include "items/ItemManager.h"
-#include "items/Inventory.h"
-#include "items/InventoryLayer.h"
-#include "items/EnttTest.h"
-#include "items/RecipeManager.h"
-#include "items/StationDetector.h"
-#include "items/CraftingMatcher.h"
-#include "items/CraftingExecutor.h"
-#include "items/CraftBar.h"
+#include "components/items/InventoryDef.h"
+#include "systems/items/ItemManager.h"
+#include "systems/items/Inventory.h"
+#include "ui/items/InventoryLayer.h"
+#include "ui/items/EquipmentPanel.h"
+#include "systems/items/EnttTest.h"
+#include "systems/items/RecipeManager.h"
+#include "systems/items/StationDetector.h"
+#include "systems/items/CraftingMatcher.h"
+#include "systems/items/CraftingExecutor.h"
+#include "ui/items/CraftBar.h"
 
 USING_NS_CC;
 
@@ -105,6 +107,8 @@ bool ItemsTestScene::init() {
     inventory->addItem(3503, 100);
     inventory->addItem(3504, 100);
     inventory->addItem(3505, 100);
+    inventory->addItem(3504, 100);
+    inventory->addItem(2120, 200);
 
     CCLOG("Added 35+ diverse items across all categories for testing");
     CCLOG("Equipment: 6 armor pieces | Placeables: 9 types | Materials: 15 types | Consumables: 1 type");
@@ -157,6 +161,13 @@ void ItemsTestScene::setupInventoryLayer() {
     if (invLayer) {
         this->addChild(invLayer, 10);  // Higher z-order to receive mouse events
         CCLOG("ItemsTestScene: InventoryLayer added with z-order 10");
+    }
+
+    // Add equipment panel independently with same coordinate system
+    auto equipPanel = EquipmentPanel::create();
+    if (equipPanel) {
+        this->addChild(equipPanel, 10);  // Same z-order as inventory
+        CCLOG("ItemsTestScene: EquipmentPanel added with z-order 10");
     }
 }
 

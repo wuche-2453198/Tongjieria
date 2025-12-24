@@ -34,30 +34,28 @@ if(APPLE OR WIN32)
     cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
 
-# add cross-platforms source files and header files 
+# add cross-platforms source files and header files
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/SplashScene.cpp
      Classes/MainMenuScene.cpp
      Classes/ItemsTestScene.cpp
      Classes/PlayerTestScene.cpp
-     Classes/items/ItemManager.cpp
-     Classes/items/Inventory.cpp
-     Classes/items/InventoryLayer.cpp
-     Classes/items/RecipeManager.cpp
-     Classes/items/StationDetector.cpp
-     Classes/items/CraftingMatcher.cpp
-     Classes/items/CraftingExecutor.cpp
-     Classes/items/CraftBar.cpp
-     Classes/player/PlayerInput.cpp
-     Classes/player/PlayerFactory.cpp
-     Classes/NPC/BlueSlime.cpp
-     Classes/NPC/Enemy.cpp
-     Classes/NPC/GameScene.cpp
-     Classes/NPC/GreenSlime.cpp
-     Classes/NPC/RedSlime.cpp
-     Classes/NPC/SlimeEnemy.cpp
-     Classes/NPC/YellowSlime.cpp
+     Classes/systems/items/ItemManager.cpp
+     Classes/systems/items/Inventory.cpp
+     Classes/ui/items/InventoryLayer.cpp
+     Classes/ui/items/EquipmentPanel.cpp
+     Classes/systems/items/RecipeManager.cpp
+     Classes/systems/items/StationDetector.cpp
+     Classes/systems/items/CraftingMatcher.cpp
+     Classes/systems/items/CraftingExecutor.cpp
+     Classes/ui/items/CraftBar.cpp
+     Classes/core/PlayerInput.cpp
+     Classes/systems/player/PlayerFactory.cpp
+     Classes/systems/player/PlayerSystems.cpp
+     Classes/systems/player/PlayerInventoryIntegration.cpp
+     Classes/systems/player/PlayerAnimationLoader.cpp
+     
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -65,26 +63,24 @@ list(APPEND GAME_HEADER
      Classes/MainMenuScene.h
      Classes/ItemsTestScene.h
      Classes/PlayerTestScene.h
-     Classes/items/InventoryDef.h
-     Classes/items/ItemManager.h
-     Classes/items/Inventory.h
-     Classes/items/InventoryLayer.h
-     Classes/items/CraftingDef.h
-     Classes/items/RecipeManager.h
-     Classes/items/StationDetector.h
-     Classes/items/CraftingMatcher.h
-     Classes/items/CraftingExecutor.h
-     Classes/items/CraftBar.h
-     Classes/player/PlayerComponents.h
-     Classes/player/PlayerInput.h
-     Classes/player/PlayerFactory.h
-     Classes/NPC/BlueSlime.h
-     Classes/NPC/Enemy.h
-     Classes/NPC/GameScene.h
-     Classes/NPC/GreenSlime.h
-     Classes/NPC/RedSlime.h
-     Classes/NPC/SlimeEnemy.h
-     Classes/NPC/YellowSlime.h
+     Classes/components/items/InventoryDef.h
+     Classes/systems/items/ItemManager.h
+     Classes/systems/items/Inventory.h
+     Classes/ui/items/InventoryLayer.h
+     Classes/ui/items/EquipmentPanel.h
+     Classes/components/items/CraftingDef.h
+     Classes/systems/items/RecipeManager.h
+     Classes/systems/items/StationDetector.h
+     Classes/systems/items/CraftingMatcher.h
+     Classes/systems/items/CraftingExecutor.h
+     Classes/ui/items/CraftBar.h
+     Classes/components/player/PlayerComponents.h
+     Classes/core/PlayerInput.h
+     Classes/systems/player/PlayerFactory.h
+     Classes/systems/player/PlayerSystems.h
+     Classes/systems/player/PlayerInventoryIntegration.h
+     Classes/systems/player/PlayerAnimationLoader.h
+     
      )
 
 if(ANDROID)

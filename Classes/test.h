@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "cocos2d.h"
-#include "items/ItemManager.h"
-#include "items/Inventory.h"
+#include "systems/items/ItemManager.h"
+#include "systems/items/Inventory.h"
 
 using namespace cocos2d;
 

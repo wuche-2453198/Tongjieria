@@ -1,12 +1,17 @@
 #include "PlayerTestScene.h"
 #include "MainMenuScene.h"
-#include "player/PlayerFactory.h"
-#include "player/PlayerComponents.h"
-#include "player/PlayerInput.h"
+#include "systems/player/PlayerFactory.h"
+#include "components/player/PlayerComponents.h"
+#include "core/PlayerInput.h"
+#include "systems/player/PlayerSystems.h"
 
 USING_NS_CC;
 
 Scene* PlayerTestScene::createScene() {
+    CCLOG("========================================");
+    CCLOG("= ENTERING PLAYER TEST SCENE");
+    CCLOG("========================================");
+
     // 创建带物理引擎的场景
     auto scene = Scene::createWithPhysics();
 
@@ -19,6 +24,8 @@ Scene* PlayerTestScene::createScene() {
 
     auto layer = PlayerTestScene::create();
     scene->addChild(layer);
+
+    CCLOG("PlayerTestScene: Scene created with physics");
     return scene;
 }
 
@@ -59,14 +66,25 @@ bool PlayerTestScene::init() {
     // 创建物理环境
     createPhysicsEnvironment();
 
-    // 初始化输入系统
-    PlayerInput::getInstance().initialize(this->getScene());
-
     // 创建玩家
     createPlayer();
 
     // 创建调试UI
     createDebugUI();
+
+    // 延迟初始化（确保场景已完全设置）
+    this->scheduleOnce([this](float dt) {
+        // 
+        auto scene = this->getScene();
+        if (scene) {
+            PlayerInput::getInstance().initialize(scene);
+            // 
+            PlayerSystemsManager::setScene(scene);
+            CCLOG("PlayerTestScene: Input system and scene reference initialized");
+        } else {
+            CCLOG("PlayerTestScene: ERROR - Scene is null!");
+        }
+    }, 0.1f, "init_input");
 
     // 启动更新
     this->scheduleUpdate();
@@ -199,142 +217,29 @@ void PlayerTestScene::createDebugUI() {
 }
 
 void PlayerTestScene::update(float delta) {
-    // 1. 更新输入状态
-    PlayerInput::getInstance().update(delta);
+    // 1. 使用 PlayerSystemsManager 更新所有系统（先读取输入状态）
+    PlayerSystemsManager::updateAllSystems(_registry, delta);
 
-    // 2. 检测地面
-    detectGround();
-
-    // 3. 更新玩家逻辑
-    updatePlayer(delta);
-
-    // 4. 更新玩家UI
-    updatePlayerUI(delta);
-
-    // 5. 更新调试信息
+    // 2. 更新调试信息
     updateDebugInfo(delta);
+
+    // 3. 更新输入状态（重置 justPressed 状态，准备下一帧）
+    PlayerInput::getInstance().update(delta);
 }
 
 void PlayerTestScene::detectGround() {
-    auto view = _registry.view<ecs::PlayerTag,
-                                ecs::PlayerSpriteComponent,
-                                ecs::PlayerStatsComponent>();
-
-    for (auto entity : view) {
-        auto [sprite, stats] = view.get<ecs::PlayerSpriteComponent,
-                                       ecs::PlayerStatsComponent>(entity);
-
-        if (sprite.sprite && sprite.sprite->getPhysicsBody()) {
-            auto body = sprite.sprite->getPhysicsBody();
-            float velocityY = body->getVelocity().y;
-
-            // 简单地面检测：速度接近0且位置较低
-            if (std::abs(velocityY) < 10.0f && sprite.sprite->getPositionY() < 500) {
-                stats.isOnGround = true;
-            } else if (velocityY < -50.0f) {
-                stats.isOnGround = false;
-            }
-        }
-    }
+    // 该方法已被 PlayerGroundDetectionSystem 接管
+    // 保留此函数以避免编译错误，但实际不再使用
 }
 
 void PlayerTestScene::updatePlayer(float dt) {
-    auto& input = PlayerInput::getInstance();
-
-    auto view = _registry.view<ecs::PlayerTag,
-                                ecs::PlayerMovementComponent,
-                                ecs::PlayerStatsComponent,
-                                ecs::TransformComponent,
-                                ecs::PlayerSpriteComponent>();
-
-    for (auto entity : view) {
-        auto [movement, stats, transform, sprite] =
-            view.get<ecs::PlayerMovementComponent,
-                     ecs::PlayerStatsComponent,
-                     ecs::TransformComponent,
-                     ecs::PlayerSpriteComponent>(entity);
-
-        // === 处理输入 ===
-        movement.isMovingLeft = input.isActionPressed("MoveLeft");
-        movement.isMovingRight = input.isActionPressed("MoveRight");
-        movement.wantsToJump = input.isActionJustPressed("Jump");
-
-        // === 移动逻辑 ===
-        float targetVelX = 0.0f;
-        if (movement.isMovingRight) {
-            targetVelX = stats.moveSpeed;
-            movement.isFacingRight = true;
-        }
-        if (movement.isMovingLeft) {
-            targetVelX = -stats.moveSpeed;
-            movement.isFacingRight = false;
-        }
-
-        // 平滑加速
-        float accel = movement.accelerationRate * dt;
-        if (targetVelX != 0) {
-            movement.velocity.x += (targetVelX - movement.velocity.x) * accel * 0.1f;
-        } else {
-            // 摩擦力减速
-            movement.velocity.x *= (stats.isOnGround ? movement.friction : movement.airResistance);
-        }
-
-        // 限制最大速度
-        if (std::abs(movement.velocity.x) > movement.maxHorizontalSpeed) {
-            movement.velocity.x = (movement.velocity.x > 0)
-                ? movement.maxHorizontalSpeed
-                : -movement.maxHorizontalSpeed;
-        }
-
-        // === 跳跃逻辑 ===
-        if (movement.wantsToJump && stats.isOnGround) {
-            if (sprite.sprite && sprite.sprite->getPhysicsBody()) {
-                auto body = sprite.sprite->getPhysicsBody();
-                body->setVelocity(Vec2(body->getVelocity().x, stats.jumpHeight));
-                stats.isOnGround = false;
-                CCLOG("Player jumped!");
-            }
-            movement.wantsToJump = false;
-        }
-
-        // === 同步到物理引擎 ===
-        if (sprite.sprite && sprite.sprite->getPhysicsBody()) {
-            auto body = sprite.sprite->getPhysicsBody();
-            body->setVelocity(Vec2(movement.velocity.x, body->getVelocity().y));
-
-            // 更新位置
-            transform.x = sprite.sprite->getPositionX();
-            transform.y = sprite.sprite->getPositionY();
-        }
-
-        // === 翻转精灵 ===
-        if (sprite.sprite) {
-            sprite.sprite->setFlippedX(!movement.isFacingRight);
-        }
-    }
+    // 该方法已被 PlayerInputSystem 和 PlayerMovementSystem 接管
+    // 保留此函数以避免编译错误，但实际不再使用
 }
 
 void PlayerTestScene::updatePlayerUI(float dt) {
-    auto view = _registry.view<ecs::PlayerTag,
-                                ecs::PlayerStatsComponent,
-                                ecs::PlayerSpriteComponent>();
-
-    for (auto entity : view) {
-        auto [stats, sprite] = view.get<ecs::PlayerStatsComponent,
-                                        ecs::PlayerSpriteComponent>(entity);
-
-        // 更新血条
-        if (sprite.healthBarFill) {
-            float healthPercent = stats.currentHealth / stats.maxHealth;
-            sprite.healthBarFill->setScaleX(healthPercent);
-        }
-
-        // 更新魔法条
-        if (sprite.manaBarFill) {
-            float manaPercent = stats.currentMana / stats.maxMana;
-            sprite.manaBarFill->setScaleX(manaPercent);
-        }
-    }
+    // 该方法已被 PlayerHealthSystem 接管
+    // 保留此函数以避免编译错误，但实际不再使用
 }
 
 void PlayerTestScene::updateDebugInfo(float dt) {

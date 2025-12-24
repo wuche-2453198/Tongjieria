@@ -1,6 +1,6 @@
 #include "MainMenuScene.h"
-#include "EcsTestScene.h"
 #include "ItemsTestScene.h"
+#include "PlayerTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -52,14 +52,14 @@ bool MainMenuScene::init() {
     this->addChild(titleLabel, 1);
   }
 
-  // 添加ECS测试按钮
-  auto ecsTestLabel =
-      Label::createWithTTF("ECS Test", "fonts/Marker Felt.ttf", 28);
-  auto ecsTestItem = MenuItemLabel::create(
-      ecsTestLabel, CC_CALLBACK_1(MainMenuScene::menuEcsTestCallback, this));
-  if (ecsTestItem != nullptr) {
-    ecsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                  origin.y + visibleSize.height / 2 + 40));
+  // 添加玩家测试按钮
+  auto playerTestLabel =
+      Label::createWithTTF("Player Test", "fonts/Marker Felt.ttf", 28);
+  auto playerTestItem = MenuItemLabel::create(
+      playerTestLabel, CC_CALLBACK_1(MainMenuScene::menuPlayerTestCallback, this));
+  if (playerTestItem != nullptr) {
+    playerTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                     origin.y + visibleSize.height / 2 + 50));
   }
 
   // 添加物品/背包测试按钮
@@ -69,7 +69,7 @@ bool MainMenuScene::init() {
       itemsTestLabel, CC_CALLBACK_1(MainMenuScene::menuItemsTestCallback, this));
   if (itemsTestItem != nullptr) {
     itemsTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
-                                    origin.y + visibleSize.height / 2 - 10));
+                                    origin.y + visibleSize.height / 2 + 10));
   }
 
   // 添加关闭按钮
@@ -83,7 +83,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(ecsTestItem, itemsTestItem, closeItem, nullptr);
+    auto menu = Menu::create(playerTestItem, itemsTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -96,11 +96,13 @@ void MainMenuScene::menuCloseCallback(Ref *pSender) {
   Director::getInstance()->end();
 }
 
-void MainMenuScene::menuEcsTestCallback(Ref *pSender) {
-  // 进入ECS测试场景
-  auto ecsTestScene = EcsTestScene::createScene();
+
+
+void MainMenuScene::menuPlayerTestCallback(Ref *pSender) {
+  // 进入玩家测试场景
+  auto playerScene = PlayerTestScene::createScene();
   Director::getInstance()->replaceScene(
-      TransitionFade::create(0.5f, ecsTestScene));
+      TransitionFade::create(0.5f, playerScene));
 }
 
 void MainMenuScene::menuItemsTestCallback(Ref *pSender) {
