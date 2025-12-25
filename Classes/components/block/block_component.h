@@ -3,6 +3,7 @@
 #include "cocos2d.h"
 #include "entt/entt.hpp"
 #include "core/consts.h"
+#include "systems/block_layer/block_layer.h"
 #include "utils/vec2i.h"
 #pragma once
 
@@ -39,9 +40,6 @@ public:
 private:
     cocos2d::Vec2 pos; ///< 位置
 };
-
-
-using BlockArray = std::array<std::array<entt::id_type, CHUNK_SIZE>, CHUNK_SIZE>;
 
 /**
 * @brief 加载票。任何持有票且有位置的实体会被区块加载系统读取，加载一定半径的区块。
@@ -87,6 +85,8 @@ private:
     int _priority = 0; ///< 区块优先级
 };
 
+using BlockArray = std::array<std::array<BlockState, CHUNK_SIZE>, CHUNK_SIZE>;
+
 /**
 * @brief 区块网格，存储这个区块下的所有方块。
 * 
@@ -102,8 +102,9 @@ public:
     ChunkBlocks();
     ~ChunkBlocks();
 
-    entt::id_type getBlockAt(const Vec2i& pos) const;
-    void setBlockAt(const Vec2i& pos, entt::id_type id);
+    BlockState getBlockAt(const Vec2i& pos) const;
+    void setBlockAt(const Vec2i& pos, BlockState id);
+    void setBlockState(const Vec2i& localPos, state stateCode);
 
     /**
     * @brief 局部位置是否合法。
@@ -119,6 +120,10 @@ private:
 * @brief 物理票，任何希望可以与物理世界互动的实体都应该持有这个组件。
 * 
 * 这个组件本质是一个粗物理体，用于物理碰撞检测。使用者可以通过修改这个组件达到优化碰撞检测的目的。
+* 
+* @see BlockPhysicsSystem
+* 
+* @tease 同理，范围设置为10000获得氢弹。
 */
 struct PhysicsTicket
 {
@@ -128,6 +133,17 @@ struct PhysicsTicket
 
     cocos2d::Vec2 size;        ///< 粗物理体大小
     cocos2d::Vec2 offset;      ///< 粗物理体偏移
+};
+
+struct ActiveBlock
+{
+    entt::id_type id;
+    Vec2i blockPos;
+};
+
+struct MiningProgress
+{
+    float progress;
 };
 
 class World;
@@ -205,4 +221,9 @@ struct DirtyChunkTag
     void addDirtyBlock(const Vec2i& pos);
     bool isAllClean();
     std::vector<DirtyBlock> dirtyBlocks;
+};
+
+struct BlockEntityTag
+{
+    std::vector<entt::entity> entites;
 };

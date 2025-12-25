@@ -78,7 +78,7 @@ public:
     * @param blockPos 方块位置
     * @param texture 贴图
     */
-    BlockBatchCommand(const Vec2i& blockPos, cocos2d::Texture2D* texture);
+    BlockBatchCommand(int globalOrder, const Vec2i& blockPos, cocos2d::Texture2D* texture);
 
     /**
     * @brief 构造函数
@@ -88,7 +88,7 @@ public:
     * @param blockPos 方块位置列表
     * @param texture 贴图
     */
-    BlockBatchCommand(const std::vector<Vec2i>& blockPosArray, cocos2d::Texture2D* texture);
+    BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& blockPosArray, cocos2d::Texture2D* texture);
 
     /**
     * @ToDO 检查是否析构完全

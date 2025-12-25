@@ -13,26 +13,26 @@ using Vec2 = cocos2d::Vec2;
 using C4B = cocos2d::Color4B;
 using Tex2F = cocos2d::Tex2F;
 
-BlockBatchCommand::BlockBatchCommand(const Vec2i& blockPos, cocos2d::Texture2D* texture)
+BlockBatchCommand::BlockBatchCommand(int globalOrder, const Vec2i& blockPos, cocos2d::Texture2D* texture)
 {
-    BlockBatchCommand(std::vector<Vec2i>{blockPos}, texture);
+    BlockBatchCommand(globalOrder, std::vector<Vec2i>{blockPos}, texture);
 }
 
-BlockBatchCommand::BlockBatchCommand(const std::vector<Vec2i>& blockPos, cocos2d::Texture2D* texture)
+BlockBatchCommand::BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& blockPos, cocos2d::Texture2D* texture)
 {
-    auto* myTrian = new Triangles();
+    auto* triangles = new Triangles();
     _vertices = genVert(blockPos);
     _indices = genIndex(blockPos.size());
 
-    myTrian->indexCount = _indices.size();
-    myTrian->indices = _indices.data();
-    myTrian->vertCount = _vertices.size();
-    myTrian->verts = _vertices.data();
+    triangles->indexCount = _indices.size();
+    triangles->indices = _indices.data();
+    triangles->vertCount = _vertices.size();
+    triangles->verts = _vertices.data();
 
     updateShaders();
     setTexture(texture);
     setVertexLayout();
-    init(0, texture, cocos2d::BlendFunc::ALPHA_PREMULTIPLIED, *myTrian, cocos2d::Mat4(), 0);
+    init(globalOrder, texture, cocos2d::BlendFunc::ALPHA_PREMULTIPLIED, *triangles, cocos2d::Mat4(), 0);
 }
 
 BlockBatchCommand::~BlockBatchCommand() {}
@@ -128,7 +128,7 @@ std::vector<unsigned short> BlockBatchCommand::genIndex(int blockNum)
 
 void BlockBatchCommand::draw(cocos2d::Renderer* renderer, const cocos2d::Mat4& transform, uint32_t flags)
 {
-    RenderCommand::init(0, transform, flags);
+    RenderCommand::init(_globalOrder, transform, flags);
     updateUniforms(transform);
     renderer->addCommand(this);
 }

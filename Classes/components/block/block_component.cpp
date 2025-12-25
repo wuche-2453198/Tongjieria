@@ -29,14 +29,19 @@ void ChunkHead::setPriority(int priority) { _priority = priority; }
 ChunkBlocks::ChunkBlocks() = default;
 ChunkBlocks::~ChunkBlocks() = default;
 
-entt::id_type ChunkBlocks::getBlockAt(const Vec2i& pos) const
+BlockState ChunkBlocks::getBlockAt(const Vec2i& localPos) const
 {
-    return _blocks[pos.x][pos.y];
+    return _blocks[localPos.x][localPos.y];
 }
 
-void ChunkBlocks::setBlockAt(const Vec2i& pos, entt::id_type id)
+void ChunkBlocks::setBlockAt(const Vec2i& localPos, BlockState state)
 {
-    _blocks[pos.x][pos.y] = id;
+    _blocks[localPos.x][localPos.y] = state;
+}
+
+void ChunkBlocks::setBlockState(const Vec2i& localPos, state stateCode)
+{
+    _blocks[localPos.x][localPos.y].stateCode = stateCode;
 }
 
 bool ChunkBlocks::isPosValied(const Vec2i& pos) const
