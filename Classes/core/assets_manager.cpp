@@ -4,20 +4,75 @@
 #include "json/rapidjson.h"
 #include "json/writer.h"
 
+
+BlockConfig::BlockConfig(rapidjson::Document* const config)
+    : _config(config),
+    _name(tools::get_str_or(*_config, "name", "error")),
+    _texturePath(tools::get_str_or(*_config, "texture", "error")),
+    _texture(cocos2d::Director::getInstance()->getTextureCache()->addImage(_texturePath)),
+    _replacable(tools::get_bool_or(*_config, "replacable", false)),
+    _renderable(tools::get_bool_or(*_config, "renderable", false)),
+    _interactable(tools::get_bool_or(*_config, "interactable", false)),
+    _collision(tools::get_bool_or(*_config, "collision", false))
+{};
+
+const std::string BlockConfig::name() const
+{
+    return _name;
+}
+
+const std::string BlockConfig::texturePath() const
+{
+    return _texturePath;
+}
+
+cocos2d::Texture2D* BlockConfig::texture() const
+{
+    return _texture;
+}
+
+bool BlockConfig::isReplacable() const
+{
+    return _replacable;
+}
+
+bool BlockConfig::isRenderble() const
+{
+    return _renderable;
+}
+
+bool BlockConfig::isInteractable() const
+{
+    return _interactable;
+}
+
+bool BlockConfig::hasCollision() const
+{
+    return _collision;
+}
+
+rapidjson::Document* const BlockConfig::getConfig() const
+{
+    return _config;
+}
+
 AssetManager::AssetManager() 
 {
     loadAllBlockJson();
 };
 
-cocos2d::Texture2D* const AssetManager::getTexture(const std::string& path) const {
+cocos2d::Texture2D* const AssetManager::getTexture(const std::string& path) const 
+{
     return cocos2d::Director::getInstance()->getTextureCache()->addImage(path);
 }
 
-const rapidjson::Document* const AssetManager::getBlockConfig(entt::id_type id) const {
-    return _block_config.at(id);
+const BlockConfig& AssetManager::getBlockConfig(entt::id_type id) const 
+{
+    return *(_block_config.at(id));
 }
 
-bool AssetManager::init() {
+bool AssetManager::init() 
+{
     loadAllBlockJson();
     return true;
 }
@@ -34,7 +89,7 @@ void AssetManager::loadAllBlockJson() {
         auto id = tools::get_str(*config, "id");
 
         if (id.has_value()) {
-            _block_config[entt::hashed_string(id.value().c_str())] = config;
+            _block_config[entt::hashed_string(id.value().c_str())] = new BlockConfig(config);
         }
     }
 }
