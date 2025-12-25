@@ -161,8 +161,7 @@ bool BlockPhysicsSystem::hasCollision(const Vec2i& blockPos)
     bool collision = false;
     if (blockState.id.has_value())
     {
-        auto config = _assetManager.getBlockConfig(blockState.id.value());
-        collision = tools::get_bool_or(*config, "collision", false); // ªÒ»°≈ˆ◊≤≈‰÷√
+        collision = _assetManager.getBlockConfig(blockState.id.value()).hasCollision();
     }
     return collision;
 }

@@ -5,16 +5,22 @@
 #include "json/writer.h"
 
 
-BlockConfig::BlockConfig(rapidjson::Document* const config)
-    : _config(config),
-    _name(tools::get_str_or(*_config, "name", "error")),
-    _texturePath(tools::get_str_or(*_config, "texture", "error")),
+BlockConfig::BlockConfig(optional_id id, rapidjson::Document* config)
+    : 
+    _id(id),
+    _config(*config),
+    _name(tools::get_str_or(_config, "name", "error")),
+    _texturePath(tools::get_str_or(_config, "texture", "error")),
     _texture(cocos2d::Director::getInstance()->getTextureCache()->addImage(_texturePath)),
-    _replacable(tools::get_bool_or(*_config, "replacable", false)),
-    _renderable(tools::get_bool_or(*_config, "renderable", false)),
-    _interactable(tools::get_bool_or(*_config, "interactable", false)),
-    _collision(tools::get_bool_or(*_config, "collision", false))
-{};
+    _replacable(tools::get_bool_or(_config, "replacable", false)),
+    _renderable(tools::get_bool_or(_config, "renderable", false)),
+    _interactable(tools::get_bool_or(_config, "interactable", false)),
+    _collision(tools::get_bool_or(_config, "collision", false))
+{}
+const optional_id BlockConfig::id() const
+{
+    return _id;
+};
 
 const std::string BlockConfig::name() const
 {
@@ -51,9 +57,14 @@ bool BlockConfig::hasCollision() const
     return _collision;
 }
 
-rapidjson::Document* const BlockConfig::getConfig() const
+const rapidjson::Document& BlockConfig::getConfig() const
 {
     return _config;
+}
+
+BlockConfig::operator bool() const
+{
+    return _id.has_value();
 }
 
 AssetManager::AssetManager() 
@@ -89,7 +100,8 @@ void AssetManager::loadAllBlockJson() {
         auto id = tools::get_str(*config, "id");
 
         if (id.has_value()) {
-            _block_config[entt::hashed_string(id.value().c_str())] = new BlockConfig(config);
+            auto id_hashed = entt::hashed_string(id.value().c_str());
+            _block_config[id_hashed] = new BlockConfig(optional_id(id_hashed), config);
         }
     }
 }

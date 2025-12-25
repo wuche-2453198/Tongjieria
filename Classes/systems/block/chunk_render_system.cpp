@@ -32,6 +32,7 @@ void ChunkRenderCommandSystem::updateChunkCommand()
 
             std::unordered_map<entt::id_type, std::vector<Vec2i>> blockbatch;
 
+            // 记录每个方块的位置
             for (int y = 0; y < CHUNK_SIZE; y++)
             {
                 for (int x = 0; x < CHUNK_SIZE; x++)
@@ -40,7 +41,7 @@ void ChunkRenderCommandSystem::updateChunkCommand()
                     entt::id_type blockID = blocks.getBlockAt(localPos);
                     Vec2i blockPos = chunkPos * CHUNK_SIZE + localPos;
                     
-                    blockbatch[blockID].push_back(blockPos);
+                    blockbatch[blockID].push_back(blockPos);            // 记录该方块的位置
                 }
             }
 
@@ -49,17 +50,13 @@ void ChunkRenderCommandSystem::updateChunkCommand()
             {
                 // 读取方块配置
                 auto& asset_manager = _registry.ctx().get<AssetManager>();
-                auto config = asset_manager.getBlockConfig(blockID);
-                
-                // 读取方块纹理
-                std::string texturePath = tools::get_str_or(*config, "texture", "a_block.bmp");
-                auto texture = asset_manager.getTexture(texturePath);
+                auto texture = asset_manager.getBlockConfig(blockID).texture();
 
                 auto batchCommand = new BlockBatchCommand(positions, texture);
-                batchCommand->setUseTransform(false);
-                batchs.push_back(batchCommand);
-                batchIDs.addBatchID(blockID, top);
-                top++;
+                batchCommand->setUseTransform(false);   // 不使用transform，直接使用block的位置
+                batchs.push_back(batchCommand);         // 添加到batchs中
+                batchIDs.addBatchID(blockID, top);      // 记录batchID和top
+                top++;                                  // top加1
             }
 
             CCLOG("Create Chunk commands at %d %d", chunkPos.x, chunkPos.y);

@@ -1,12 +1,15 @@
+#pragma once
 #include "cocos2d.h"
 #include "entt/entt.hpp"
 #include "json/document.h"
-#pragma once
+
+using optional_id = std::optional<entt::id_type>;
 
 class BlockConfig
 {
 public:
-    BlockConfig(rapidjson::Document* const config);
+    BlockConfig(optional_id id, rapidjson::Document* config);
+    const optional_id id() const;
     const std::string name() const;
     const std::string texturePath() const;
     cocos2d::Texture2D* texture() const;
@@ -14,8 +17,12 @@ public:
     bool isRenderble() const;
     bool isInteractable() const;
     bool hasCollision() const;
-    rapidjson::Document* const getConfig() const;
+    const rapidjson::Document& getConfig() const;
+
+    operator bool() const;
 private:
+    optional_id _id;
+    rapidjson::Document& _config;
     const std::string& _name;
     const std::string& _texturePath;
     cocos2d::Texture2D* _texture;
@@ -23,7 +30,6 @@ private:
     bool _renderable;
     bool _interactable;
     bool _collision;
-    rapidjson::Document* _config;
 };
 
 /**

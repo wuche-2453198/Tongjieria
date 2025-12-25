@@ -79,14 +79,14 @@ bool BlockWorld::TryPlace(const Vec2i& blockPos, entt::id_type block_id, state b
         return false;
     }
     auto blockAtPos = _blockLayer.getBlockAtBlockPos(blockPos).id.value();
-    auto config = _assetManager.getBlockConfig(blockAtPos);
+    auto& config = _assetManager.getBlockConfig(blockAtPos);
     // 检查方块配置是否存在
     if (!config)
     {
         return false;
     }
     // 检查方块是否可替换
-    if(!tools::get_bool_or(*config, "replaceable", false))
+    if(!config.isReplacable())
     {
         return false;
     }
