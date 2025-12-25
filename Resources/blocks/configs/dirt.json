@@ -1,7 +1,8 @@
 {
-    "id": "dirt",
-    "name": "Dirt",
-    "texture": "blocks\\textures\\dirt.png",
-    "replaceable" : false,
-    "collision" : true
+  "id": "dirt",
+  "name": "Dirt",
+  "texture": "blocks\\textures\\dirt.png",
+  "replaceable": false,
+  "renderable": true,
+  "collision": true
 }

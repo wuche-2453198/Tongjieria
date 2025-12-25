@@ -2,6 +2,7 @@
   "id": "green_block",
   "name": "Green Block",
   "texture": "blocks\\textures\\green_block.png",
-  "replaceable" : false,
-  "collision" : true
+  "replaceable": false,
+  "renderable": true,
+  "collision": true
 }

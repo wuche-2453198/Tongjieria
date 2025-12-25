@@ -2,6 +2,7 @@
   "id": "test_block",
   "name": "Test Block",
   "texture": "a_block.bmp",
-  "replaceable" : false,
-  "collision" : true
+  "replaceable": false,
+  "renderable": true,
+  "collision": true
 }

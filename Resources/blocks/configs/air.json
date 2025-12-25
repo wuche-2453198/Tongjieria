@@ -1,8 +1,9 @@
 {
-    "id": "air",
-    "name": "Air",
-    "texture": "blocks\\textures\\air.png",
-    "replaceable" : true,
-    "interacable" : false,
-    "collision" : false
+  "id": "air",
+  "name": "Air",
+  "texture": "blocks\\textures\\air.png",
+  "replaceable": true,
+  "renderable": false,
+  "interacable": false,
+  "collision": false
 }

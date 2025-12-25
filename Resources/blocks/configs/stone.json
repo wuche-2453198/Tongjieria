@@ -2,6 +2,7 @@
   "id": "stone",
   "name": "Stone",
   "texture": "blocks\\textures\\stone.png",
-  "replaceable" : false,
-  "collision" : true
+  "replaceable": false,
+  "renderable": true,
+  "collision": true
 }
