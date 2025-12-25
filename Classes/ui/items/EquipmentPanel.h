@@ -19,24 +19,16 @@ public:
     // Refresh all equipment slots from player equipment data
     void refresh();
 
-protected:
-    enum class EquipSlotType {
-        Helmet,       // 头盔
-        Chestplate,   // 胸甲
-        Leggings,     // 护腿
-        Accessory0,   // 饰品槽 1
-        Accessory1,   // 饰品槽 2
-        Accessory2,   // 饰品槽 3
-        Accessory3    // 饰品槽 4
-    };
+    // Public slot helpers for cross-UI interaction
+    int hitTestEquipSlot(const cocos2d::Vec2& worldPos) const;
+    EquipSlotType getEquipSlotType(int index) const;
 
+protected:
     static const int EQUIPMENT_SLOT_COUNT = 7;  // 3 armor + 4 accessories
 
     // Slot helpers
-    int hitTestEquipSlot(const cocos2d::Vec2& worldPos) const;
     cocos2d::Rect getEquipSlotRect(int index) const;
     cocos2d::Vec2 getEquipSlotPos(int index) const;
-    EquipSlotType getEquipSlotType(int index) const;
     std::string getEquipSlotTexture(EquipSlotType type) const;
 
     void updateTooltip(const std::string& text, const cocos2d::Vec2& worldPos);

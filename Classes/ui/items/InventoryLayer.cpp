@@ -1,4 +1,6 @@
 #include "InventoryLayer.h"
+#include "EquipmentPanel.h"
+#include "systems/items/EquipmentValidator.h"
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -99,12 +101,12 @@ bool InventoryLayer::init() {
     auto listener = EventListenerCustom::create("Event_InventoryChanged", CC_CALLBACK_1(InventoryLayer::onInventoryChanged, this));
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-    // Name label shown near top inside the panel
-    _nameLabel = Label::createWithSystemFont("", "Arial", 16);
-    _nameLabel->setAnchorPoint(Vec2(0.5f, 1.0f));
-    float labelY = panelHeight - 4.0f;
-    _nameLabel->setPosition(Vec2(panelWidth * 0.5f, labelY));
-    this->addChild(_nameLabel, 5);
+    // Name label shown near top inside the panel (commented out)
+    // _nameLabel = Label::createWithSystemFont("", "Arial", 16);
+    // _nameLabel->setAnchorPoint(Vec2(0.5f, 1.0f));
+    // float labelY = panelHeight - 4.0f;
+    // _nameLabel->setPosition(Vec2(panelWidth * 0.5f, labelY));
+    // this->addChild(_nameLabel, 5);
 
     // Tooltip (outside panel right side)
     _tooltipBg = LayerColor::create(Color4B(12, 16, 26, 230));
@@ -402,6 +404,18 @@ void InventoryLayer::attachMouseHandlers() {
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
         Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+
+        // First try to equip to equipment panel
+        if (tryEquipToPanel(_dragSource, pos)) {
+            // Successfully equipped
+            _dragging = false;
+            if (_dragSprite) _dragSprite->setVisible(false);
+            _dragSource = -1;
+            updateHighlights();
+            return;
+        }
+
+        // Otherwise handle normal inventory drag
         int target = hitTestSlot(pos);
         endDrag(target);
     };
@@ -424,7 +438,7 @@ void InventoryLayer::attachMouseHandlers() {
             const auto& slots = Inventory::getInstance()->getSlots();
             if (idx < (int)slots.size() && slots[idx].itemId != 0) {
                 auto def = ItemManager::getInstance()->getItemData(slots[idx].itemId);
-                _nameLabel->setString(def ? def->name : "");
+                // _nameLabel->setString(def ? def->name : "");
                 updateTooltip(def ? def->name : "", pos);
                 return;
             }
@@ -432,7 +446,7 @@ void InventoryLayer::attachMouseHandlers() {
             _hoverIndex = -1;
             updateHighlights();
         }
-        _nameLabel->setString("");
+        // _nameLabel->setString("");
         updateTooltip("", Vec2::ZERO);
     };
 
@@ -627,9 +641,42 @@ void InventoryLayer::updateTooltip(const std::string& text, const Vec2& worldPos
     _tooltipBg->setContentSize(Size(size.width + padding * 2, size.height + padding * 2));
     _tooltipLabel->setPosition(Vec2(padding, size.height * 0.5f + padding));
 
+    // Convert world position to local coordinate space
     Vec2 local = this->convertToNodeSpace(worldPos);
-    float x = this->getContentSize().width + 8.0f;
-    float y = std::min(std::max(local.y, padding), this->getContentSize().height - padding);
+
+    // Offset tooltip to the right and slightly below the cursor
+    float offsetX = 15.0f;  // Right offset from cursor
+    float offsetY = -15.0f;  // Down offset from cursor
+
+    float x = local.x + offsetX;
+    float y = local.y + offsetY;
+
+    // Get screen bounds to prevent tooltip from going off-screen
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto origin = Director::getInstance()->getVisibleOrigin();
+
+    // Clamp tooltip position to stay within screen bounds
+    float tooltipWidth = size.width + padding * 2;
+    float tooltipHeight = size.height + padding * 2;
+
+    // Convert to world space to check bounds
+    Vec2 tooltipWorldPos = this->convertToWorldSpace(Vec2(x, y));
+
+    // Right edge check
+    if (tooltipWorldPos.x + tooltipWidth > origin.x + visibleSize.width) {
+        x = local.x - offsetX - tooltipWidth;  // Show on left side of cursor instead
+    }
+
+    // Bottom edge check
+    if (tooltipWorldPos.y - tooltipHeight < origin.y) {
+        y = local.y - offsetY;  // Show above cursor instead
+    }
+
+    // Top edge check
+    if (tooltipWorldPos.y > origin.y + visibleSize.height) {
+        y = local.y + offsetY - tooltipHeight;
+    }
+
     _tooltipBg->setPosition(Vec2(x, y));
     _tooltipBg->setVisible(true);
 }
@@ -706,6 +753,49 @@ void InventoryLayer::updateDragSprite(const Vec2& worldPos) {
 void InventoryLayer::onInventoryChanged(EventCustom* event) {
     refresh();
     updateHighlights();
+}
+
+void InventoryLayer::setEquipmentPanel(EquipmentPanel* panel) {
+    _equipmentPanel = panel;
+}
+
+bool InventoryLayer::tryEquipToPanel(int inventoryIndex, const Vec2& worldPos) {
+    if (!_equipmentPanel) return false;
+    if (inventoryIndex < 0) return false;
+
+    // Check if position is over equipment panel
+    int equipSlotIndex = _equipmentPanel->hitTestEquipSlot(worldPos);
+    if (equipSlotIndex < 0) return false;
+
+    CCLOG("InventoryLayer: Trying to equip inventory slot %d to equipment slot %d", inventoryIndex, equipSlotIndex);
+
+    // Get item info
+    auto inv = Inventory::getInstance();
+    const auto& slots = inv->getSlots();
+    if (inventoryIndex >= (int)slots.size()) return false;
+
+    int itemId = slots[inventoryIndex].itemId;
+    if (itemId == 0) return false;
+
+    // Validate equipment type
+    auto validator = EquipmentValidator::getInstance();
+    EquipSlotType targetSlotType = _equipmentPanel->getEquipSlotType(equipSlotIndex);
+
+    if (!validator->canEquip(itemId, targetSlotType)) {
+        CCLOG("InventoryLayer: Item %d cannot be equipped to slot type %d", itemId, (int)targetSlotType);
+        return false;
+    }
+
+    // Perform equipment
+    bool success = inv->equipItem(inventoryIndex, equipSlotIndex);
+    if (success) {
+        CCLOG("InventoryLayer: Successfully equipped item %d from slot %d to equipment slot %d",
+              itemId, inventoryIndex, equipSlotIndex);
+    } else {
+        CCLOG("InventoryLayer: Failed to equip item");
+    }
+
+    return success;
 }
 
 void InventoryLayer::onOrganizationButtonClicked(Ref* sender) {

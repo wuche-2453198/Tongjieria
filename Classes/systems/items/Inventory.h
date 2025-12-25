@@ -4,7 +4,7 @@
 #include "components/items/InventoryDef.h"
 
 
-//固定物品栏定义 
+//固定物品栏定义
 class Inventory {
 public:
     static Inventory* getInstance();
@@ -12,6 +12,9 @@ public:
     // Initialize capacity (clears current slots)
     // Default: 40 general slots + 10个快捷键栏 + 4 armor + 4 coin + 1 trash = 59
     void init(size_t capacity = 59);
+
+    // Equipment slot management (separate from main inventory slots)
+    static constexpr int EQUIPMENT_SLOT_COUNT = 7;  // 3 armor + 4 accessories
 
     // Add items; returns true if fully added, false if overflow
     //添加物品定义
@@ -44,6 +47,24 @@ public:
 
     void clear();
 
+    // Equipment slot access
+    const std::vector<InventorySlot>& getEquipmentSlots() const { return _equipmentSlots; }
+    InventorySlot getEquipmentSlot(int index) const;
+
+    // Equip item from inventory to equipment slot
+    // Returns true if successful
+    bool equipItem(int inventoryIndex, int equipSlotIndex);
+
+    // Unequip item from equipment slot to inventory
+    // Returns true if successful (false if inventory full)
+    bool unequipItem(int equipSlotIndex);
+
+    // Swap equipment between two equipment slots
+    bool swapEquipment(int equipSlot1, int equipSlot2);
+
+    // Move equipment from one slot to another (or swap if different)
+    bool moveEquipment(int fromEquipSlot, int toEquipSlot);
+
 private:
     Inventory() = default;
     ~Inventory() = default;
@@ -51,8 +72,10 @@ private:
     static Inventory* _instance;
 
     std::vector<InventorySlot> _slots;
+    std::vector<InventorySlot> _equipmentSlots;  // Separate equipment slots
 
     void dispatchInventoryChanged();
+    void dispatchEquipmentChanged();
     int addItemInternal(int id, int count);
 };
 

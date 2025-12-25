@@ -168,6 +168,12 @@ void ItemsTestScene::setupInventoryLayer() {
     if (equipPanel) {
         this->addChild(equipPanel, 10);  // Same z-order as inventory
         CCLOG("ItemsTestScene: EquipmentPanel added with z-order 10");
+
+        // IMPORTANT: Connect InventoryLayer to EquipmentPanel for cross-UI dragging
+        if (invLayer) {
+            invLayer->setEquipmentPanel(equipPanel);
+            CCLOG("ItemsTestScene: InventoryLayer connected to EquipmentPanel");
+        }
     }
 }
 

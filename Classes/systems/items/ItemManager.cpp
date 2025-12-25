@@ -23,6 +23,14 @@ ItemType convertToItemType(int rawType) {
     }
 }
 
+EquipType convertToEquipType(const std::string& str) {
+    if (str == "helmet") return EquipType::Helmet;
+    if (str == "chestplate") return EquipType::Chestplate;
+    if (str == "leggings") return EquipType::Leggings;
+    if (str == "accessory") return EquipType::Accessory;
+    return EquipType::None;
+}
+
 const std::vector<std::string> kItemFiles = {
     "items/items_json/items_equipment.json",
     "items/items_json/items_placeables.json",
@@ -86,6 +94,17 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
             }
         }
 
+        // Read equipment-specific fields
+        EquipType equipType = EquipType::None;
+        if (itemJson.HasMember("equipType") && itemJson["equipType"].IsString()) {
+            equipType = convertToEquipType(itemJson["equipType"].GetString());
+        }
+
+        int defense = 0;
+        if (itemJson.HasMember("defense") && itemJson["defense"].IsInt()) {
+            defense = itemJson["defense"].GetInt();
+        }
+
         auto entity = _registry.create();
         _registry.emplace<ItemId>(entity, id);
         _registry.emplace<ItemName>(entity, name);
@@ -94,6 +113,8 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
         _registry.emplace<ItemIcon>(entity, iconPath);
         _registry.emplace<ItemValue>(entity, value);
         _registry.emplace<ItemTags>(entity, tags);
+        _registry.emplace<EquipTypeComponent>(entity, equipType);
+        _registry.emplace<DefenseComponent>(entity, defense);
 
         _idToEntity[id] = entity;
     }
@@ -152,6 +173,12 @@ ItemDefinition ItemManager::entityToDefinition(entt::entity entity) const {
     }
     if (auto* tagsComp = _registry.try_get<ItemTags>(entity)) {
         def.tags = tagsComp->tags;
+    }
+    if (auto* equipTypeComp = _registry.try_get<EquipTypeComponent>(entity)) {
+        def.equipType = equipTypeComp->equipType;
+    }
+    if (auto* defenseComp = _registry.try_get<DefenseComponent>(entity)) {
+        def.defense = defenseComp->defense;
     }
 
     return def;

@@ -1,4 +1,5 @@
 #include "EquipmentPanel.h"
+#include "systems/items/EquipmentValidator.h"
 #include <algorithm>
 #include <cmath>
 
@@ -45,6 +46,12 @@ bool EquipmentPanel::init() {
     buildSlots();
     refresh();
     attachMouseHandlers();
+
+    // Listen to equipment change events
+    auto listener = EventListenerCustom::create("Event_EquipmentChanged", [this](EventCustom* event) {
+        refresh();
+    });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     // Name label shown near top inside the panel
     _nameLabel = Label::createWithSystemFont("", "Arial", 14);
@@ -116,11 +123,26 @@ void EquipmentPanel::buildSlots() {
 }
 
 void EquipmentPanel::refresh() {
-    // TODO: Integrate with player equipment system
-    // For now, just hide all icons
-    for (size_t i = 0; i < _slotIcons.size(); ++i) {
+    // Get equipment slots from inventory
+    const auto& equipSlots = Inventory::getInstance()->getEquipmentSlots();
+
+    for (size_t i = 0; i < _slotIcons.size() && i < equipSlots.size(); ++i) {
+        const auto& slot = equipSlots[i];
         auto icon = _slotIcons[i];
-        icon->setVisible(false);
+
+        if (slot.itemId == 0 || slot.count == 0) {
+            icon->setVisible(false);
+            continue;
+        }
+
+        auto frame = ItemManager::getInstance()->getItemSprite(slot.itemId);
+        if (frame) {
+            icon->setSpriteFrame(frame);
+            icon->setVisible(true);
+            icon->setScale(_slotSize / icon->getContentSize().width * 0.7f);
+        } else {
+            icon->setVisible(false);
+        }
     }
 }
 
@@ -169,15 +191,18 @@ void EquipmentPanel::attachMouseHandlers() {
                 _hoverIndex = idx;
                 updateHighlights();
             }
-            // TODO: Show equipment item info in tooltip
-            _nameLabel->setString("");
-            updateTooltip("", pos);
+            // Show equipment item info in tooltip
+            const auto& equipSlots = Inventory::getInstance()->getEquipmentSlots();
+            if (idx < (int)equipSlots.size() && equipSlots[idx].itemId != 0) {
+                auto def = ItemManager::getInstance()->getItemData(equipSlots[idx].itemId);
+                updateTooltip(def ? def->name : "", pos);
+                return;
+            }
             return;
         } else if (_hoverIndex != -1) {
             _hoverIndex = -1;
             updateHighlights();
         }
-        _nameLabel->setString("");
         updateTooltip("", Vec2::ZERO);
     };
 
@@ -215,7 +240,7 @@ Vec2 EquipmentPanel::getEquipSlotPos(int index) const {
     return Vec2(x, y);
 }
 
-EquipmentPanel::EquipSlotType EquipmentPanel::getEquipSlotType(int index) const {
+EquipSlotType EquipmentPanel::getEquipSlotType(int index) const {
     switch (index) {
         case 0: return EquipSlotType::Helmet;
         case 1: return EquipSlotType::Chestplate;
@@ -288,9 +313,26 @@ void EquipmentPanel::updateHighlights() {
 
 void EquipmentPanel::beginDrag(int index, const Vec2& worldPos) {
     if (index < 0 || index >= EQUIPMENT_SLOT_COUNT) return;
-    // TODO: Check if equipment slot has an item
-    _dragging = false;  // Disabled for now until integration
+
+    const auto& equipSlots = Inventory::getInstance()->getEquipmentSlots();
+    if (equipSlots[index].itemId == 0) return;  // Cannot drag empty slot
+
+    _dragging = true;
     _dragSource = index;
+
+    if (!_dragSprite) {
+        _dragSprite = Sprite::create();
+        this->addChild(_dragSprite, 10);
+    }
+
+    auto frame = ItemManager::getInstance()->getItemSprite(equipSlots[index].itemId);
+    if (frame) {
+        _dragSprite->setSpriteFrame(frame);
+        _dragSprite->setVisible(true);
+        _dragSprite->setScale(_slotSize / _dragSprite->getContentSize().width * 0.7f);
+        updateDragSprite(worldPos);
+    }
+
     updateHighlights();
 }
 
@@ -299,10 +341,57 @@ void EquipmentPanel::endDrag(int targetIndex) {
     _dragging = false;
     if (_dragSprite) _dragSprite->setVisible(false);
 
-    if (targetIndex < 0) { updateHighlights(); return; }
-    if (targetIndex == _dragSource) { updateHighlights(); return; }
+    if (targetIndex < 0) {
+        // Dropped outside - unequip to inventory
+        auto inv = Inventory::getInstance();
+        if (inv->unequipItem(_dragSource)) {
+            CCLOG("EquipmentPanel: Unequipped item from slot %d", _dragSource);
+        } else {
+            CCLOG("EquipmentPanel: Failed to unequip (inventory full?)");
+        }
+        _dragSource = -1;
+        updateHighlights();
+        return;
+    }
 
-    // TODO: Implement equipment swap/move logic
+    if (targetIndex == _dragSource) {
+        _dragSource = -1;
+        updateHighlights();
+        return;
+    }
+
+    // Swap or move equipment between slots
+    auto inv = Inventory::getInstance();
+    const auto& equipSlots = inv->getEquipmentSlots();
+
+    // Validate: check if source item can go to target slot
+    auto validator = EquipmentValidator::getInstance();
+    int sourceItemId = equipSlots[_dragSource].itemId;
+    EquipSlotType targetSlotType = static_cast<EquipSlotType>(targetIndex);
+
+    if (!validator->canEquip(sourceItemId, targetSlotType)) {
+        CCLOG("EquipmentPanel: Cannot equip item %d to slot type %d", sourceItemId, (int)targetSlotType);
+        _dragSource = -1;
+        updateHighlights();
+        return;
+    }
+
+    // Also validate target item can go to source slot (if swapping)
+    if (equipSlots[targetIndex].itemId != 0) {
+        int targetItemId = equipSlots[targetIndex].itemId;
+        EquipSlotType sourceSlotType = static_cast<EquipSlotType>(_dragSource);
+
+        if (!validator->canEquip(targetItemId, sourceSlotType)) {
+            CCLOG("EquipmentPanel: Cannot swap - target item %d incompatible with source slot %d",
+                  targetItemId, (int)sourceSlotType);
+            _dragSource = -1;
+            updateHighlights();
+            return;
+        }
+    }
+
+    inv->moveEquipment(_dragSource, targetIndex);
+    CCLOG("EquipmentPanel: Moved equipment from slot %d to slot %d", _dragSource, targetIndex);
 
     _dragSource = -1;
     updateHighlights();

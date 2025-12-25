@@ -9,6 +9,11 @@ project(${APP_NAME})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Force UTF-8 encoding for MSVC
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 if(XCODE)
     if(NOT DEFINED CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET)
         SET (CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 8.0)
@@ -43,6 +48,7 @@ list(APPEND GAME_SOURCE
      Classes/PlayerTestScene.cpp
      Classes/systems/items/ItemManager.cpp
      Classes/systems/items/Inventory.cpp
+     Classes/systems/items/EquipmentValidator.cpp
      Classes/ui/items/InventoryLayer.cpp
      Classes/ui/items/EquipmentPanel.cpp
      Classes/systems/items/RecipeManager.cpp
@@ -66,6 +72,7 @@ list(APPEND GAME_HEADER
      Classes/components/items/InventoryDef.h
      Classes/systems/items/ItemManager.h
      Classes/systems/items/Inventory.h
+     Classes/systems/items/EquipmentValidator.h
      Classes/ui/items/InventoryLayer.h
      Classes/ui/items/EquipmentPanel.h
      Classes/components/items/CraftingDef.h

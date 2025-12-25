@@ -6,7 +6,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/copper_helmet.png",
     "value": 10,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 2
   },
   {
     "id": 1102,
@@ -15,7 +17,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/copper_chestplate.png",
     "value": 15,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 3
   },
   {
     "id": 1103,
@@ -24,7 +28,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/copper_greaves.png",
     "value": 10,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 2
   },
   {
     "id": 1104,
@@ -33,7 +39,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/copper_leggings.png",
     "value": 12,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 2
   },
   {
     "id": 1111,
@@ -42,7 +50,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/iron_helmet.png",
     "value": 20,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 3
   },
   {
     "id": 1112,
@@ -51,7 +61,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/iron_chestplate.png",
     "value": 30,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 4
   },
   {
     "id": 1113,
@@ -60,7 +72,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/iron_greaves.png",
     "value": 20,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 3
   },
   {
     "id": 1114,
@@ -69,7 +83,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/iron_leggings.png",
     "value": 25,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 3
   },
   {
     "id": 1121,
@@ -78,7 +94,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/silver_helmet.png",
     "value": 35,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 4
   },
   {
     "id": 1122,
@@ -87,7 +105,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/silver_chestplate.png",
     "value": 50,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 5
   },
   {
     "id": 1123,
@@ -96,7 +116,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/silver_greaves.png",
     "value": 35,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 4
   },
   {
     "id": 1124,
@@ -105,7 +127,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/silver_leggings.png",
     "value": 40,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 4
   },
   {
     "id": 1131,
@@ -114,7 +138,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/gold_helmet.png",
     "value": 50,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 5
   },
   {
     "id": 1132,
@@ -123,7 +149,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/gold_chestplate.png",
     "value": 75,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 6
   },
   {
     "id": 1133,
@@ -132,7 +160,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/gold_greaves.png",
     "value": 50,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 5
   },
   {
     "id": 1134,
@@ -141,7 +171,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/gold_leggings.png",
     "value": 60,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 5
   },
   {
     "id": 1141,
@@ -150,7 +182,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/aluminum_helmet.png",
     "value": 30,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 4
   },
   {
     "id": 1142,
@@ -159,7 +193,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/aluminum_chestplate.png",
     "value": 45,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 5
   },
   {
     "id": 1143,
@@ -168,7 +204,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/aluminum_greaves.png",
     "value": 30,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 4
   },
   {
     "id": 1144,
@@ -177,7 +215,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/aluminum_leggings.png",
     "value": 35,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 4
   },
   {
     "id": 1151,
@@ -186,7 +226,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/lead_helmet.png",
     "value": 25,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 3
   },
   {
     "id": 1152,
@@ -195,7 +237,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/lead_chestplate.png",
     "value": 35,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 4
   },
   {
     "id": 1153,
@@ -204,7 +248,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/lead_greaves.png",
     "value": 25,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 3
   },
   {
     "id": 1154,
@@ -213,7 +259,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/lead_leggings.png",
     "value": 28,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 3
   },
   {
     "id": 1161,
@@ -222,7 +270,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zinc_helmet.png",
     "value": 40,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 5
   },
   {
     "id": 1162,
@@ -231,7 +281,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zinc_chestplate.png",
     "value": 60,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 6
   },
   {
     "id": 1163,
@@ -240,7 +292,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zinc_greaves.png",
     "value": 40,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 5
   },
   {
     "id": 1164,
@@ -249,7 +303,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zinc_leggings.png",
     "value": 45,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 5
   },
   {
     "id": 1171,
@@ -258,7 +314,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/obdurite_helmet.png",
     "value": 80,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 6
   },
   {
     "id": 1172,
@@ -267,7 +325,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/obdurite_chestplate.png",
     "value": 120,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 8
   },
   {
     "id": 1173,
@@ -276,7 +336,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/obdurite_greaves.png",
     "value": 80,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 6
   },
   {
     "id": 1174,
@@ -285,7 +347,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/obdurite_leggings.png",
     "value": 90,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 6
   },
   {
     "id": 1181,
@@ -294,7 +358,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/rhymestone_helmet.png",
     "value": 100,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 7
   },
   {
     "id": 1182,
@@ -303,7 +369,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/rhymestone_chestplate.png",
     "value": 150,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 9
   },
   {
     "id": 1183,
@@ -312,7 +380,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/rhymestone_greaves.png",
     "value": 100,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 7
   },
   {
     "id": 1184,
@@ -321,7 +391,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/rhymestone_leggings.png",
     "value": 110,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 7
   },
   {
     "id": 1191,
@@ -330,7 +402,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zythium_helmet.png",
     "value": 200,
-    "tags": [1, 101]
+    "tags": [1, 101],
+    "equipType": "helmet",
+    "defense": 10
   },
   {
     "id": 1192,
@@ -339,7 +413,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zythium_chestplate.png",
     "value": 300,
-    "tags": [1, 102]
+    "tags": [1, 102],
+    "equipType": "chestplate",
+    "defense": 12
   },
   {
     "id": 1193,
@@ -348,7 +424,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zythium_greaves.png",
     "value": 200,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 10
   },
   {
     "id": 1194,
@@ -357,7 +435,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/armor/zythium_leggings.png",
     "value": 220,
-    "tags": [1, 103]
+    "tags": [1, 103],
+    "equipType": "leggings",
+    "defense": 10
   },
   {
     "id": 1201,

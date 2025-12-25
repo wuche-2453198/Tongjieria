@@ -9,6 +9,9 @@
 #include <vector>
 #include <string>
 
+// Forward declaration
+class EquipmentPanel;
+
 // Simple 10x5 inventory UI with mouse drag/drop and count/name display
 //UI类的定义，包含鼠标拖拽，
 class InventoryLayer : public cocos2d::Layer {
@@ -18,6 +21,9 @@ public:
 
     // Refresh all slot visuals from Inventory data
     void refresh();
+
+    // Set equipment panel for cross-UI drag support
+    void setEquipmentPanel(EquipmentPanel* panel);
 
 protected:
 
@@ -74,10 +80,16 @@ private:
     // Organization button
     cocos2d::ui::Button* _organizationButton = nullptr;
 
+    // Reference to equipment panel for cross-UI dragging
+    EquipmentPanel* _equipmentPanel = nullptr;
+
     void buildSlots();
     void attachMouseHandlers();
     void onOrganizationButtonClicked(cocos2d::Ref* sender);
     void sortInventory();
+
+    // Helper to try equipping item to equipment panel
+    bool tryEquipToPanel(int inventoryIndex, const cocos2d::Vec2& worldPos);
 };
 
 #endif // __INVENTORY_LAYER_H__
