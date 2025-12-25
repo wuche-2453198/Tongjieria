@@ -23,7 +23,7 @@ BlockSystemManager::BlockSystemManager(entt::registry& registry, entt::dispatche
     _blockLoadSystem = std::make_unique<BlockLoadSystem>(_registry, dispatcher);
     _chunkUnloadSystem = std::make_unique<ChunkUnloadSystem>(_registry, dispatcher);
     _blockPhysicsSystem = std::make_unique<BlockPhysicsSystem>(_registry, dispatcher);
-    _chunkRenderCommandSystem = std::make_unique<ChunkRenderCommandSystem>(_registry, dispatcher);
+    _chunkRenderCommandSystem = std::make_unique<ChunkRenderSystem>(_registry, dispatcher);
     _blockInteractSystem = std::make_unique<BlockInteractSystem>(_registry, dispatcher);
 }
 

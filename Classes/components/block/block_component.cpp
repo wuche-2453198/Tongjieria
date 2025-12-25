@@ -14,8 +14,6 @@ Position::Position(const cocos2d::Vec2& vec) : pos(vec) {};
 
 Position::operator cocos2d::Vec2() const { return pos; }
 
-Position::operator Vec2i() const { return pos; }
-
 const const cocos2d::Vec2& Position::getPostion() const { return pos; }
 
 void Position::setPosition(const cocos2d::Vec2& pos) { this->pos = pos; }
@@ -61,15 +59,22 @@ WorldScene::operator bool() const { return _world != nullptr; }
 CustomcommandPack::CustomcommandPack() = default;
 
 CustomcommandPack::~CustomcommandPack() {
-    for (auto ptr : commands) {
-        delete ptr;
-    }
+    releaseAllCommand();
 }
 
 CustomcommandPack::CustomcommandPack(CustomcommandPack&& other) noexcept
     : commands(std::move(other.commands)) 
 {  
     other.commands.clear();
+}
+
+void CustomcommandPack::releaseAllCommand()
+{
+    for (auto ptr : commands) 
+    {
+        delete ptr;
+    }
+    commands.clear();
 }
 
 bool DirtyBlock::isClean()

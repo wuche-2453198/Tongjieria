@@ -33,7 +33,6 @@ public:
     Position(const cocos2d::Vec2& vec);
 
     operator cocos2d::Vec2() const;
-    operator Vec2i() const;
 
     const cocos2d::Vec2& getPostion() const;
     void setPosition(const cocos2d::Vec2& pos);
@@ -172,6 +171,8 @@ public:
     CustomcommandPack();
     ~CustomcommandPack();
     CustomcommandPack(CustomcommandPack&& other) noexcept;
+
+    void releaseAllCommand();
 
     std::vector<RenderComponent*> commands; ///< äÖÈ¾ÃüÁîÁÐ±í
 };

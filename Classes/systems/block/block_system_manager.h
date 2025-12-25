@@ -18,7 +18,7 @@ class ChunkLoadSystem;
 class BlockLoadSystem;
 class ChunkUnloadSystem;
 class BlockPhysicsSystem;
-class ChunkRenderCommandSystem;
+class ChunkRenderSystem;
 class BlockInteractSystem;
 class DebugSystem;
 
@@ -35,7 +35,7 @@ private:
     std::unique_ptr<BlockLoadSystem> _blockLoadSystem = nullptr;
     std::unique_ptr<ChunkUnloadSystem> _chunkUnloadSystem = nullptr;
     std::unique_ptr<BlockPhysicsSystem> _blockPhysicsSystem = nullptr;
-    std::unique_ptr<ChunkRenderCommandSystem> _chunkRenderCommandSystem = nullptr;
+    std::unique_ptr<ChunkRenderSystem> _chunkRenderCommandSystem = nullptr;
     std::unique_ptr<BlockInteractSystem> _blockInteractSystem = nullptr;
     std::unique_ptr<DebugSystem> _debugSystem = nullptr;
 };

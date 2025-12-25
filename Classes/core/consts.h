@@ -1,11 +1,21 @@
 #pragma once
 /**
-* 定义的方块的逻辑大小
+* @brief 定义的方块的逻辑大小
 *
 * @note 应当尽量是二的整数倍
 */
-constexpr int BLOCK_SIZE = 16;
-constexpr static const int CHUNK_SIZE = 16;
+constexpr static int BLOCK_SIZE = 16;
+constexpr static int CHUNK_SIZE = 16;
+
+/**
+* @brief 渲染距离
+*/
+static unsigned int CHUNK_RENDER_START_DISTANCE = 4; 
+
+/**
+* @brief 渲染距离的截断距离
+*/
+static unsigned int CHUNK_RENDER_CUT_DISTANCE = 5;
 
 /**
 */

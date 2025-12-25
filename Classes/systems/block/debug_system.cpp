@@ -21,7 +21,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     
     testEntites.push_back(_registry.create());
     _registry.emplace<Position>(testEntites[0], cocos2d::Vec2::ZERO);
-    _registry.emplace<LoadingTicket>(testEntites[0], testEntites[0], 1, false);
+    //aaa_registry.emplace<LoadingTicket>(testEntites[0], testEntites[0], 1, false);
 
     addADrawNode();
     drawNodes[0]->drawDot({0,0}, 10, cocos2d::Color4F::RED);
@@ -36,10 +36,10 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     }
     addADrawNode();
 
-    for (int i = 0; i < 0; i++)
+    for (int i = 0; i < 2; i++)
     {
         addAPhysicsSprites();
-        physicsSprites[i]->setPosition(700 + i * 200, 100);
+        physicsSprites[i]->setPosition(700 + i * 100, 100);
         _registry.emplace<LoadingTicket>(physicsEntity[i], physicsEntity[i], 1, false);
     }
 }
