@@ -1,8 +1,0 @@
-{
-  "id": "red_block",
-  "name": "Red Block",
-  "texture": "blocks\\textures\\red_block.png",
-  "replacable": false,
-  "renderable": true,
-  "collision": true
-}

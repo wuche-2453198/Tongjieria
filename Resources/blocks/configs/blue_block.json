@@ -1,8 +1,0 @@
-{
-  "id": "blue_block",
-  "name": "Blue Block",
-  "texture": "blocks\\textures\\blue_block.png",
-  "replacable": false,
-  "renderable": true,
-  "collision": true
-}
