@@ -21,7 +21,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     
     testEntites.push_back(_registry.create());
     _registry.emplace<Position>(testEntites[0], cocos2d::Vec2::ZERO);
-    //_registry.emplace<LoadingTicket>(testEntites[0], testEntites[0], 1, false);
+    _registry.emplace<LoadingTicket>(testEntites[0], testEntites[0], 1, false);
 
     addADrawNode();
     drawNodes[0]->drawDot({0,0}, 10, cocos2d::Color4F::RED);
@@ -31,15 +31,16 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     {
         for (int j = 0; j < 10; j++)
         {
-            drawNodes[1]->drawDot(cocos2d::Vec2(i, j) * CHUNK_SIZE * BLOCK_SIZE, 3, cocos2d::Color4F::GREEN);
+            drawNodes[1]->drawDot(cocos2d::Vec2(i, j) * CHUNK_SIZE * BLOCK_SIZE, 1, cocos2d::Color4F::GREEN);
         }
     }
+    addADrawNode();
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 0; i++)
     {
         addAPhysicsSprites();
         physicsSprites[i]->setPosition(700 + i * 200, 100);
-        _registry.emplace<LoadingTicket>(physicsEntity[i], physicsEntity[i], 2, false);
+        _registry.emplace<LoadingTicket>(physicsEntity[i], physicsEntity[i], 1, false);
     }
 }
 
@@ -83,8 +84,6 @@ void DebugSystem::update(float delta)
     if (camera)
     {
         _registry.get<Position>(testEntites[0]) = camera->getPosition();
-
-        
     }
 
     drawNodes[0]->setPosition(tools::MouseDebugTool::getWorldPosition());

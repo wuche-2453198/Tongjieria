@@ -29,7 +29,6 @@ public:
 private:
 
     void AddNewChunk();
-    void removeLowPriorityChunk();
 
     /**
     * @brief 在对应的区块坐标上生成一个区块头。
@@ -50,8 +49,6 @@ private:
     * @brief 工具函数，获取chunkPos在center的第几层外。
     */
     int inLayer(const Vec2i& center, const Vec2i& chunkPos);
-
-    int priority(const Vec2i& center, const Vec2i& chunkPos);
 
     BlockLayer& _blockLayer;
 };

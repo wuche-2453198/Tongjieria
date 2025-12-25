@@ -2,6 +2,8 @@
 #include "systems/block_layer/block_layer.h"
 #include "chunk_load_system.h"
 
+#include "debug_system.h"
+
 ChunkLoadSystem::ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher),
     _blockLayer(_registry.ctx().get<BlockLayer>())
@@ -14,6 +16,19 @@ void ChunkLoadSystem::update(float delta)
 {
     AddNewChunk();
     updatePriority();
+
+    auto& mappings = _blockLayer.getChunkMappings();
+
+    DebugSystem::drawNodes[2]->clear();
+    auto view = _registry.view<Position, ChunkHead>();
+    view.each([&](const Position& pos, const ChunkHead& head)
+        {
+            Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
+            cocos2d::Vec2 lowLeft = chunkPos * BLOCK_SIZE * CHUNK_SIZE;
+            cocos2d::Vec2 highRight = (chunkPos + Vec2i(1, 1)) * BLOCK_SIZE * CHUNK_SIZE;
+            DebugSystem::drawNodes[2]->drawRect(lowLeft, highRight, cocos2d::Color4F::GREEN);
+        });
+    
 }
 
 void ChunkLoadSystem::AddNewChunk()
