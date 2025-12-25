@@ -13,45 +13,46 @@ using Vec2 = cocos2d::Vec2;
 using C4B = cocos2d::Color4B;
 using Tex2F = cocos2d::Tex2F;
 
-BlockBatchCommand::BlockBatchCommand(const Vec2i& blockPos)
+BlockBatchCommand::BlockBatchCommand(const Vec2i& blockPos, cocos2d::Texture2D* texture)
 {
-    auto texture = cocos2d::Director::getInstance()->
-        getInstance()->getTextureCache()->addImage("a_block.bmp");
-    texture->setAliasTexParameters();
+    BlockBatchCommand(std::vector<Vec2i>{blockPos}, texture);
+}
 
+BlockBatchCommand::BlockBatchCommand(const std::vector<Vec2i>& blockPos, cocos2d::Texture2D* texture)
+{
     auto* myTrian = new Triangles();
-    _vertices = genVertAtBlockPos(blockPos);
-    _indices = { 0, 1, 2, 0, 2, 3 };
+    _vertices = genVert(blockPos);
+    _indices = genIndex(blockPos.size());
 
-    myTrian->indexCount = 6;
+    myTrian->indexCount = _indices.size();
     myTrian->indices = _indices.data();
-    myTrian->vertCount = 4;
+    myTrian->vertCount = _vertices.size();
     myTrian->verts = _vertices.data();
 
     updateShaders();
+    setTexture(texture);
     setVertexLayout();
     init(0, texture, cocos2d::BlendFunc::ALPHA_PREMULTIPLIED, *myTrian, cocos2d::Mat4(), 0);
 }
 
-BlockBatchCommand::~BlockBatchCommand()
+BlockBatchCommand::~BlockBatchCommand() {}
+
+void BlockBatchCommand::setTexture(cocos2d::Texture2D* texture)
 {
-}
-
-void BlockBatchCommand::updateShaders() {
-    auto* program = Program::getBuiltinProgram(ProgramType::POSITION_TEXTURE_COLOR);
-    auto programState = new (std::nothrow) ProgramState(program);
-
-    auto texture = cocos2d::Director::getInstance()->
-        getInstance()->getTextureCache()->addImage("a_block.bmp");
-    texture->setAliasTexParameters();
-
+    auto programState = getPipelineDescriptor().programState;
     auto textureLocation = programState->getUniformLocation("u_texture");
     programState->setTexture(textureLocation, 0, texture->getBackendTexture());
+}
 
+void BlockBatchCommand::updateShaders() 
+{
+    auto* program = Program::getBuiltinProgram(ProgramType::POSITION_TEXTURE_COLOR);
+    auto programState = new (std::nothrow) ProgramState(program);
     getPipelineDescriptor().programState = programState;
 }
 
-void BlockBatchCommand::setVertexLayout() {
+void BlockBatchCommand::setVertexLayout() 
+{
     auto programState = getPipelineDescriptor().programState;
     auto layout = programState->getVertexLayout();
 
@@ -93,14 +94,36 @@ void BlockBatchCommand::updateUniforms(const cocos2d::Mat4& transform)
     programState->setUniform(mvpLocation, matrixMVP.m, sizeof(matrixMVP.m));
 }
 
-std::vector<V3F_C4B_T2F> BlockBatchCommand::genVertAtBlockPos(Vec2i block_pos)
+std::vector<V3F_C4B_T2F> BlockBatchCommand::genVert(const std::vector<Vec2i>& blockPos)
 {
-    std::vector<V3F_C4B_T2F> verts(4);
-    verts[0] = V3F_C4B_T2F(Vec3(block_pos.x, block_pos.y, 0)*BLOCK_SIZE, C4B::WHITE, Tex2F(0, 0));
-    verts[1] = V3F_C4B_T2F(Vec3(block_pos.x, block_pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 1));
-    verts[2] = V3F_C4B_T2F(Vec3(block_pos.x + 1, block_pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 1));
-    verts[3] = V3F_C4B_T2F(Vec3(block_pos.x + 1, block_pos.y, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 0));
+    std::vector<V3F_C4B_T2F> verts(blockPos.size() * 4);
+
+    int index = 0;
+    for (int i = 0; i < blockPos.size(); i ++)
+    {
+        Vec2i pos = blockPos[i];
+        int vertIndex = i * 4;
+        verts[vertIndex]     = V3F_C4B_T2F(Vec3(pos.x,     pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 0));
+        verts[vertIndex + 1] = V3F_C4B_T2F(Vec3(pos.x,     pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 1));
+        verts[vertIndex + 2] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 1));
+        verts[vertIndex + 3] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 0));
+    }
     return verts;
+}
+
+std::vector<unsigned short> BlockBatchCommand::genIndex(int blockNum)
+{
+    std::vector<unsigned short> indices(blockNum * 6);
+    for (int i = 0; i < blockNum; i++)
+    {
+        indices[i * 6] = i * 4;
+        indices[i * 6 + 1] = i * 4 + 1;
+        indices[i * 6 + 2] = i * 4 + 2;
+        indices[i * 6 + 3] = i * 4;
+        indices[i * 6 + 4] = i * 4 + 2;
+        indices[i * 6 + 5] = i * 4 + 3;
+    }
+    return indices;
 }
 
 void BlockBatchCommand::draw(cocos2d::Renderer* renderer, const cocos2d::Mat4& transform, uint32_t flags)
@@ -112,145 +135,33 @@ void BlockBatchCommand::draw(cocos2d::Renderer* renderer, const cocos2d::Mat4& t
 
 void BlockBatchCommand::visit(cocos2d::Renderer* renderer, const cocos2d::Mat4& parentTransform, uint32_t parentFlags) {}
 
-ChunkCommand::ChunkCommand(Buffer* sharedIndexBuffer)
-{
-    _indexBuffer = sharedIndexBuffer;
-}
-
-ChunkCommand::~ChunkCommand() {}
-
-void ChunkCommand::init(float globalZOrder) 
-{
-    CustomCommand::init(globalZOrder);
-}
-
-void ChunkCommand::updateUniforms(const cocos2d::Mat4& transform)
-{
-    auto& pipelineDescriptor = getPipelineDescriptor();
-    const auto& matrixP = cocos2d::Director::getInstance()
-        ->getMatrix(cocos2d::MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
-    cocos2d::Mat4 matrixMVP = matrixP * transform;
-    auto mvpLocation = _programState->getUniformLocation("u_mvpMat");
-    _programState->setUniform(mvpLocation, matrixMVP.m, sizeof(matrixMVP.m));
-}
-
-void ChunkCommand::setVertexLayout()
-{
-}
-
 RenderComponent::RenderComponent() = default;
 
 RenderComponent::~RenderComponent() = default;
 
-BlockCommand::BlockCommand(const Vec2i& pos, cocos2d::Texture2D* texture, Buffer* shared_index_buffer) {
-    _indexBuffer = shared_index_buffer;
-
-    updateShaders(texture);
-    setVertexLayout();
-    generateVertex(pos);
-    generateIndex();
-}
-
-BlockCommand::~BlockCommand()
+void ChunkRenderBatchID::addBatchID(entt::id_type id, int commandIndex)
 {
-    CC_SAFE_RELEASE(_programState);
+    assert(!hasBatchID(id), "ID 重复添加！");
+    _blockBatchMap[id] = commandIndex;
 }
 
-void BlockCommand::init(float globalZOrder) {
-    CustomCommand::init(globalZOrder);
-}
-
-void BlockCommand::setTexture(cocos2d::Texture2D* texture) {
-    texture->setAliasTexParameters();
-    auto textureLocation = _programState->getUniformLocation("u_texture");
-    _programState->setTexture(textureLocation, 0, texture->getBackendTexture());
-}
-
-void BlockCommand::updateShaders(cocos2d::Texture2D* texture) {
-    CC_SAFE_RELEASE(_programState);
-    auto* program = Program::getBuiltinProgram(ProgramType::POSITION_TEXTURE_COLOR);
-    _programState = new (std::nothrow) ProgramState(program);
-
-    setTexture(texture);
-
-    getPipelineDescriptor().programState = _programState;
-    setDrawType(DrawType::ELEMENT);
-    setPrimitiveType(PrimitiveType::TRIANGLE);
-}
-
-void BlockCommand::setVertexLayout() {
-    auto layout = _programState->getVertexLayout();
-
-    layout->setAttribute(
-        cocos2d::backend::ATTRIBUTE_NAME_POSITION,
-        _programState->getAttributeLocation(Attribute::POSITION),
-        VertexFormat::FLOAT3,
-        0,
-        false
-    );
-
-    layout->setAttribute(
-        cocos2d::backend::ATTRIBUTE_NAME_TEXCOORD,
-        _programState->getAttributeLocation(Attribute::TEXCOORD),
-        VertexFormat::FLOAT2,
-        offsetof(V3F_C4B_T2F, texCoords),
-        false
-    );
-
-    layout->setAttribute(
-        cocos2d::backend::ATTRIBUTE_NAME_COLOR,
-        _programState->getAttributeLocation(Attribute::COLOR),
-        VertexFormat::UBYTE4,
-        offsetof(V3F_C4B_T2F, colors),
-        true
-    );
-
-    layout->setLayout(sizeof(V3F_C4B_T2F));
-}
-
-void BlockCommand::generateVertex(const Vec2i& pos) {
-    if (_vertexBuffer) return;
-
-    createVertexBuffer(sizeof(V3F_C4B_T2F), 4, Usage::DYNAMIC);
-
-    std::vector<V3F_C4B_T2F> vertex(4);
-
-    cocos2d::Color4B WHITE = cocos2d::Color4B::WHITE;
-    vertex[0] = { pos * BLOCK_SIZE, WHITE, {0, 0} };
-    vertex[1] = { (pos + Vec2i(0,1)) * BLOCK_SIZE, WHITE, {0, 1} };
-    vertex[2] = { (pos + Vec2i(1,1)) * BLOCK_SIZE, WHITE, {1, 1} };
-    vertex[3] = { (pos + Vec2i(1,0)) * BLOCK_SIZE, WHITE, {1, 0} };
-
-    updateVertexBuffer(vertex.data(), 4 * sizeof(V3F_C4B_T2F));
-    setVertexDrawInfo(0, 4);
-}
-
-void BlockCommand::generateIndex() {
-    if (_indexBuffer) return;
-    createIndexBuffer(IndexFormat::U_SHORT, 6, Usage::DYNAMIC);
-    std::vector<unsigned short> index = { 0,1,2,0,2,3 };
-    updateIndexBuffer(index.data(), 6 * sizeof(unsigned short));
-    setIndexDrawInfo(0, 6);
-}
-
-void BlockCommand::updateUniforms(const cocos2d::Mat4& transform) {
-    auto& pipelineDescriptor = getPipelineDescriptor();
-    const auto& matrixP = cocos2d::Director::getInstance()
-        ->getMatrix(cocos2d::MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
-    cocos2d::Mat4 matrixMVP = matrixP * transform;
-    auto mvpLocation = _programState->getUniformLocation("u_MVPMatrix");
-    _programState->setUniform(mvpLocation, matrixMVP.m, sizeof(matrixMVP.m));
-
-    float alpha = 255.0f / 255.0f;
-    auto alphaUniformLocation = _programState->getUniformLocation("u_alpha");
-    _programState->setUniform(alphaUniformLocation, &alpha, sizeof(alpha));
-}
-
-void BlockCommand::draw(cocos2d::Renderer* renderer, const cocos2d::Mat4& transform, uint32_t flags) 
+void ChunkRenderBatchID::removeBatchID(entt::id_type id)
 {
-    init(0);
-    updateUniforms(transform);
-    renderer->addCommand(this);
+    assert(hasBatchID(id), "ID 重复抹除或不存在！");
+    _blockBatchMap.erase(id);
 }
 
-void BlockCommand::visit(cocos2d::Renderer* renderer, const cocos2d::Mat4& parentTransform, uint32_t parentFlags) {}
+int ChunkRenderBatchID::getBatchIndex(entt::id_type id) const
+{
+    return _blockBatchMap.at(id);
+}
+
+bool ChunkRenderBatchID::hasBatchID(entt::id_type id) const
+{
+    return _blockBatchMap.find(id) != _blockBatchMap.end();
+}
+
+void ChunkRenderBatchID::clear()
+{
+    _blockBatchMap.clear();
+}
