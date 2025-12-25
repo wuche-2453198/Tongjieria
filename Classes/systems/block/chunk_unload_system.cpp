@@ -16,7 +16,7 @@ void ChunkUnloadSystem::update(float delta)
             if (chunk.getPriority() < ChunkHead::UNLOADING_PRIORITY)
             {
                 _registry.ctx().get<BlockLayer>().
-                    removeChunkID(BlockLayer::worldPosToChunkPos(pos.getPostion()));
+                    removeChunk(BlockLayer::worldPosToChunkPos(pos.getPostion()));
                 unloadChunks.push_back(entity);
             }
         });

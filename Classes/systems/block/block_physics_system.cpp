@@ -120,6 +120,8 @@ void BlockPhysicsSystem::updateDirtyBlock()
             for (auto& dirtyBlock : tag.dirtyBlocks)
             {
                 const Vec2i blockPos = chunkPos * CHUNK_SIZE + dirtyBlock.localPos;
+
+                // todo 现在每一次方块变动都会生成一个形体，在之后又会清除，目前还没有影响性能，但是需要考虑优化。
                 auto shape = createBoxAtBlockPos(blockPos);
 
                 // 如果原有形体已经存在，则移除

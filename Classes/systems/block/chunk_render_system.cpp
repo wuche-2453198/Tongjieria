@@ -6,22 +6,23 @@
 #include "utils/tools.h"
 
 ChunkRenderSystem::ChunkRenderSystem(entt::registry& registry, entt::dispatcher& dispatcher)
-    : ISystem(registry, dispatcher) {};
+    : ISystem(registry, dispatcher), _assetManager(_registry.ctx().get<AssetManager>()) {};
 ChunkRenderSystem::~ChunkRenderSystem() = default;
 
 void ChunkRenderSystem::update(float delta)
 {
-    updateChunkCommand();
-    updateUnseen();
+    createCommand();
+    cutCommand();
     updateDirtyBlock();
 }
 
-void ChunkRenderSystem::updateChunkCommand()
+void ChunkRenderSystem::createCommand()
 {
     // 获取已经生成但没有渲染指令的区块
     auto view = _registry.view<Position, ChunkBlocks>(entt::exclude<CustomcommandPack>);
     view.each([&](entt::entity entity, Position& pos, ChunkBlocks& blocks)
         {
+            // 获取当前相机的区块位置
             Vec2i cameraChunkPos =
                 BlockLayer::worldPosToChunkPos(cocos2d::Camera::getDefaultCamera()->getPosition());
             Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
@@ -36,11 +37,12 @@ void ChunkRenderSystem::updateChunkCommand()
         });
 }
 
-void ChunkRenderSystem::updateUnseen()
+void ChunkRenderSystem::cutCommand()
 {
     auto view = _registry.view<Position, ChunkBlocks, CustomcommandPack, ChunkRenderBatchID>();
     view.each([&](entt::entity entity, Position& pos, ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id)
         {
+            // 获取当前相机的区块位置
             Vec2i cameraChunkPos =
                 BlockLayer::worldPosToChunkPos(cocos2d::Camera::getDefaultCamera()->getPosition());
             Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
@@ -58,6 +60,7 @@ void ChunkRenderSystem::updateDirtyBlock()
     auto view = _registry.view<Position, ChunkBlocks, CustomcommandPack, ChunkRenderBatchID, DirtyChunkTag>();
     view.each([&](entt::entity entity, Position& pos, ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id, DirtyChunkTag tag)
         {
+            // 清理区块命令和渲染缓存
             pack.releaseAllCommand();
             id.clear();
 
@@ -87,9 +90,11 @@ void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& b
         {
             Vec2i localPos = Vec2i(x, y);
             entt::id_type blockID = blocks.getBlockAt(localPos);
-            Vec2i blockPos = chunkPos * CHUNK_SIZE + localPos;
-
-            blockbatch[blockID].push_back(blockPos);            // 记录该方块的位置
+            if (_assetManager.getBlockConfig(blockID).isRenderble())
+            {
+                Vec2i blockPos = chunkPos * CHUNK_SIZE + localPos;
+                blockbatch[blockID].push_back(blockPos);            // 记录该方块的位置
+            }
         }
     }
 
@@ -97,10 +102,9 @@ void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& b
     for (auto& [blockID, positions] : blockbatch)
     {
         // 读取方块配置
-        auto& asset_manager = _registry.ctx().get<AssetManager>();
-        auto texture = asset_manager.getBlockConfig(blockID).texture();
+        auto texture = _assetManager.getBlockConfig(blockID).texture();
 
-        auto batchCommand = new BlockBatchCommand(positions, texture);
+        auto batchCommand = new BlockBatchCommand(0, positions, texture);
         batchCommand->setUseTransform(false);   // 不使用transform，直接使用block的位置
         pack.commands.push_back(batchCommand);  // 添加到batchs中
         id.addBatchID(blockID, top);            // 记录batchID和top

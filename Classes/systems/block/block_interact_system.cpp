@@ -28,10 +28,10 @@ void BlockInteractSystem::onBlockPlaced(const BlockPlacedEvent& event)
     auto& assetManager = _registry.ctx().get<AssetManager>();
     auto& blockLayer = _registry.ctx().get<BlockLayer>();
 
-    BlockState newState(event.blockPos, event.id);
+    BlockHandle newState(event.blockPos, event.id);
     blockLayer.setBlockAtBlockPos(event.blockPos, newState);
 
-    auto chunkID = blockLayer.getChunkID(BlockLayer::blockPosToChunkPos(event.blockPos));
+    auto chunkID = blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 
@@ -44,10 +44,10 @@ void BlockInteractSystem::onBlockDestroyed(const BlockDestroyEvent& event)
     auto& assetManager = _registry.ctx().get<AssetManager>();
     auto& blockLayer = _registry.ctx().get<BlockLayer>();
 
-    BlockState newState(event.blockPos, entt::hashed_string("air"));
+    BlockHandle newState(event.blockPos, entt::hashed_string("air"));
     blockLayer.setBlockAtBlockPos(event.blockPos, newState);
 
-    auto chunkID = blockLayer.getChunkID(BlockLayer::blockPosToChunkPos(event.blockPos));
+    auto chunkID = blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 

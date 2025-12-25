@@ -4,6 +4,8 @@
 
 #include "debug_system.h"
 
+#define CHUNK_VIEW_ENABEL 0
+
 ChunkLoadSystem::ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher),
     _blockLayer(_registry.ctx().get<BlockLayer>())
@@ -21,6 +23,8 @@ void ChunkLoadSystem::update(float delta)
 
     DebugSystem::drawNodes[2]->clear();
     auto view = _registry.view<Position, ChunkHead>();
+    
+#if CHUNK_VIEW_ENABEL == 1
     view.each([&](const Position& pos, const ChunkHead& head)
         {
             Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
@@ -28,7 +32,7 @@ void ChunkLoadSystem::update(float delta)
             cocos2d::Vec2 highRight = (chunkPos + Vec2i(1, 1)) * BLOCK_SIZE * CHUNK_SIZE;
             DebugSystem::drawNodes[2]->drawRect(lowLeft, highRight, cocos2d::Color4F::GREEN);
         });
-    
+#endif // 
 }
 
 void ChunkLoadSystem::AddNewChunk()
@@ -67,7 +71,7 @@ void ChunkLoadSystem::addChunk(const Vec2i& chunkPos)
     _registry.emplace<ChunkHead>(entity);
 
     // 更新区块索引
-    _blockLayer.addChunkID(chunkPos, entity);
+    _blockLayer.addChunk(chunkPos, entity);
 }
 
 void ChunkLoadSystem::updatePriority()

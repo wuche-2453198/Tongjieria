@@ -2,7 +2,7 @@
 #include "cocos2d.h"
 
 class BlockCommand;
-class BlockState;
+class BlockHandle;
 
 /**
 * @brief 将所有自定义渲染指令提交给Renderer。
