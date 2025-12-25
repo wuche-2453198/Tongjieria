@@ -1,8 +1,8 @@
 #pragma once
 #include "block_system_manager.h"
 
-class BlockCommand;
 class ChunkBlocks;
+class BlockBatchCommand;
 
 /**
 * @brief Çø¿éäÖÈ¾ÏµÍ³¡£
@@ -20,8 +20,7 @@ public:
     ChunkRenderCommandSystem(entt::registry& registry, entt::dispatcher& dispatcher);
     ~ChunkRenderCommandSystem();
     void update(float delta);
-private:
-    BlockCommand* generateCommand(const ChunkBlocks& blocks, const Vec2i& localPos);
+private: 
     void updateChunkCommand();
     void updateUnseen();
     void updateDirtyBlock();
