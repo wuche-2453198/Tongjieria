@@ -1,8 +1,16 @@
 {
   "id": "dirt",
   "name": "Dirt",
-  "texture": "blocks\\textures\\dirt.png",
-  "replacable": false,
-  "renderable": true,
-  "collision": true
+  "origin": {
+    "base": {
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "block\\textures\\dirt.png"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
 }

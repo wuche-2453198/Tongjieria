@@ -1,8 +1,16 @@
 {
   "id": "stone",
   "name": "Stone",
-  "texture": "blocks\\textures\\stone.png",
-  "replacable": false,
-  "renderable": true,
-  "collision": true
+  "origin": {
+    "base": {
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "block\\textures\\stone.png"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
 }
