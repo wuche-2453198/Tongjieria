@@ -2,7 +2,7 @@
   "id": "air",
   "name": "Air",
   "texture": "blocks\\textures\\air.png",
-  "replaceable": true,
+  "replacable": true,
   "renderable": false,
   "interacable": false,
   "collision": false

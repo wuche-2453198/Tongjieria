@@ -2,7 +2,7 @@
   "id": "who_ask_you",
   "name": "No one ask you",
   "texture": "CloseNormal.png",
-  "replaceable": false,
+  "replacable": false,
   "renderable": true,
   "collision": true
 }

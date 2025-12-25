@@ -2,7 +2,7 @@
   "id": "red_block",
   "name": "Red Block",
   "texture": "blocks\\textures\\red_block.png",
-  "replaceable": false,
+  "replacable": false,
   "renderable": true,
   "collision": true
 }
