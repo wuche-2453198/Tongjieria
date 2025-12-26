@@ -5,7 +5,7 @@
     "base": {
       "replaceable": true,
       "behavior": "air_behavior",
-      "texture": "block\\textures\\air.png"
+      "texture": "blocks\\textures\\air.png"
     },
     "collision": {
       "enable": false
