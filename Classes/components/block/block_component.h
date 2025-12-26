@@ -7,7 +7,8 @@
 #include "utils/vec2i.h"
 #include "systems/block_layer/block_layer.h"
 
-namespace cocos2d {
+namespace cocos2d 
+{
     class Vec2;
     class CustomCommand;
 };
@@ -26,7 +27,8 @@ class IComponent {};
 * 
 * @note 不兼容UI，UI应该有专用的位置组件。
 */
-class Position : public IComponent {
+class Position : public IComponent 
+{
 public:
     Position();
     Position(float x, float y);
@@ -49,7 +51,8 @@ private:
 * 
 * @tease 半径设为1000可以获得核弹。
 */
-struct LoadingTicket {
+struct LoadingTicket 
+{
     LoadingTicket() = default;
     LoadingTicket(entt::entity entity_id, unsigned int radius, bool is_permanent)
         :entity_id(entity_id), radius(radius), is_permanent(is_permanent) {};
@@ -71,10 +74,11 @@ struct LoadingTicket {
 * 还有一个温暖的家（blockLayer），后来被万恶的开发者分尸后扔到大路上了（registry），
 * 这个是他的头。
 */
-class ChunkHead : public IComponent {
+class ChunkHead : public IComponent 
+{
 public:
-    ChunkHead();
-    ChunkHead(int priority);
+    ChunkHead(LayerType layerType);
+    ChunkHead(LayerType layerType, int priority);
     ~ChunkHead();
 
     int getPriority() const;
@@ -82,7 +86,16 @@ public:
 
     static inline int UNLOADING_PRIORITY = 0; ///< 卸载优先级阈值
 private:
-    int _priority = 0; ///< 区块优先级
+    int _priority = 0;      ///< 区块优先级
+    LayerType _layerType;   ///< 区块所在层类型
+};
+
+struct BlockState
+{
+    BlockState() : id(entt::null), stateCode(0) {}
+    BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
+    entt::id_type id;   ///< 方块ID
+    state stateCode;    ///< 方块状态
 };
 
 using BlockArray = std::array<std::array<BlockState, CHUNK_SIZE>, CHUNK_SIZE>;
@@ -102,22 +115,64 @@ public:
     ChunkBlocks();
     ~ChunkBlocks();
 
-    BlockState getBlockAt(const Vec2i& pos) const;
-    void setBlockAt(const Vec2i& pos, BlockState id);
+    /**
+    * @brief 获取指定位置的方块。
+    * 
+    * @return 方块ID和状态码
+    */
+    BlockState getBlockAt(const Vec2i& localPos) const;
+
+    /**
+    * @brief 
+    */
+    void setBlockAt(const Vec2i& pos, BlockState blockState);
+
+    /**
+    * @brief 设置指定位置的方块状态。
+    */
     void setBlockState(const Vec2i& localPos, state stateCode);
 
+    /**
+    * @brief 这个区块是否存在方块实体。
+    */
     bool hasChunkEntity();
+
+    /**
+    * @brief 指定位置是否有方块实体。
+    */
     bool hasChunkEntityAt(const Vec2i& localPos);
+
+    /**
+    * @brief 获取指定位置的方块实体。
+    */
     entt::entity getEntityAt(const Vec2i& localPos);
+
+    /**
+    * @brief 设置指定位置的方块实体。
+    */
     void addEntity(const Vec2i& localPos, entt::entity entity);
+
+    /**
+    * @brief 移除指定位置的方块实体。
+    */
     void removeEntity(const Vec2i localPos);
+
+    /**
+    * @brief 获取方块实体映射
+    */
+    const std::unordered_map<Vec2i, entt::entity>& getEntityMapping();
+
+    /**
+    * @brief 获取所有方块实体
+    */
+    std::vector<entt::entity> getEntites();
     /**
     * @brief 局部位置是否合法。
     */
     bool isPosValied(const Vec2i& pos) const;
     const BlockArray& const getBlockView() const;
 private:
-    BlockArray _blocks; ///< 区块内的方块数组
+    BlockArray _blocks;                                     ///< 区块内的方块数组
     std::unordered_map<Vec2i, entt::entity> _blockEntities; ///< 这个区块加载的方块实体列表
 };
 
@@ -140,10 +195,25 @@ struct PhysicsTicket
     cocos2d::Vec2 offset;      ///< 粗物理体偏移
 };
 
-struct ActiveBlock
+/**
+* @class BlockEntityHead
+* 
+* @brief 方块实体头。
+* 
+* 存储着方块实体的基本信息。
+* - 在方块实体中，这个组件应该是第一个被添加的组件。
+* - 应当使用saveEmplace和saveRemove来添加和移除组件。
+*   否则方块实体可能不会被正确地清除。
+* 
+* @see BlockEntityCleanSystem
+*/
+struct BlockEntityHead
 {
-    ActiveBlock(entt::id_type id, const Vec2i& blockPos);
+    BlockEntityHead(entt::id_type id, const Vec2i& blockPos);
 
+    /**
+    * @brief 
+    */
     template<typename T, typename... Args>
     T& saveEmplace(entt::registry& registry, entt::entity entity, Args&&... args)
     {

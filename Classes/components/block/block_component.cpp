@@ -18,8 +18,10 @@ const const cocos2d::Vec2& Position::getPostion() const { return pos; }
 
 void Position::setPosition(const cocos2d::Vec2& pos) { this->pos = pos; }
 
-ChunkHead::ChunkHead() = default;
-ChunkHead::ChunkHead(int priority): _priority(priority) {}
+ChunkHead::ChunkHead(LayerType layerType) 
+    : _priority(0), _layerType(layerType) {}
+ChunkHead::ChunkHead(LayerType layerType,int priority) 
+    : _priority(priority), _layerType(layerType) {}
 ChunkHead::~ChunkHead() = default;
 
 int ChunkHead::getPriority() const { return _priority; }
@@ -71,6 +73,21 @@ void ChunkBlocks::removeEntity(const Vec2i blockPos)
     _blockEntities.erase(blockPos);
 }
 
+const std::unordered_map<Vec2i, entt::entity>& ChunkBlocks::getEntityMapping()
+{
+    return _blockEntities;
+}
+
+std::vector<entt::entity> ChunkBlocks::getEntites()
+{
+    std::vector<entt::entity> entities;
+    for (auto& entityMapping : _blockEntities)
+    {
+        entities.push_back(entityMapping.second);
+    }
+    return entities;
+}
+
 bool ChunkBlocks::isPosValied(const Vec2i& pos) const
 {
     return 0 <= pos.x && pos.x < CHUNK_SIZE && 
@@ -83,7 +100,7 @@ const BlockArray& const ChunkBlocks::getBlockView() const
 }
 
 
-ActiveBlock::ActiveBlock(entt::id_type id, const Vec2i& blockPos)
+BlockEntityHead::BlockEntityHead(entt::id_type id, const Vec2i& blockPos)
  : id(id), blockPos(blockPos) {}
 
 MiningProgress::MiningProgress() = default;
