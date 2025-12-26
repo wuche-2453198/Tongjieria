@@ -18,6 +18,9 @@ public:
   // 玩家测试场景按钮回调
   void menuPlayerTestCallback(cocos2d::Ref *pSender);
 
+  // 整合测试场景按钮回调
+  void menuIntegrationTestCallback(cocos2d::Ref *pSender);
+
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);
 };

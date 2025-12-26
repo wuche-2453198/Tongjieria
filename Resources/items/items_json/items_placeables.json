@@ -6,7 +6,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/dirt.png",
     "value": 1,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+     "tileId": 1
   },
   {
     "id": 2002,

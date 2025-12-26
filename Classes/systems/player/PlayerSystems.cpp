@@ -1,6 +1,7 @@
 #include "PlayerSystems.h"
 #include "core/PlayerInput.h"
 #include "PlayerAnimationLoader.h"
+#include "PlayerInventoryIntegration.h"
 #include <cmath>
 
 USING_NS_CC;
@@ -65,6 +66,21 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
         if (input.isKeyJustPressed(EventKeyboard::KeyCode::KEY_0)) {
             hotbar.selectSlot(9);
             CCLOG("Hotbar slot changed to: 9");
+        }
+
+        // ==================== Handle Item Usage ====================
+        // J key to use current hotbar item
+        if (input.isKeyJustPressed(EventKeyboard::KeyCode::KEY_J)) {
+            CCLOG("PlayerInputSystem: J key pressed - using hotbar item");
+            PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
+        }
+
+        // Mouse left click to use item (alternative to J key)
+        if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_LEFT)) {
+            // Only use item on left click if not clicking on UI
+            // TODO: Add UI hit test to prevent using items when clicking UI elements
+            CCLOG("PlayerInputSystem: Left click - using hotbar item");
+            PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
         }
 
         // TODO: Mouse wheel to switch hotbar (need to extend PlayerInput to support mouse wheel)

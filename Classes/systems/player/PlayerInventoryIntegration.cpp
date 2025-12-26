@@ -1,4 +1,7 @@
 #include "PlayerInventoryIntegration.h"
+#include "systems/items/EquipmentValidator.h"
+#include "systems/items/ItemManager.h"
+#include "systems/player/ItemUseSystem.h"
 #include "cocos2d.h"
 
 USING_NS_CC;
@@ -35,12 +38,38 @@ ecs::PlayerEquipmentComponent::EquipmentSlot& getEquipmentSlot(
     }
 }
 
-// This feature is not fully implemented yet
 bool canEquipToSlot(int itemId, EquipmentSlotType slotType) {
-    // TODO: Determine if item can be equipped to specified slot based on item type
-    // Need to get item info from ItemManager
-    // Currently returns true, need to implement item type check later
-    return itemId != 0;
+    if (itemId == 0) {
+        return false;
+    }
+
+    // Convert PlayerInventoryBridge::EquipmentSlotType to EquipSlotType
+    EquipSlotType targetSlotType;
+    switch (slotType) {
+        case EquipmentSlotType::Helmet:
+            targetSlotType = EquipSlotType::Helmet;
+            break;
+        case EquipmentSlotType::Chestplate:
+            targetSlotType = EquipSlotType::Chestplate;
+            break;
+        case EquipmentSlotType::Leggings:
+            targetSlotType = EquipSlotType::Leggings;
+            break;
+        case EquipmentSlotType::Accessory0:
+        case EquipmentSlotType::Accessory1:
+        case EquipmentSlotType::Accessory2:
+        case EquipmentSlotType::Accessory3:
+        case EquipmentSlotType::Accessory4:
+        case EquipmentSlotType::Accessory5:
+            targetSlotType = EquipSlotType::Accessory0; // All accessories use same validation
+            break;
+        default:
+            return false;
+    }
+
+    // Use EquipmentValidator to check if item can be equipped
+    auto* validator = EquipmentValidator::getInstance();
+    return validator->canEquip(itemId, targetSlotType);
 }
 
 bool equipItem(entt::registry& registry,
@@ -211,13 +240,8 @@ bool useHotbarItem(entt::registry& registry,
 
     CCLOG("useHotbarItem: Using item %d from hotbar slot %d", slot.itemId, hotbarIndex);
 
-    // TODO: Execute different use logic based on item type
-    // - Consumables: consume and apply effects
-    // - Weapons: initiate attack
-    // - Tools: start using tool
-    // - Blocks: prepare to place
-
-    return true;
+    // Use ItemUseSystem to handle item usage
+    return ItemUseSystem::useItem(registry, playerEntity, slot.itemId);
 }
 
 // ==================== Stats Calculation Implementation ====================
@@ -239,37 +263,58 @@ void calculateEquipmentStats(entt::registry& registry,
     float rangedDamageBonus = 1.0f;
     float magicDamageBonus = 1.0f;
 
-    // TODO: Get stats for each equipment from ItemManager
-    // Need to implement equipment stats database
+    auto* itemMgr = ItemManager::getInstance();
 
-    // Calculate armor defense
+    // Calculate armor defense from helmet
     if (!equipment.helmet.isEmpty()) {
-        // totalDefense += getItemDefense(equipment.helmet.itemId);
-        totalDefense += 2; // Temporary value
+        auto itemData = itemMgr->getItemData(equipment.helmet.itemId);
+        if (itemData) {
+            totalDefense += itemData->defense;
+            CCLOG("  Helmet: %s (+%d defense)", itemData->name.c_str(), itemData->defense);
+        }
     }
+
+    // Calculate armor defense from chestplate
     if (!equipment.chestplate.isEmpty()) {
-        totalDefense += 3; // Temporary value
+        auto itemData = itemMgr->getItemData(equipment.chestplate.itemId);
+        if (itemData) {
+            totalDefense += itemData->defense;
+            CCLOG("  Chestplate: %s (+%d defense)", itemData->name.c_str(), itemData->defense);
+        }
     }
+
+    // Calculate armor defense from leggings
     if (!equipment.leggings.isEmpty()) {
-        totalDefense += 2; // Temporary value
+        auto itemData = itemMgr->getItemData(equipment.leggings.itemId);
+        if (itemData) {
+            totalDefense += itemData->defense;
+            CCLOG("  Leggings: %s (+%d defense)", itemData->name.c_str(), itemData->defense);
+        }
     }
 
     // Calculate accessory bonuses
     for (int i = 0; i < ecs::PlayerEquipmentComponent::MAX_ACCESSORIES; i++) {
         if (!equipment.accessories[i].isEmpty()) {
-            // TODO: Get accessory stats
-            // E.g.: speed accessories, damage accessories, etc.
+            auto itemData = itemMgr->getItemData(equipment.accessories[i].itemId);
+            if (itemData) {
+                // Accessories can provide defense too
+                totalDefense += itemData->defense;
+                CCLOG("  Accessory %d: %s (+%d defense)", i, itemData->name.c_str(), itemData->defense);
+
+                // TODO: Add other accessory bonuses when data is available
+                // Example: moveSpeedBonus, damage bonuses, etc.
+            }
         }
     }
 
     // Apply to player stats
     stats.defense = totalDefense;
-    // stats.moveSpeed *= moveSpeedBonus;
+    // stats.moveSpeed *= moveSpeedBonus;  // TODO: Apply when moveSpeed bonuses are added to items
     stats.meleeDamageBonus = meleeDamageBonus;
     stats.rangedDamageBonus = rangedDamageBonus;
     stats.magicDamageBonus = magicDamageBonus;
 
-    CCLOG("calculateEquipmentStats: Defense=%d", stats.defense);
+    CCLOG("calculateEquipmentStats: Total Defense=%d", stats.defense);
 }
 
 int checkArmorSet(entt::registry& registry,

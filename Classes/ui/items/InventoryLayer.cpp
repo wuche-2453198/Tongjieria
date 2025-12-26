@@ -49,16 +49,16 @@ bool InventoryLayer::init() {
     const auto visibleSize = director->getVisibleSize();
     const auto origin = director->getVisibleOrigin();
 
-    // Panel occupies top-left quarter of the screen
-    float panelWidth = visibleSize.width * 0.25f;
-    float panelHeight = visibleSize.height * 0.25f;
+    // Panel occupies larger area to show all inventory slots
+    float panelWidth = visibleSize.width * 0.5f;  // Increased from 0.25f to 0.5f
+    float panelHeight = visibleSize.height * 0.6f; // Increased from 0.25f to 0.6f
     setIgnoreAnchorPointForPosition(false);
     setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     setContentSize(Size(panelWidth, panelHeight));
     setPosition(Vec2(origin.x, origin.y + visibleSize.height - panelHeight));
 
-    // Background panel: semi-transparent dark without border
-    auto panelBg = LayerColor::create(Color4B(18, 22, 32, 180));
+    // Background panel: fully transparent (no mask)
+    auto panelBg = LayerColor::create(Color4B(18, 22, 32, 0));  // Changed alpha to 0 (fully transparent)
     panelBg->setContentSize(Size(panelWidth, panelHeight));
     panelBg->setPosition(Vec2::ZERO);
     this->addChild(panelBg, -2);
@@ -805,10 +805,19 @@ void InventoryLayer::onOrganizationButtonClicked(Ref* sender) {
 
 void InventoryLayer::sortInventory() {
     auto inv = Inventory::getInstance();
+    if (!inv) {
+        CCLOG("ERROR: InventoryLayer::sortInventory - Inventory instance is null!");
+        return;
+    }
+
     auto& slots = const_cast<std::vector<InventorySlot>&>(inv->getSlots());
+    if (slots.empty()) {
+        CCLOG("ERROR: InventoryLayer::sortInventory - Inventory slots are empty!");
+        return;
+    }
 
     // Only sort normal slots (first 40 slots), don't touch weapon/coin/ammo/trash slots
-    const int sortableSlots = kNormalSlots;
+    const int sortableSlots = std::min(kNormalSlots, (int)slots.size());
 
     // Create a temporary vector to hold non-empty slots
     std::vector<InventorySlot> items;
@@ -816,6 +825,11 @@ void InventoryLayer::sortInventory() {
         if (slots[i].itemId != 0 && slots[i].count > 0) {
             items.push_back(slots[i]);
         }
+    }
+
+    if (items.empty()) {
+        CCLOG("InventoryLayer::sortInventory - No items to sort");
+        return;
     }
 
     // Sort by item ID first, then by count (descending)
@@ -833,7 +847,11 @@ void InventoryLayer::sortInventory() {
         for (auto& slot : consolidated) {
             if (slot.itemId == item.itemId) {
                 auto itemData = ItemManager::getInstance()->getItemData(item.itemId);
-                int maxStack = itemData ? itemData->maxStack : 99;
+                if (!itemData) {
+                    CCLOG("WARNING: Item %d data not found during sort", item.itemId);
+                    continue;
+                }
+                int maxStack = itemData->maxStack;
 
                 if (slot.count < maxStack) {
                     int canAdd = std::min(item.count, maxStack - slot.count);

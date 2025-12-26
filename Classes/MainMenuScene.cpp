@@ -1,6 +1,7 @@
 #include "MainMenuScene.h"
 #include "ItemsTestScene.h"
 #include "PlayerTestScene.h"
+#include "IntegrationTestScene.h"
 #include "audio/include/AudioEngine.h"
 
 USING_NS_CC;
@@ -72,6 +73,16 @@ bool MainMenuScene::init() {
                                     origin.y + visibleSize.height / 2 + 10));
   }
 
+  // 添加整合测试按钮
+  auto integrationTestLabel =
+      Label::createWithTTF("Integration Test", "fonts/Marker Felt.ttf", 28);
+  auto integrationTestItem = MenuItemLabel::create(
+      integrationTestLabel, CC_CALLBACK_1(MainMenuScene::menuIntegrationTestCallback, this));
+  if (integrationTestItem != nullptr) {
+    integrationTestItem->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                          origin.y + visibleSize.height / 2 - 30));
+  }
+
   // 添加关闭按钮
   auto closeItem = MenuItemImage::create(
       "CloseNormal.png", "CloseSelected.png",
@@ -83,7 +94,7 @@ bool MainMenuScene::init() {
     float y = origin.y + closeItem->getContentSize().height / 2;
     closeItem->setPosition(Vec2(x, y));
 
-    auto menu = Menu::create(playerTestItem, itemsTestItem, closeItem, nullptr);
+    auto menu = Menu::create(playerTestItem, itemsTestItem, integrationTestItem, closeItem, nullptr);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
   }
@@ -110,4 +121,11 @@ void MainMenuScene::menuItemsTestCallback(Ref *pSender) {
   auto itemsScene = ItemsTestScene::createScene();
   Director::getInstance()->replaceScene(
       TransitionFade::create(0.5f, itemsScene));
+}
+
+void MainMenuScene::menuIntegrationTestCallback(Ref *pSender) {
+  // 进入Items与Player整合测试场景
+  auto integrationScene = IntegrationTestScene::createScene();
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(0.5f, integrationScene));
 }

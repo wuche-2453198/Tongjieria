@@ -1,5 +1,7 @@
 #include "EquipmentPanel.h"
 #include "systems/items/EquipmentValidator.h"
+#include "core/GameManager.h"
+#include "systems/player/PlayerInventoryIntegration.h"
 #include <algorithm>
 #include <cmath>
 
@@ -33,8 +35,8 @@ bool EquipmentPanel::init() {
     // Position aligned with CraftBar (bottom at y=70, same as CraftBar)
     setPosition(Vec2(origin.x + visibleSize.width, origin.y+70.0f ));
 
-    // Background panel: semi-transparent dark without border
-    auto panelBg = LayerColor::create(Color4B(18, 22, 32, 180));
+    // Background panel: fully transparent (no mask)
+    auto panelBg = LayerColor::create(Color4B(18, 22, 32, 0));  // Changed alpha to 0 (fully transparent)
     panelBg->setContentSize(Size(panelWidth, panelHeight));
     panelBg->setPosition(Vec2::ZERO);
     this->addChild(panelBg, -2);

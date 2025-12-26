@@ -46,6 +46,7 @@ list(APPEND GAME_SOURCE
      Classes/MainMenuScene.cpp
      Classes/ItemsTestScene.cpp
      Classes/PlayerTestScene.cpp
+     Classes/IntegrationTestScene.cpp
      Classes/systems/items/ItemManager.cpp
      Classes/systems/items/Inventory.cpp
      Classes/systems/items/EquipmentValidator.cpp
@@ -61,7 +62,9 @@ list(APPEND GAME_SOURCE
      Classes/systems/player/PlayerSystems.cpp
      Classes/systems/player/PlayerInventoryIntegration.cpp
      Classes/systems/player/PlayerAnimationLoader.cpp
-     
+     Classes/systems/player/ItemUseSystem.cpp
+     Classes/core/GameManager.cpp
+
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -69,6 +72,7 @@ list(APPEND GAME_HEADER
      Classes/MainMenuScene.h
      Classes/ItemsTestScene.h
      Classes/PlayerTestScene.h
+     Classes/IntegrationTestScene.h
      Classes/components/items/InventoryDef.h
      Classes/systems/items/ItemManager.h
      Classes/systems/items/Inventory.h
@@ -87,7 +91,9 @@ list(APPEND GAME_HEADER
      Classes/systems/player/PlayerSystems.h
      Classes/systems/player/PlayerInventoryIntegration.h
      Classes/systems/player/PlayerAnimationLoader.h
-     
+     Classes/systems/player/ItemUseSystem.h
+     Classes/core/GameManager.h
+
      )
 
 if(ANDROID)

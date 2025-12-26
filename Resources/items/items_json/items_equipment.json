@@ -446,7 +446,9 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/wooden_sword.png",
     "value": 5,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "weapon",
+    "damage": 8
   },
   {
     "id": 1202,
