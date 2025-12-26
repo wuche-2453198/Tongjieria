@@ -6,17 +6,6 @@
 BlockLayer::BlockLayer(entt::registry& registry) : _registry(registry) {}
 BlockLayer::~BlockLayer() {}
 
-entt::entity BlockLayer::addChunk(const Vec2i& chunk_pos, entt::entity entity) {
-    assert(!hasChunkExist(chunk_pos));
-    _chunkMappings[chunk_pos] = entity;
-    return entity;
-}
-
-void BlockLayer::removeChunk(const Vec2i& chunk_pos) {
-    assert(hasChunkExist(chunk_pos));
-    _chunkMappings.erase(chunk_pos);
-}
-
 Vec2i BlockLayer::worldPosToChunkPos(const cocos2d::Vec2& worldPos)
 {
     return Vec2i(blockPosToChunkPos(worldPosToBlockPos(worldPos)));
@@ -34,6 +23,11 @@ Vec2i BlockLayer::blockPosToChunkPos(const Vec2i& blockPos) {
 
 Vec2i BlockLayer::blockPosToChunkLocalPos(const Vec2i& worldPos) {
     return worldPos - blockPosToChunkPos(worldPos) * CHUNK_SIZE;
+}
+
+bool BlockLayer::hasChunkExistAtWorldPos(const cocos2d::Vec2& worldPos) const
+{
+    return hasChunkExist(worldPosToChunkPos(worldPos));
 }
 
 bool BlockLayer::hasChunkExistAtBlockPos(const Vec2i& worldPos) const {
@@ -54,43 +48,54 @@ bool BlockLayer::setBlockAtWorldPos(const cocos2d::Vec2& worldPos, const BlockHa
     return setBlockAtBlockPos(worldPosToBlockPos(worldPos), state);
 }
 
+std::pair<entt::entity, ChunkHead&> BlockLayer::addChunk(const Vec2i& chunkPos) {
+    assert(!hasChunkExist(chunkPos));
+    // 创建实体和区块头
+    entt::entity entity = _registry.create();
+    ChunkHead& head = _registry.emplace<ChunkHead>(entity, chunkPos);
+    // 维护区块索引
+    _chunkMappings[chunkPos] = entity;
+
+    return { entity, head };
+}
+
+void BlockLayer::destroyChunk(const Vec2i& chunkPos) {
+    assert(hasChunkExist(chunkPos));
+    // 移除实体和区块
+    _registry.destroy(getChunk(chunkPos));
+    _chunkMappings.erase(chunkPos);
+}
+
 BlockHandle BlockLayer::getBlockAtBlockPos(const Vec2i& blockPos) const
 {
     auto chunkPos = blockPosToChunkPos(blockPos);
-    if (!hasChunkExist(chunkPos))
-    {
-        return BlockHandle();
-    }
-    // todo 添加是否初始化检查
     auto& chunk = _registry.get<ChunkBlocks>(getChunk(chunkPos));
     auto blockState = chunk.getBlockAt(blockPosToChunkLocalPos(blockPos));
 
-    BlockHandle state;
-    state.blockPos = blockPos;
-    state.id = blockState.id;
-    state.stateCode = blockState.stateCode;
-    state.blockEntiy = entt::null; // todo 设置方块实体
+    BlockHandle handle;
+    handle.blockPos = blockPos;
+    handle.id = blockState.id;
+    handle.stateCode = blockState.stateCode;
     
-    // todo 设置其他数据，如方块状态，方块实体
-    return state;
+    // 尝试获取实体
+    Vec2i localPos = BlockLayer::blockPosToChunkLocalPos(blockPos);
+    if (chunk.hasChunkEntityAt(localPos))
+    {
+        handle.blockEntiy = chunk.getEntityAt(localPos);
+    }
+    
+    return handle;
 }
 
 bool BlockLayer::setBlockAtBlockPos(const Vec2i& blockPos, const BlockHandle& state)
 {
     auto chunkPos = blockPosToChunkPos(blockPos);
-    if (!hasChunkExist(chunkPos) || !state.id.has_value())
-    {
-        return false;
-    }
-    // todo 添加是否初始化检查
     auto& chunk = _registry.get<ChunkBlocks>(getChunk(chunkPos));
     chunk.setBlockAt(blockPosToChunkLocalPos(blockPos), BlockState(state.id.value(), state.stateCode));
-
-    // todo 设置其他数据，如方块状态，方块实体
     return true;
 }
 
-entt::entity const BlockLayer::getChunkAtWorldPos(const Vec2i& worldPos) const
+entt::entity const BlockLayer::getChunkAtWorldPos(const cocos2d::Vec2& worldPos) const
 {
     return getChunk(worldPosToChunkPos(worldPos));
 }

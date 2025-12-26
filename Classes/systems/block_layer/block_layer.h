@@ -11,18 +11,11 @@ namespace cocos2d {
 class AssetManager;
 class ChunkHead;
 
-struct BlockState
-{
-    BlockState() : id(entt::null), stateCode(0) {}
-    BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
-    entt::id_type id;   ///< 方块ID
-    state stateCode;    ///< 方块状态
-};
-
 /*
 * @brief 方块世界的高级访问中心，提供一套区块索引和基础方法，以供快速查询和使用。
 * 
-* 本身不直接参与任何逻辑。但是区块索引的维护由其自身实现，本质是高级容器。
+* 本身不直接参与任何逻辑。但是维护一套基于区块稀疏表的数据结构。
+* @note 不应当使用registry进行区块头的添加，应该使用方块层的方法。
 */
 class BlockLayer
 {
@@ -31,19 +24,18 @@ public:
     ~BlockLayer();
 
     /**
-    * @brief 添加区块ID映射.
+    * @brief 添加区块头
     * 
     * @param pos 区块坐标
-    * @param entity 区块实体ID
     */
-    entt::entity addChunk(const Vec2i& chunkPos, entt::entity entity);
+    std::pair<entt::entity, ChunkHead&> addChunk(const Vec2i& chunkPos);
 
     /**
-    * @brief 移除区块ID映射.
+    * @brief 移除区块映射.
     * 
     * @param pos 区块坐标
     */
-    void removeChunk(const Vec2i& chunkPos);
+    void destroyChunk(const Vec2i& chunkPos);
 
     /**
     * @brief 将世界坐标转换到区块坐标
@@ -77,7 +69,13 @@ public:
     */
     static Vec2i blockPosToChunkLocalPos(const Vec2i& blockPos);
 
-    bool hasChunkExistAtWorldPos(const cocos2d::Vec2& worldPos);
+    /**
+    * @brief 世界坐标下是否存在已加载区块
+    * 
+    * @param worldPos 世界坐标
+    * @return 是否存在已加载区块
+    */
+    bool hasChunkExistAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
     /**
     * @brief 方块坐标下是否存在已加载区块
@@ -95,21 +93,60 @@ public:
     */
     bool hasChunkExist(const Vec2i& chunkPos) const;
 
-    BlockHandle getBlockAtWorldPos(const cocos2d::Vec2& pos) const;
+    /**
+    * @brief 获取世界位置下的方块
+    * 
+    * @param worldPos 世界坐标
+    * @return 方块句柄
+    */
+    BlockHandle getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
-    bool setBlockAtWorldPos(const cocos2d::Vec2& pos, const BlockHandle& state);
+    /**
+    * @brief 设置世界位置下的方块
+    * 
+    * @param worldPos 世界坐标
+    * @return 真，如果放置成功
+    */
+    bool setBlockAtWorldPos(const cocos2d::Vec2& worldPos, const BlockHandle& state);
 
-    BlockHandle getBlockAtBlockPos(const Vec2i& pos) const;
+    /**
+    * @brief 获取方块坐标下的方块
+    * 
+    * @param blockPos 方块坐标
+    * @return 方块句柄
+    */
+    BlockHandle getBlockAtBlockPos(const Vec2i& blockPos) const;
 
-    bool setBlockAtBlockPos(const Vec2i& pos, const BlockHandle& state);
+    /**
+    * @brief 设置方块坐标下的方块
+    * 
+    * @param blockPos 方块坐标
+    * @return 真，如果放置成功
+    */
+    bool setBlockAtBlockPos(const Vec2i& blockPos, const BlockHandle& state);
 
-    entt::entity const getChunkAtWorldPos(const Vec2i& pos) const;
+    /**
+    * @brief 获取世界坐标下的区块
+    * 
+    * @param worldPos 世界坐标
+    * @return 区块实体id
+    */
+    entt::entity const getChunkAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
-    entt::entity const getChunk(const Vec2i& pos) const;
+    /**
+    * @brief 获取区块坐标下的区块
+    * 
+    * @param chunkPos 区块坐标
+    * @return 区块实体id
+    */
+    entt::entity const getChunk(const Vec2i& chunkPos) const;
 
+    /**
+    * @brief 获取区块映射表
+    */
     const std::unordered_map<Vec2i, entt::entity>& getChunkMappings();
 private:
 
-    entt::registry& _registry;
-    std::unordered_map<Vec2i, entt::entity> _chunkMappings;
+    entt::registry& _registry;                              ///< 组件总线
+    std::unordered_map<Vec2i, entt::entity> _chunkMappings; ///< 区块映射
 };
