@@ -34,19 +34,19 @@ ChunkBlocks BlockLoadSystem::generateChunk()
     return ChunkBlocks();
 }
 
-entt::id_type BlockLoadSystem::WorldGenAt(const Vec2i& pos)
+BlockState BlockLoadSystem::WorldGenAt(const Vec2i& pos)
 {
     // 一个非常简单的世界生成函数
     if (pos.y > 4)
     {
-        return entt::hashed_string("air");
+        return BlockState((entt::id_type)entt::hashed_string("air"), 0);
     }
     else if (pos.y > 0)
     {
-        return entt::hashed_string("dirt");
+        return BlockState((entt::id_type)entt::hashed_string("dirt"), 0);
     }
     else
     {
-        return entt::hashed_string("stone");
+        return BlockState((entt::id_type)entt::hashed_string("stone"), 0);
     }
 }

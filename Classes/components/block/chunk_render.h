@@ -109,12 +109,12 @@ public:
     * 更新uniforms，主要是矩阵
     */
     void updateUniforms(const cocos2d::Mat4& transform);
-private:
 
     /**
     * @brief 设置贴图
     */
     void setTexture(cocos2d::Texture2D* texture);
+private:
     void updateShaders();
 
     /**

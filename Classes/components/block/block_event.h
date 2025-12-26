@@ -66,10 +66,10 @@ struct BlockStateChangedEvent : public BlockEvent
 struct BlockMinedEvent : public BlockEvent
 {
     BlockMinedEvent() = default;
-    BlockMinedEvent(entt::id_type block_id, const Vec2i& pos, float progress, entt::entity miner)
-        : BlockEvent(block_id, pos), miningProgress(progress), miner(miner) {}
+    BlockMinedEvent(entt::id_type block_id, const Vec2i& pos, float miningFactor, entt::entity miner)
+        : BlockEvent(block_id, pos), miningFactor(miningFactor), miner(miner) {}
 
-    float miningProgress; ///< 当前挖掘进度
+    float miningFactor;
     entt::entity miner;    ///< 挖掘方块的实体
 };
 

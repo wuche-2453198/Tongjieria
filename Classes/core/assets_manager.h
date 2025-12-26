@@ -2,34 +2,113 @@
 #include "cocos2d.h"
 #include "entt/entt.hpp"
 #include "json/document.h"
+#include "utils/tools.h"
 
 using optional_id = std::optional<entt::id_type>;
+using state = uint32_t;
+
+struct CollisionBody
+{
+    cocos2d::Vec2 size;
+    cocos2d::Vec2 offset;
+};
 
 class BlockConfig
 {
 public:
+    BlockConfig();
     BlockConfig(optional_id id, rapidjson::Document* config);
-    const optional_id id() const;
-    const std::string name() const;
-    const std::string texturePath() const;
-    cocos2d::Texture2D* texture() const;
-    bool isReplacable() const;
-    bool isRenderble() const;
-    bool isInteractable() const;
-    bool hasCollision() const;
-    const rapidjson::Document& getConfig() const;
+    optional_id id() const;
+    const rapidjson::Value* getOrigin() const;
+    const rapidjson::Value* getStateConfig(state stateCode) const;
 
+    const rapidjson::Value* getValueObject(const rapidjson::Value& config, const std::string& firstTag, const std::string& secondTag)
+    {
+        auto first = tools::get_obj(config, firstTag);
+        if (!first)
+        {
+            return nullptr;
+        }
+        return  tools::get_obj(*first, secondTag);
+    }
+
+    template <typename T>
+    std::optional<T> getVal(const rapidjson::Value& config, const std::string& firstTag, const std::string& secondTag) const
+    {
+        auto first = tools::get_obj(config, firstTag);
+        if (!first)
+        {
+            return std::nullopt;
+        }
+        return  tools::get<T>(*first, secondTag.c_str());
+    }
+
+    template <typename T>
+    std::optional<T> getOriginVal(const std::string& firstTag, const std::string& secondTag) const
+    {
+        return getVal<T>(*getOrigin(), firstTag, secondTag);
+    }
+
+    template <typename T>
+    T getOriginValOr(const std::string& firstTag, const std::string& secondTag, T defaultValue) const
+    {
+        auto originVal = getOriginVal<T>(firstTag, secondTag);
+        if (originVal)
+        {
+            return originVal.value();
+        }
+        return defaultValue;
+    }
+
+    template <typename T>
+    std::optional<T> getStateVal(const std::string& firstTag, const std::string& secondTag, state stateCode) const
+    {
+        return getVal<T>(*getStateConfig(stateCode), firstTag, secondTag);
+    }
+
+    template <typename T>
+    T getStateValOr(const std::string& firstTag, const std::string& secondTag, state stateCode, T defaultValue) const
+    {
+        auto stateVal = getStateVal<T>(firstTag, secondTag, stateCode);
+        if(stateVal)
+        {
+            return stateVal.value();
+        }
+        return defaultValue;
+    }
+
+    template <typename T>
+    std::optional<T> tryGetStateVal(const std::string& firstTag, const std::string& secondTag, state stateCode) const
+    {
+        auto stateVal = getVal<T>(*getStateConfig(stateCode), firstTag, secondTag);
+        if (stateVal)
+        {
+            return stateVal;
+        }
+        return getOriginVal<T>(firstTag, secondTag);
+    }
+
+    template <typename T>
+    T tryGetStateValOr(const std::string& firstTag, const std::string& secondTag, state stateCode, T defaultValue) const
+    {
+        auto stateVal = tryGetStateVal<T>(firstTag, secondTag, stateCode);
+        if (stateVal)
+        {
+            return stateVal.value();
+        }
+        return defaultValue;
+    }
+
+    const 
+
+    const rapidjson::Document& getConfig() const;
     operator bool() const;
 private:
     optional_id _id;
-    rapidjson::Document& _config;
-    const std::string& _name;
-    const std::string& _texturePath;
-    cocos2d::Texture2D* _texture;
-    bool _replacable;
-    bool _renderable;
-    bool _interactable;
-    bool _collision;
+    rapidjson::Document* _config = nullptr;
+
+
+    std::unordered_map<state, std::string> stateCodeToName;
 };
 
 /**

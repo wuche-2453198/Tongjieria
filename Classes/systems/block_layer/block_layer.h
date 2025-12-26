@@ -11,6 +11,14 @@ namespace cocos2d {
 class AssetManager;
 class ChunkHead;
 
+struct BlockState
+{
+    BlockState() : id(entt::null), stateCode(0) {}
+    BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
+    entt::id_type id;   ///< 方块ID
+    state stateCode;    ///< 方块状态
+};
+
 /*
 * @brief 方块世界的高级访问中心，提供一套区块索引和基础方法，以供快速查询和使用。
 * 
@@ -28,14 +36,14 @@ public:
     * @param pos 区块坐标
     * @param entity 区块实体ID
     */
-    void addChunkID(const Vec2i& pos, entt::entity entity);
+    entt::entity addChunk(const Vec2i& chunkPos, entt::entity entity);
 
     /**
     * @brief 移除区块ID映射.
     * 
     * @param pos 区块坐标
     */
-    void removeChunkID(const Vec2i& pos);
+    void removeChunk(const Vec2i& chunkPos);
 
     /**
     * @brief 将世界坐标转换到区块坐标
@@ -56,7 +64,7 @@ public:
     /**
     * @brief 将方块坐标转换到区块坐标。
     * 
-    * @param world_pos 方块坐标
+    * @param blockPos 方块坐标
     * @return 区块坐标
     */
     static Vec2i blockPosToChunkPos(const Vec2i& blockPos);
@@ -64,15 +72,17 @@ public:
     /**
     * @brief 将方块坐标转换到区块局部坐标
     * 
-    * @param world_pos 方块坐标
+    * @param blockPos 方块坐标
     * @return 区块局部坐标
     */
     static Vec2i blockPosToChunkLocalPos(const Vec2i& blockPos);
 
+    bool hasChunkExistAtWorldPos(const cocos2d::Vec2& worldPos);
+
     /**
     * @brief 方块坐标下是否存在已加载区块
     * 
-    * @param pos 方块坐标
+    * @param blockPos 方块坐标
     * @return 是否存在已加载区块
     */
     bool hasChunkExistAtBlockPos(const Vec2i& blockPos) const;
@@ -80,27 +90,25 @@ public:
     /**
     * @brief 区块坐标下是否存在已加载区块
     * 
-    * @param pos 区块坐标
+    * @param chunkPos 区块坐标
     * @return 是否存在已加载区块
     */
     bool hasChunkExist(const Vec2i& chunkPos) const;
 
-    BlockState getBlockAtWorldPos(const cocos2d::Vec2& pos) const;
+    BlockHandle getBlockAtWorldPos(const cocos2d::Vec2& pos) const;
 
-    bool setBlockAtWorldPos(const cocos2d::Vec2& pos, const BlockState& state);
+    bool setBlockAtWorldPos(const cocos2d::Vec2& pos, const BlockHandle& state);
 
-    BlockState getBlockAtBlockPos(const Vec2i& pos) const;
+    BlockHandle getBlockAtBlockPos(const Vec2i& pos) const;
 
-    bool setBlockAtBlockPos(const Vec2i& pos, const BlockState& state);
+    bool setBlockAtBlockPos(const Vec2i& pos, const BlockHandle& state);
 
-    entt::entity const getChunkIDAtWorldPos(const Vec2i& pos) const;
+    entt::entity const getChunkAtWorldPos(const Vec2i& pos) const;
 
-    entt::entity const getChunkID(const Vec2i& pos) const;
+    entt::entity const getChunk(const Vec2i& pos) const;
 
     const std::unordered_map<Vec2i, entt::entity>& getChunkMappings();
 private:
-
-
 
     entt::registry& _registry;
     std::unordered_map<Vec2i, entt::entity> _chunkMappings;

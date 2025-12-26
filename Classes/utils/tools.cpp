@@ -21,61 +21,24 @@ std::vector<std::string> get_all_json(const std::string& folder_path)
 	return json_files;
 }
 
-std::optional<bool> get_bool(const rapidjson::Value& json, const std::string& name)
+const rapidjson::Value* get_array(const rapidjson::Value& config, const std::string& tag)
 {
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsBool() ?
-        std::make_optional(json[name.c_str()].GetBool()) :
-        std::nullopt;
+	if (!config.HasMember(tag.c_str()) || !config.IsArray())
+	{
+		return nullptr;
+	}
+	return &(config[tag.c_str()]);
 }
 
-bool get_bool_or(const rapidjson::Value& json, const std::string& name, bool default_val)
+const rapidjson::Value* get_obj(const rapidjson::Value& config, const std::string& tag)
 {
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsBool() ?
-        json[name.c_str()].GetBool() :
-        default_val;
+	if (!config.HasMember(tag.c_str()) || !config.IsObject())
+	{
+		return nullptr;
+	}
+	return &(config[tag.c_str()]);
 }
 
-std::optional<int> get_int(const rapidjson::Value& json, const std::string& name)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsInt() ?
-		std::make_optional(json[name.c_str()].GetInt()) :
-		std::nullopt;
-}
-
-int get_int_or(const rapidjson::Value& json, const std::string& name, int default_val)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsInt() ?
-		json[name.c_str()].GetInt() :
-		default_val;
-}
-
-std::optional<std::string> get_str(const rapidjson::Value& json, const std::string& name)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsString() ?
-		std::make_optional(json[name.c_str()].GetString()) :
-		std::nullopt;
-}
-
-std::string get_str_or(const rapidjson::Value& json, const std::string& name, const std::string& default_val)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsString() ?
-		json[name.c_str()].GetString() :
-		default_val;
-}
-
-std::optional<float> get_float(const rapidjson::Value& json, const std::string& name)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsFloat() ?
-		std::make_optional(json[name.c_str()].GetFloat()) :
-		std::nullopt;
-}
-
-float get_float_or(const rapidjson::Value& json, const std::string& name, float default_val)
-{
-	return json.HasMember(name.c_str()) && json[name.c_str()].IsFloat() ?
-		json[name.c_str()].GetFloat() :
-		default_val;
-}
 
 cocos2d::Vec3 MouseDebugTool::s_screenPos = cocos2d::Vec3::ZERO;
 cocos2d::Vec2 MouseDebugTool::s_worldPos = cocos2d::Vec2::ZERO;

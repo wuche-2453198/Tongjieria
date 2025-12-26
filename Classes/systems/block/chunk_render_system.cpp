@@ -89,8 +89,9 @@ void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& b
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             Vec2i localPos = Vec2i(x, y);
-            entt::id_type blockID = blocks.getBlockAt(localPos);
-            if (_assetManager.getBlockConfig(blockID).isRenderble())
+            entt::id_type blockID = blocks.getBlockAt(localPos).id;
+            
+            if (_assetManager.getBlockConfig(blockID))
             {
                 Vec2i blockPos = chunkPos * CHUNK_SIZE + localPos;
                 blockbatch[blockID].push_back(blockPos);            // 记录该方块的位置
@@ -102,7 +103,11 @@ void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& b
     for (auto& [blockID, positions] : blockbatch)
     {
         // 读取方块配置
-        auto texture = _assetManager.getBlockConfig(blockID).texture();
+        const auto& texturePath = 
+            _assetManager.getBlockConfig(blockID).
+            getOriginValOr<std::string>("base", "texture","a_block.bmp");
+        // 加载纹理
+        auto texture = _assetManager.getTexture(texturePath);
 
         auto batchCommand = new BlockBatchCommand(0, positions, texture);
         batchCommand->setUseTransform(false);   // 不使用transform，直接使用block的位置

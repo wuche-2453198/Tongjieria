@@ -4,6 +4,8 @@
 
 class ChunkBlocks;
 
+struct BlockState;
+
 /**
 * @brief 生成区块的方块。调度加载系统和生成系统。
 *
@@ -19,8 +21,9 @@ public:
 private:
     ChunkBlocks loadChunk();
     ChunkBlocks generateChunk();
+
     /**
     * @brief 根据世界位置生成方块。
     */
-    entt::id_type WorldGenAt(const Vec2i& pos);
+    BlockState WorldGenAt(const Vec2i& pos);
 };

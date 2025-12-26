@@ -5,7 +5,7 @@
 
 using optional_id = std::optional<entt::id_type>;
 using optional_entity = std::optional<entt::entity>;
-using state = uint8_t;
+using state = uint32_t;
 
 /**
 * @brief 方块类型枚举。
@@ -21,8 +21,8 @@ enum class BlockType
 *
 * @todo 完善方块状态
 */
-struct BlockState {
-    BlockState(
+struct BlockHandle {
+    BlockHandle(
         const Vec2i& pos = Vec2i(0,0),
         optional_id block_id = std::nullopt, 
         optional_entity entity = std::nullopt,
@@ -85,7 +85,7 @@ public:
     * @param pos 方块在世界中的位置
     * @return 方块状态
     */
-    BlockState getBlockAtBlockPos(const Vec2i& BlockPos) const;
+    BlockHandle getBlockAtBlockPos(const Vec2i& BlockPos) const;
 
     /**
     * @brief 获取指定世界位置的方块状态。
@@ -93,7 +93,7 @@ public:
     * @param pos 世界坐标
     * @return 方块状态
     */
-    BlockState getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const;
+    BlockHandle getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
     /**
     * @brief 尝试与指定位置的方块交互。

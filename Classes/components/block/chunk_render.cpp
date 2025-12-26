@@ -39,6 +39,10 @@ BlockBatchCommand::~BlockBatchCommand() {}
 
 void BlockBatchCommand::setTexture(cocos2d::Texture2D* texture)
 {
+    if (texture->getBackendTexture() == _texture)
+    {
+        return;
+    }
     auto programState = getPipelineDescriptor().programState;
     auto textureLocation = programState->getUniformLocation("u_texture");
     programState->setTexture(textureLocation, 0, texture->getBackendTexture());

@@ -11,7 +11,7 @@ BlockWorld::BlockWorld(entt::registry& registry, entt::dispatcher& dispatcher)
     _assetManager(_registry.ctx().get<AssetManager>()) {}
 BlockWorld::~BlockWorld() = default;
 
-BlockState BlockWorld::getBlockAtBlockPos(const Vec2i& blockPos) const
+BlockHandle BlockWorld::getBlockAtBlockPos(const Vec2i& blockPos) const
 {
     if (_blockLayer.hasChunkExist(BlockLayer::blockPosToChunkLocalPos(blockPos)))
     {
@@ -19,11 +19,11 @@ BlockState BlockWorld::getBlockAtBlockPos(const Vec2i& blockPos) const
     }
     else
     {
-        return BlockState();
+        return BlockHandle();
     }
 }
 
-BlockState BlockWorld::getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const
+BlockHandle BlockWorld::getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const
 {
     return getBlockAtBlockPos(BlockLayer::worldPosToBlockPos(worldPos));
 }
@@ -86,7 +86,7 @@ bool BlockWorld::TryPlace(const Vec2i& blockPos, entt::id_type block_id, state b
         return false;
     }
     // 检查方块是否可替换
-    if(!config.isReplacable())
+    if (config.getOriginValOr("base","replaceable",false))
     {
         return false;
     }

@@ -1,11 +1,11 @@
+#pragma once
 #include <memory>
 #include <optional>
 #include "cocos2d.h"
 #include "entt/entt.hpp"
 #include "core/consts.h"
-#include "systems/block_layer/block_layer.h"
 #include "utils/vec2i.h"
-#pragma once
+#include "systems/block_layer/block_layer.h"
 
 namespace cocos2d {
     class Vec2;
@@ -137,13 +137,33 @@ struct PhysicsTicket
 
 struct ActiveBlock
 {
+    ActiveBlock(entt::id_type id, const Vec2i& blockPos);
+
+    template<typename T, typename... Args>
+    T& saveEmplace(entt::registry& registry, entt::entity entity, Args&&... args)
+    {
+        auto& component = registry.emplace<T>(entity, std::forward<Args>(args)...);
+        componentCount++;
+        return component;
+    }
+
+    template<typename T>
+    void saveRemove(entt::registry& registry, entt::entity entity)
+    {
+        registry.remove<T>(entity);
+        componentCount--;
+    }
+
     entt::id_type id;
     Vec2i blockPos;
+    int componentCount = 0;
 };
 
 struct MiningProgress
 {
-    float progress;
+    MiningProgress();
+    MiningProgress(float progress);
+    float progress = 0.0f;
 };
 
 class World;
@@ -223,7 +243,10 @@ struct DirtyChunkTag
     std::vector<DirtyBlock> dirtyBlocks;
 };
 
-struct BlockEntityTag
+struct MiningTag
 {
-    std::vector<entt::entity> entites;
+    MiningTag(float factor, entt::entity miner) : factor(factor), minier(minier) {}
+    entt::entity minier =  entt::null;
+    float factor;
 };
+

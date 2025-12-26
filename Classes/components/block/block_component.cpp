@@ -55,6 +55,15 @@ const BlockArray& const ChunkBlocks::getBlockView() const
     return _blocks;
 }
 
+
+ActiveBlock::ActiveBlock(entt::id_type id, const Vec2i& blockPos)
+ : id(id), blockPos(blockPos) {}
+
+MiningProgress::MiningProgress() = default;
+
+MiningProgress::MiningProgress(float progress) : progress(progress) {}
+
+
 WorldScene::WorldScene(World* world) : _world(world) {}
 WorldScene::~WorldScene() = default;
 World& WorldScene::operator*() const { return *_world; }

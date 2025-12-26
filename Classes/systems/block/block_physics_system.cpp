@@ -159,12 +159,10 @@ bool BlockPhysicsSystem::isInside(const Vec2i& blockPos, const Vec2i& blockUpper
 bool BlockPhysicsSystem::hasCollision(const Vec2i& blockPos)
 {
     auto blockState = _blockLayer.getBlockAtBlockPos(blockPos);
-
-    bool collision = false;
-    if (blockState.id.has_value())
-    {
-        collision = _assetManager.getBlockConfig(blockState.id.value()).hasCollision();
-    }
+    if (!blockState.id.has_value()) return false;
+    auto collision =
+        _assetManager.getBlockConfig(blockState.id.value()).
+        getOriginValOr<bool>("collision", "enable", false);
     return collision;
 }
 

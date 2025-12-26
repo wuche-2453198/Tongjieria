@@ -30,6 +30,8 @@ private:
 class BlockBehavior
 {
 public:
+    BlockBehavior(entt::registry& registry);
+
     /**
     * @brief 当方块被放置时调用。
     */
@@ -59,11 +61,14 @@ public:
     * @brief 当方块收到随机刻时调用。
     */
     virtual void onRamdomTick() = 0;
+protected:
+    entt::registry& _registry;
 };
 
 class DirtBehavior : public BlockBehavior
 {
 public:
+    DirtBehavior(entt::registry& registry);
     virtual void onBlockPlaced(const BlockPlacedEvent& event) override;
     virtual void onBlockDestroyed(const BlockDestroyEvent& event) override;
     virtual void onBlockMined(const BlockMinedEvent& event) override;

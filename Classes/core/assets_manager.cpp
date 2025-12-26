@@ -5,67 +5,45 @@
 #include "json/writer.h"
 
 
+BlockConfig::BlockConfig() : _id(std::nullopt) {}
+
 BlockConfig::BlockConfig(optional_id id, rapidjson::Document* config)
-    : 
-    _id(id),
-    _config(*config),
-    _name(tools::get_str_or(_config, "name", "error")),
-    _texturePath(tools::get_str_or(_config, "texture", "error")),
-    _texture(cocos2d::Director::getInstance()->getTextureCache()->addImage(_texturePath)),
-    _replacable(tools::get_bool_or(_config, "replacable", false)),
-    _renderable(tools::get_bool_or(_config, "renderable", false)),
-    _interactable(tools::get_bool_or(_config, "interactable", false)),
-    _collision(tools::get_bool_or(_config, "collision", false))
-{}
-const optional_id BlockConfig::id() const
 {
-    return _id;
-};
+    _id = id;
+    _config = config;
 
-const std::string BlockConfig::name() const
-{
-    return _name;
+    auto states = tools::get_obj(*_config, "states");
+    if (states)
+    {
+        state stateCode = 0;
+        for (auto it = states->MemberBegin(); it != states->MemberEnd(); ++it)
+        {
+            stateCodeToName[stateCode] = it->name.GetString();
+            stateCode++;
+        }
+    }
 }
 
-const std::string BlockConfig::texturePath() const
+optional_id BlockConfig::id() const { return _id; }
+const rapidjson::Value* BlockConfig::getOrigin() const
 {
-    return _texturePath;
+    return tools::get_obj(*_config, "origin");
 }
 
-cocos2d::Texture2D* BlockConfig::texture() const
+const rapidjson::Value* BlockConfig::getStateConfig(state stateCode) const
 {
-    return _texture;
+    auto states = tools::get_obj(*_config, "states");
+    if (states)
+    {
+        const auto& stateName = stateCodeToName.at(stateCode);
+        auto state = tools::get_obj(*states, stateName.c_str());
+        return state;
+    }
+    return nullptr;
 }
 
-bool BlockConfig::isReplacable() const
-{
-    return _replacable;
-}
-
-bool BlockConfig::isRenderble() const
-{
-    return _renderable;
-}
-
-bool BlockConfig::isInteractable() const
-{
-    return _interactable;
-}
-
-bool BlockConfig::hasCollision() const
-{
-    return _collision;
-}
-
-const rapidjson::Document& BlockConfig::getConfig() const
-{
-    return _config;
-}
-
-BlockConfig::operator bool() const
-{
-    return _id.has_value();
-}
+const rapidjson::Document& BlockConfig::getConfig() const { return *_config; }
+BlockConfig::operator bool() const { return _id.has_value(); }
 
 AssetManager::AssetManager() 
 {
@@ -97,7 +75,7 @@ void AssetManager::loadAllBlockJson() {
         
         rapidjson::Document* config = new rapidjson::Document();
         config->Parse(json_str.c_str());
-        auto id = tools::get_str(*config, "id");
+        auto id = tools::get<std::string>(*config, "id");
 
         if (id.has_value()) {
             auto id_hashed = entt::hashed_string(id.value().c_str());
