@@ -9,11 +9,11 @@ BlockMiningSystem::~BlockMiningSystem() = default;
 
 void BlockMiningSystem::update(float delta)
 {
-    mining();
+    mining(delta);
     render();
 }
 
-void BlockMiningSystem::mining()
+void BlockMiningSystem::mining(float delta)
 {
     auto view = _registry.view<ActiveBlock, MiningTag>();
     view.each([&](entt::entity entity, ActiveBlock& block, MiningTag& tag)
@@ -24,7 +24,11 @@ void BlockMiningSystem::mining()
                 progress = &(block.saveEmplace<MiningProgress>(_registry, entity));
             }
             // ∆∆ªµ∑ΩøÈ
-            progress->progress += tag.factor;
+            progress->progress += tag.factor * delta;
+
+            CCLOG("Mined at %d %d, progress= %f",
+                block.blockPos.x, block.blockPos.y,
+                progress->progress);
 
             // Õ⁄æÚÕÍ≥…£¨≥¢ ‘∆∆ªµ
             if (progress->progress > 1.0f)
@@ -45,8 +49,9 @@ void BlockMiningSystem::render()
     auto needToAdd = _registry.view<ActiveBlock, MiningProgress>(entt::exclude<CustomcommandPack>);
     needToAdd.each([&](entt::entity entity, ActiveBlock& block, MiningProgress& progress)
         {
-            auto texture = _registry.ctx().get<AssetManager>().getTexture("blocks\\textures\\air.png");
-            auto command = new BlockBatchCommand(10, block.blockPos, texture);
+            auto texture = _registry.ctx().get<AssetManager>().getTexture("blocks\\textures\\stone.png");
+            auto command = new BlockBatchCommand(1, block.blockPos, texture);
+            command->setUseTransform(false);
             auto& pack = block.saveEmplace<CustomcommandPack>(_registry, entity);
             pack.commands.push_back(command);
         });
@@ -55,9 +60,10 @@ void BlockMiningSystem::render()
     auto needToUpdate = _registry.view<ActiveBlock, MiningProgress, CustomcommandPack>();
     needToUpdate.each([&](entt::entity entity, ActiveBlock& block, MiningProgress& progress, CustomcommandPack& pack)
         {
-            auto command = pack.commands[0];
-            auto blockCommand = dynamic_cast<BlockBatchCommand*>(command);
-            blockCommand->setTexture(getProgressTexture(progress.progress));
+            pack.releaseAllCommand();
+            auto command = new BlockBatchCommand(1, block.blockPos, getProgressTexture(progress.progress));
+            command->setUseTransform(false);
+            pack.commands.push_back(command);
         });
 
     // “∆≥˝Œﬁ–ßµƒ‰÷»æ÷∏¡Ó

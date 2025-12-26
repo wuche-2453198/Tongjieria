@@ -65,7 +65,8 @@ void DebugSystem::onMouseEvent(const MouseEvent& event)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.tryDestroy(blockPos, testEntites[0]);
+        blockWorld.tryMine(blockPos, testEntites[0]);
+
     }
 }
 

@@ -16,7 +16,7 @@ public:
     ~BlockMiningSystem();
     void update(float delta);
 private:
-    void mining();
+    void mining(float delta);
     void render();
     cocos2d::Texture2D* getProgressTexture(float progress);
     AssetManager& _assetManager;

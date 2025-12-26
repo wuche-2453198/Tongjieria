@@ -5,6 +5,8 @@
 #include "cocos2d.h"
 #pragma once
 
+class AssetManager;
+class BlockLayer;
 class BlockBehaviorRegistry;
 
 /**
@@ -28,12 +30,9 @@ private:
     void onBlockInteracted(const BlockInteractEvent& event);
     void onRandomTick();
     void addDirtyTag(entt::entity chunk, const Vec2i& localPos);
-    std::unique_ptr<BlockBehaviorRegistry> _behaviorRegistry;
-};
 
-class BlockUpdateSystem : public ISystem
-{
-public:
-    BlockUpdateSystem(entt::registry& registry, entt::dispatcher& dispatcher);
-    ~BlockUpdateSystem();
+    std::unique_ptr<BlockBehaviorRegistry> _behaviorRegistry;
+
+    AssetManager& _assetManager;
+    BlockLayer& _blockLayer;
 };

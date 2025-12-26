@@ -5,7 +5,9 @@
 #include "block_interact_system.h"
 
 BlockInteractSystem::BlockInteractSystem(entt::registry& registry, entt::dispatcher& dispatcher)
-    : ISystem(registry, dispatcher)
+    : ISystem(registry, dispatcher), 
+    _blockLayer(_registry.ctx().get<BlockLayer>()),
+    _assetManager(_registry.ctx().get<AssetManager>())
 {
     _behaviorRegistry = std::make_unique<BlockBehaviorRegistry>();
 
@@ -25,13 +27,10 @@ void BlockInteractSystem::onBlockPlaced(const BlockPlacedEvent& event)
     auto behavior = _behaviorRegistry->getBehavior(event.id);
     if (behavior) behavior->onBlockPlaced(event);
 
-    auto& assetManager = _registry.ctx().get<AssetManager>();
-    auto& blockLayer = _registry.ctx().get<BlockLayer>();
-
     BlockHandle newState(event.blockPos, event.id);
-    blockLayer.setBlockAtBlockPos(event.blockPos, newState);
+    _blockLayer.setBlockAtBlockPos(event.blockPos, newState);
 
-    auto chunkID = blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
+    auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 
@@ -41,19 +40,45 @@ void BlockInteractSystem::onBlockDestroyed(const BlockDestroyEvent& event)
     auto behavior = _behaviorRegistry->getBehavior(event.id);
     if (behavior) behavior->onBlockDestroyed(event);
 
-    auto& assetManager = _registry.ctx().get<AssetManager>();
-    auto& blockLayer = _registry.ctx().get<BlockLayer>();
-
     BlockHandle newState(event.blockPos, entt::hashed_string("air"));
-    blockLayer.setBlockAtBlockPos(event.blockPos, newState);
+    _blockLayer.setBlockAtBlockPos(event.blockPos, newState);
 
-    auto chunkID = blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
+    auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 
 void BlockInteractSystem::onBlockMined(const BlockMinedEvent& event)
 {
-    _behaviorRegistry->getBehavior(event.id)->onBlockMined(event);
+    auto behavior = _behaviorRegistry->getBehavior(event.id);
+    if (behavior) behavior->onBlockMined(event);
+
+    BlockHandle handle = _blockLayer.getBlockAtBlockPos(event.blockPos);
+
+    entt::entity blockEntity;
+    if (!handle.blockEntiy.has_value())
+    {
+        // 创建一个新的方块实体
+        blockEntity = _registry.create();
+
+        _registry.emplace<Position>(blockEntity, event.blockPos * BLOCK_SIZE);
+        _registry.emplace<ActiveBlock>(blockEntity, handle.id.value(), event.blockPos);
+
+        auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
+        _registry.get<ChunkBlocks>(chunkID).
+            addEntity(BlockLayer::blockPosToChunkLocalPos(event.blockPos), blockEntity);
+    }
+    else
+    {
+        blockEntity = handle.blockEntiy.value();
+    }
+
+    auto& block = _registry.get<ActiveBlock>(blockEntity);
+
+    // 防止重复加入
+    if (!_registry.all_of<MiningTag>(blockEntity))
+    {
+        block.saveEmplace<MiningTag>(_registry, blockEntity, event.miningFactor, event.miner);
+    }
 }
 
 void BlockInteractSystem::onBlockNeighborChanged()
