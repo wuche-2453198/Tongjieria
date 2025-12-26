@@ -111,11 +111,16 @@ public:
     void updateUniforms(const cocos2d::Mat4& transform);
 
     /**
+    * @brief ¸üĞÂÌùÍ¼
+    */
+    void setNewTexture(cocos2d::Texture2D* texture);
+private:
+    void updateShaders();
+
+    /**
     * @brief ÉèÖÃÌùÍ¼
     */
     void setTexture(cocos2d::Texture2D* texture);
-private:
-    void updateShaders();
 
     /**
     * @brief 

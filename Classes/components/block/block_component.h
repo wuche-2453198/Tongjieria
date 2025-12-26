@@ -106,6 +106,11 @@ public:
     void setBlockAt(const Vec2i& pos, BlockState id);
     void setBlockState(const Vec2i& localPos, state stateCode);
 
+    bool hasChunkEntity();
+    bool hasChunkEntityAt(const Vec2i& localPos);
+    entt::entity getEntityAt(const Vec2i& localPos);
+    void addEntity(const Vec2i& localPos, entt::entity entity);
+    void removeEntity(const Vec2i localPos);
     /**
     * @brief 局部位置是否合法。
     */
@@ -113,7 +118,7 @@ public:
     const BlockArray& const getBlockView() const;
 private:
     BlockArray _blocks; ///< 区块内的方块数组
-    std::vector<entt::entity> _blockEntities; ///< 这个区块加载的方块实体列表
+    std::unordered_map<Vec2i, entt::entity> _blockEntities; ///< 这个区块加载的方块实体列表
 };
 
 /**

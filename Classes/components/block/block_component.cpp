@@ -44,6 +44,33 @@ void ChunkBlocks::setBlockState(const Vec2i& localPos, state stateCode)
     _blocks[localPos.x][localPos.y].stateCode = stateCode;
 }
 
+bool ChunkBlocks::hasChunkEntity()
+{
+    return _blockEntities.size();
+}
+
+bool ChunkBlocks::hasChunkEntityAt(const Vec2i& localPos)
+{
+    return _blockEntities.find(localPos) != _blockEntities.end();
+}
+
+entt::entity ChunkBlocks::getEntityAt(const Vec2i& localPos)
+{
+    return _blockEntities.at(localPos);
+}
+
+void ChunkBlocks::addEntity(const Vec2i& localPos, entt::entity entity)
+{
+    assert(!hasChunkEntityAt(localPos));
+    _blockEntities[localPos] = entity;
+}
+
+void ChunkBlocks::removeEntity(const Vec2i blockPos)
+{
+    assert(hasChunkEntityAt(blockPos));
+    _blockEntities.erase(blockPos);
+}
+
 bool ChunkBlocks::isPosValied(const Vec2i& pos) const
 {
     return 0 <= pos.x && pos.x < CHUNK_SIZE && 

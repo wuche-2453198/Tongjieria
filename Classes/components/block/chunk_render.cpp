@@ -14,9 +14,8 @@ using C4B = cocos2d::Color4B;
 using Tex2F = cocos2d::Tex2F;
 
 BlockBatchCommand::BlockBatchCommand(int globalOrder, const Vec2i& blockPos, cocos2d::Texture2D* texture)
-{
-    BlockBatchCommand(globalOrder, std::vector<Vec2i>{blockPos}, texture);
-}
+    : BlockBatchCommand(globalOrder, std::vector<Vec2i>{blockPos}, texture)
+{}
 
 BlockBatchCommand::BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& blockPos, cocos2d::Texture2D* texture)
 {
@@ -38,17 +37,24 @@ BlockBatchCommand::BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& 
 BlockBatchCommand::~BlockBatchCommand() {}
 
 void BlockBatchCommand::setTexture(cocos2d::Texture2D* texture)
-{
-    if (texture->getBackendTexture() == _texture)
-    {
-        return;
-    }
+{   
     auto programState = getPipelineDescriptor().programState;
     auto textureLocation = programState->getUniformLocation("u_texture");
     programState->setTexture(textureLocation, 0, texture->getBackendTexture());
 }
 
-void BlockBatchCommand::updateShaders() 
+void BlockBatchCommand::setNewTexture(cocos2d::Texture2D* texture)
+{
+    if (_texture == texture->getBackendTexture())
+    {
+        return;
+    }
+    updateShaders();
+    setTexture(texture);
+    init(_globalOrder, texture, cocos2d::BlendFunc::ALPHA_PREMULTIPLIED, _triangles, cocos2d::Mat4(), 0);
+}
+
+void BlockBatchCommand::updateShaders()
 {
     auto* program = Program::getBuiltinProgram(ProgramType::POSITION_TEXTURE_COLOR);
     auto programState = new (std::nothrow) ProgramState(program);
