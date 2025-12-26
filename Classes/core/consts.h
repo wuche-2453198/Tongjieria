@@ -8,6 +8,14 @@ constexpr static int BLOCK_SIZE = 16;
 constexpr static int CHUNK_SIZE = 16;
 
 /**
+* @brief 方块类型枚举。
+*/
+enum class LayerType
+{
+    BLOCK, WALL
+};
+
+/**
 * @brief 渲染距离
 */
 static unsigned int CHUNK_RENDER_START_DISTANCE = 4; 
