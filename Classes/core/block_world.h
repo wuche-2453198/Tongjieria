@@ -114,6 +114,18 @@ public:
     bool tryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor);
 
     /**
+    * @brief 尝试挖掘指定位置的方块
+    * 
+    * @param 
+    */
+    bool tryMine(const Vec2i& blockPos, entt::entity interactor);
+
+    /**
+    * @brief 尝试挖掘指定世界位置的方块
+    */
+    bool tryMineAtWorldPos(const cocos2d::Vec2& worldPos, entt::entity interactor);
+
+    /**
     * @brief 尝试破坏指定位置的方块。
     * 
     * @param pos 方块坐标

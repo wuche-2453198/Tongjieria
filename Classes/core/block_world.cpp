@@ -50,6 +50,28 @@ bool BlockWorld::tryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity in
     return tryInteract(BlockLayer::worldPosToBlockPos(pos), interactor);
 }
 
+bool BlockWorld::tryMine(const Vec2i& blockPos, entt::entity interactor)
+{
+    if (!_blockLayer.hasChunkExistAtBlockPos(blockPos))
+    {
+        return false;
+    }
+    entt::id_type id = _blockLayer.getBlockAtBlockPos(blockPos).id.value();
+    if (id == entt::hashed_string("air"))
+    {
+        return false;
+    }
+    BlockMinedEvent event(id, blockPos, 3, interactor);
+    _dispatcher.trigger(event);
+
+    return true;
+}
+
+bool BlockWorld::tryMineAtWorldPos(const cocos2d::Vec2& worldPos, entt::entity interactor)
+{
+    return tryMine(BlockLayer::worldPosToBlockPos(worldPos), interactor);
+}
+
 bool BlockWorld::tryDestroy(const Vec2i& pos, entt::entity destroyer)
 {
     // 检查方块是否存在
@@ -86,7 +108,7 @@ bool BlockWorld::TryPlace(const Vec2i& blockPos, entt::id_type block_id, state b
         return false;
     }
     // 检查方块是否可替换
-    if (config.getOriginValOr("base","replaceable",false))
+    if (!config.getOriginValOr("base","replaceable",false))
     {
         return false;
     }
