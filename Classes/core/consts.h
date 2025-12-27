@@ -15,6 +15,10 @@ enum class LayerType
     BLOCK, WALL
 };
 
+constexpr int BLOCK_Z_ORDER = 0;
+constexpr int WALL_Z_ORDER = -1;
+static int getZOrder(LayerType type) {return type == LayerType::BLOCK? BLOCK_Z_ORDER : WALL_Z_ORDER;}
+
 /**
 * @brief ‰÷»ææ‡¿Î
 */
