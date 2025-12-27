@@ -21,6 +21,12 @@ public:
   // 整合测试场景按钮回调
   void menuIntegrationTestCallback(cocos2d::Ref *pSender);
 
+  // 方块调试场景按钮回调
+  void menuBlockDebugCallback(cocos2d::Ref *pSender);
+
+  // 方块测试场景按钮回调
+  void menuWorldTestCallback(cocos2d::Ref *pSender);
+
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);
 };

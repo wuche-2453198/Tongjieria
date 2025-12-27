@@ -17,7 +17,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/stone.png",
     "value": 2,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+    "tileId": 2
   },
   {
     "id": 2003,
@@ -26,7 +28,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/cobblestone.png",
     "value": 2,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+    "tileId": 3
   },
   {
     "id": 2004,
@@ -35,7 +39,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/stone_bricks.png",
     "value": 3,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+    "tileId": 4
   },
   {
     "id": 2005,
@@ -44,7 +50,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/chiseled_stone.png",
     "value": 4,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+    "tileId": 5
   },
   {
     "id": 2006,
@@ -53,7 +61,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/chiseled_cobblestone.png",
     "value": 3,
-    "tags": [5, 501]
+    "tags": [5, 501],
+    "placeable": true,
+    "tileId": 6
   },
   {
     "id": 2007,
@@ -62,7 +72,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/wood.png",
     "value": 1,
-    "tags": [5, 502]
+    "tags": [5, 502],
+    "placeable": true,
+    "tileId": 7
   },
   {
     "id": 2008,
@@ -71,7 +83,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/varnished_wood.png",
     "value": 3,
-    "tags": [5, 502]
+    "tags": [5, 502],
+    "placeable": true,
+    "tileId": 8
   },
   {
     "id": 2009,
@@ -80,7 +94,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/sand.png",
     "value": 1,
-    "tags": [5, 503]
+    "tags": [5, 503],
+    "placeable": true,
+    "tileId": 9
   },
   {
     "id": 2010,
@@ -89,7 +105,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/sandstone.png",
     "value": 2,
-    "tags": [5, 503]
+    "tags": [5, 503],
+    "placeable": true,
+    "tileId": 10
   },
   {
     "id": 2011,
@@ -98,7 +116,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/clay.png",
     "value": 2,
-    "tags": [5, 504]
+    "tags": [5, 504],
+    "placeable": true,
+    "tileId": 11
   },
   {
     "id": 2012,
@@ -107,7 +127,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/clay_bricks.png",
     "value": 3,
-    "tags": [5, 504]
+    "tags": [5, 504],
+    "placeable": true,
+    "tileId": 12
   },
   {
     "id": 2013,
@@ -116,7 +138,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/glass.png",
     "value": 3,
-    "tags": [5, 505]
+    "tags": [5, 505],
+    "placeable": true,
+    "tileId": 13
   },
   {
     "id": 2014,
@@ -125,7 +149,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/mud.png",
     "value": 1,
-    "tags": [5, 506]
+    "tags": [5, 506],
+    "placeable": true,
+    "tileId": 14
   },
   {
     "id": 2015,
@@ -134,7 +160,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/blocks/snow.png",
     "value": 1,
-    "tags": [5, 507]
+    "tags": [5, 507],
+    "placeable": true,
+    "tileId": 15
   },
   {
     "id": 2016,
@@ -143,7 +171,9 @@
     "maxStack": 99,
     "icon": "items/Placeables/blocks/zythium_lamp.png",
     "value": 50,
-    "tags": [5, 508]
+    "tags": [5, 508],
+    "placeable": true,
+    "tileId": 16
   },
   {
     "id": 2101,
@@ -152,7 +182,9 @@
     "maxStack": 99,
     "icon": "items/Placeables/machines/workbench.png",
     "value": 10,
-    "tags": [5, 511]
+    "tags": [5, 511],
+    "placeable": true,
+    "tileId": 100
   },
   {
     "id": 2102,
@@ -161,7 +193,9 @@
     "maxStack": 99,
     "icon": "items/Placeables/machines/furnace.png",
     "value": 20,
-    "tags": [5, 512]
+    "tags": [5, 512],
+    "placeable": true,
+    "tileId": 101
   },
   {
     "id": 2103,
@@ -170,7 +204,9 @@
     "maxStack": 99,
     "icon": "items/Placeables/machines/Anvil.png",
     "value": 30,
-    "tags": [5, 512]
+    "tags": [5, 512],
+    "placeable": true,
+    "tileId": 102
   },
   {
     "id": 2111,
@@ -260,7 +296,9 @@
     "maxStack": 99,
     "icon": "items/Placeables/woodware/wooden_door.png",
     "value": 6,
-    "tags": [5, 514]
+    "tags": [5, 514],
+    "placeable": true,
+    "tileId": 200
   },
   {
     "id": 2121,
@@ -269,7 +307,9 @@
     "maxStack": 999,
     "icon": "items/Placeables/woodware/wood_platform.png",
     "value": 1,
-    "tags": [5, 514]
+    "tags": [5, 514],
+    "placeable": true,
+    "tileId": 201
   },
   {
     "id": 2122,
@@ -278,6 +318,8 @@
     "maxStack": 999,
     "icon": "items/Placeables/woodware/torch.png",
     "value": 1,
-    "tags": [5, 514]
+    "tags": [5, 514],
+    "placeable": true,
+    "tileId": 202
   }
 ]

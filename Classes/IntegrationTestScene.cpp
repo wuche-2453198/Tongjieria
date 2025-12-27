@@ -6,9 +6,18 @@
 #include "systems/player/PlayerFactory.h"
 #include "systems/player/PlayerSystems.h"
 #include "core/PlayerInput.h"
+#include "core/GameManager.h"
+#include "core/assets_manager.h"
+#include "core/world.h"
 #include "components/player/PlayerComponents.h"
+#include "components/block/block_component.h"
+#include "systems/block/block_system_manager.h"
 
 USING_NS_CC;
+
+IntegrationTestScene::IntegrationTestScene()
+    : _registry(GameManager::getInstance()->getRegistry()) {
+}
 
 Scene* IntegrationTestScene::createScene() {
     CCLOG("========================================");
@@ -65,6 +74,21 @@ bool IntegrationTestScene::init() {
     // Setup keyboard listener for ESC key
     setupKeyboardListener();
 
+    // Initialize BlockWorld (already initialized in GameManager)
+    auto& blockWorld = GameManager::getInstance()->getBlockWorld();
+    auto& dispatcher = GameManager::getInstance()->getDispatcher();
+    CCLOG("IntegrationTestScene: BlockWorld accessed successfully");
+
+    // Register WorldScene for DebugSystem
+    // Note: DebugSystem requires WorldScene in its constructor
+    // We pass nullptr since IntegrationTestScene is not a World scene
+    // AssetManager is already registered in GameManager
+    _registry.ctx().emplace<WorldScene>(nullptr);
+
+    // Create BlockSystemManager
+    _blockSystemManager = new BlockSystemManager(_registry, dispatcher);
+    CCLOG("IntegrationTestScene: BlockSystemManager created");
+
     // Delayed initialization (ensure scene is fully setup)
     this->scheduleOnce([this](float dt) {
         auto scene = this->getScene();
@@ -80,7 +104,7 @@ bool IntegrationTestScene::init() {
     // Start update
     this->scheduleUpdate();
 
-    CCLOG("IntegrationTestScene: Initialization complete");
+    CCLOG("IntegrationTestScene: Initialization complete (with BlockWorld)");
     return true;
 }
 
@@ -207,7 +231,18 @@ void IntegrationTestScene::createPlayer() {
     Vec2 spawnPos(visibleSize.width / 2, 300);
     _playerEntity = PlayerFactory::createPlayer(_registry, spawnPos, this);
 
-    CCLOG("IntegrationTestScene: Player created!");
+    // Register player entity in GameManager
+    GameManager::getInstance()->setPlayerEntity(_playerEntity);
+
+    // Add loading ticket to player for chunk loading
+    _registry.emplace<LoadingTicket>(
+        _playerEntity,
+        _playerEntity,  // entity_id parameter for LoadingTicket constructor
+        5,              // Load radius: 5 chunks
+        true            // Permanent ticket
+    );
+
+    CCLOG("IntegrationTestScene: Player created with LoadingTicket (radius: 5)");
 }
 
 void IntegrationTestScene::setupTestItems() {
@@ -317,6 +352,11 @@ void IntegrationTestScene::toggleInventory() {
 void IntegrationTestScene::update(float delta) {
     // Update all player systems
     PlayerSystemsManager::updateAllSystems(_registry, delta);
+
+    // Update block systems
+    if (_blockSystemManager) {
+        _blockSystemManager->update(delta);
+    }
 
     // Update input state (reset justPressed state for next frame)
     PlayerInput::getInstance().update(delta);

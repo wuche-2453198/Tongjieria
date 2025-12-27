@@ -56,11 +56,11 @@ std::vector<Vec2i> BlockPhysicsSystem::getAllAddIn()
     std::vector<Vec2i> toAdd;
     view.each([&](Position& worldPos, PhysicsTicket& ticket)
         {
-            // »ñÈ¡´ÖÅö×²ÌåµÄ·¶Î§
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Ä·ï¿½Î§
             Vec2i blockUpperLeft = getUpperLeft(worldPos, ticket);
             Vec2i blockLowerRight = getLowerRight(worldPos, ticket);
 
-            // ¶ÔÓÚ´ÖÅö×²ÌåÄÚËùÓÐµÄ·½¿é
+            // ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ·ï¿½ï¿½ï¿½
             for (int y = blockUpperLeft.y; y >= blockLowerRight.y; y--)
             {
                 for (int x = blockUpperLeft.x; x <= blockLowerRight.x; x++)
@@ -142,16 +142,16 @@ void BlockPhysicsSystem::updateDirtyBlock()
             {
                 const Vec2i blockPos = chunkPos * CHUNK_SIZE + dirtyBlock.localPos;
 
-                // todo ÏÖÔÚÃ¿Ò»´Î·½¿é±ä¶¯¶¼»áÉú³ÉÒ»¸öÐÎÌå£¬ÔÚÖ®ºóÓÖ»áÇå³ý£¬Ä¿Ç°»¹Ã»ÓÐÓ°ÏìÐÔÄÜ£¬µ«ÊÇÐèÒª¿¼ÂÇÓÅ»¯¡£
+                // todo ï¿½ï¿½ï¿½ï¿½Ã¿Ò»ï¿½Î·ï¿½ï¿½ï¿½ä¶¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½å£¬ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Ç°ï¿½ï¿½Ã»ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½
                 auto shape = createBoxAtBlockPos(blockPos);
 
-                // Èç¹ûÔ­ÓÐÐÎÌåÒÑ¾­´æÔÚ£¬ÔòÒÆ³ý
+                // ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
                 if (_physicsLayer.hasPhysicsShapeTag(blockPos))
                 {
                     _body->removeShape(Vec2i::vec2ihash(blockPos));
                     _physicsLayer.removePhysicsShapeTag(blockPos);
                 }
-                // Èç¹ûÐÂÐÎÌå´æÔÚ£¬ÔòÌí¼Ó
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (shape)
                 {
                     _body->addShape(shape);
@@ -161,7 +161,7 @@ void BlockPhysicsSystem::updateDirtyBlock()
                 dirtyBlock.collisionDirty = false;
             }
 
-            // Èç¹ûËùÓÐ·½¿é¶¼ÇåÀí¸É¾»ÁË£¬ÔòÒÆ³ýÔà¿é±ê¼Ç
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½ï¿½é¶¼ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (tag.isAllClean())
             {
                 _registry.remove<DirtyChunkTag>(chunkID);
@@ -203,7 +203,7 @@ Vec2i BlockPhysicsSystem::getLowerRight(const Position& worldPos, const PhysicsT
 
 cocos2d::PhysicsShapeBox* BlockPhysicsSystem::createBoxAtBlockPos(const Vec2i& blockPos)
 {
-    // Èç¹ûÃ»ÓÐÅö×²£¬Ö±½Ó·µ»Ø
+    // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½
     if (!hasCollision(blockPos))
     {
         return nullptr;

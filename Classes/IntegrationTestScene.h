@@ -15,21 +15,26 @@
  * - 物品使用（J键或鼠标左键）
  * - 玩家移动和跳跃
  * - 装备属性计算
+ * - 方块系统集成（挖掘、放置）
  */
 class IntegrationTestScene : public cocos2d::Layer {
 public:
+    IntegrationTestScene();
     static cocos2d::Scene* createScene();
     virtual bool init() override;
     CREATE_FUNC(IntegrationTestScene);
 
 private:
-    entt::registry _registry;
+    entt::registry& _registry;
     entt::entity _playerEntity;
 
     // UI references
     class InventoryLayer* _inventoryLayer = nullptr;
     class EquipmentPanel* _equipmentPanel = nullptr;
     bool _inventoryVisible = false;
+
+    // Block system manager
+    class BlockSystemManager* _blockSystemManager = nullptr;
 
     // Setup methods
     void createPhysicsEnvironment();
