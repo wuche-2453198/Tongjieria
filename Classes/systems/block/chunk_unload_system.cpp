@@ -10,19 +10,13 @@ void ChunkUnloadSystem::update(float delta)
 {
     auto view = _registry.view<Position, ChunkHead>();
     std::vector<entt::entity> unloadChunks;
-    view.each([&](entt::entity entity, Position& pos, ChunkHead& chunk)
+    view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
         {
             // 卸载所有低优先级的区块
-            if (chunk.getPriority() < ChunkHead::UNLOADING_PRIORITY)
+            if (head.getPriority() < ChunkHead::UNLOADING_PRIORITY)
             {
-                _registry.ctx().get<BlockLayer>().
-                    removeChunk(BlockLayer::worldPosToChunkPos(pos.getPostion()));
-                unloadChunks.push_back(entity);
+                _registry.ctx().get<BlockWorld>().getLayer(head.getLayerType()).
+                    destroyChunk(BlockLayer::worldPosToChunkPos(pos.getPostion()));
             }
         });
-    // 卸载区块实体
-    for (auto entity : unloadChunks)
-    {
-        _registry.destroy(entity);
-    }
 }
