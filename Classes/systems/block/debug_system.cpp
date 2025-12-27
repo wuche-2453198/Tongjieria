@@ -122,7 +122,7 @@ void DebugSystem::addAPhysicsSprites()
 {
     auto& world = _registry.ctx().get<WorldScene>();
     auto& assetManager = _registry.ctx().get<AssetManager>();
-    auto texture = assetManager.getTexture("blocks\\textures\\red_block.png");
+    auto texture = assetManager.getTexture("a_block.bmp");
 
     auto sprites = cocos2d::Sprite::createWithTexture(texture);
     sprites->addComponent(cocos2d::PhysicsBody::createBox({ BLOCK_SIZE,BLOCK_SIZE }));
