@@ -36,6 +36,15 @@ bool PlayerAnimationLoader::initialize(Node* parentNode) {
     s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING] =
         loadWeaponSwingAnimation(parentNode);
 
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::EAT] =
+        loadEatAnimation(parentNode);
+
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::DRINK] =
+        loadDrinkAnimation(parentNode);
+
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::MINE] =
+        loadMineAnimation(parentNode);
+
     CCLOG("PlayerAnimationLoader: All animations loaded successfully!");
     CCLOG("  - IDLE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::IDLE].getFrameCount());
     CCLOG("  - WALK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::WALK].getFrameCount());
@@ -44,6 +53,9 @@ bool PlayerAnimationLoader::initialize(Node* parentNode) {
     CCLOG("  - BREAK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::BREAK].getFrameCount());
     CCLOG("  - PLACE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::PLACE].getFrameCount());
     CCLOG("  - WEAPON_SWING: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING].getFrameCount());
+    CCLOG("  - EAT: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::EAT].getFrameCount());
+    CCLOG("  - DRINK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::DRINK].getFrameCount());
+    CCLOG("  - MINE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::MINE].getFrameCount());
 
     return true;
 }
@@ -67,6 +79,12 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadAnimation(
             return loadPlaceAnimation(parentNode);
         case ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING:
             return loadWeaponSwingAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::EAT:
+            return loadEatAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::DRINK:
+            return loadDrinkAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::MINE:
+            return loadMineAnimation(parentNode);
         default:
             CCLOG("PlayerAnimationLoader: Animation state %d not implemented, using IDLE",
                   static_cast<int>(state));
@@ -293,4 +311,112 @@ Sprite* PlayerAnimationLoader::createFrameSprite(const std::string& path, Node* 
     }
 
     return sprite;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadEatAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.07f;  // 70ms per frame
+    anim.loop = false;       // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading EAT animation...");
+
+    // Load eat animation frames from player/eat/ directory
+    // Try EatFood_example_frame_NNN.png format first (starts from 000)
+    int successCount = 0;
+    for (int i = 0; i < 20; i++) {  // Try up to 20 frames, starting from 000
+        std::string path = StringUtils::format("player/eat/EatFood_example_frame_%03d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            // Stop if frame doesn't exist
+            break;
+        }
+    }
+
+    // If no frames found, try alternative formats
+    if (successCount == 0) {
+        CCLOG("PlayerAnimationLoader: No EatFood frames found, trying alternative formats...");
+        for (int i = 1; i <= 20; i++) {
+            std::string path = StringUtils::format("player/eat/Style_1_male_%02d.png", i);
+            auto sprite = createFrameSprite(path, parentNode);
+            if (sprite) {
+                anim.frames.push_back(sprite);
+                successCount++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded EAT animation: %d frames", successCount);
+    return anim;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadDrinkAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.07f;  // 70ms per frame
+    anim.loop = false;       // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading DRINK animation...");
+
+    // Load drink animation frames from player/drink/ directory
+    // Try DrinkOld_example_frame_NNN.png format first (starts from 000)
+    int successCount = 0;
+    for (int i = 0; i < 20; i++) {  // Try up to 20 frames, starting from 000
+        std::string path = StringUtils::format("player/drink/DrinkOld_example_frame_%03d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            // Stop if frame doesn't exist
+            break;
+        }
+    }
+
+    // If no frames found, try alternative formats
+    if (successCount == 0) {
+        CCLOG("PlayerAnimationLoader: No DrinkOld frames found, trying alternative formats...");
+        for (int i = 1; i <= 20; i++) {
+            std::string path = StringUtils::format("player/drink/Style_1_male_%02d.png", i);
+            auto sprite = createFrameSprite(path, parentNode);
+            if (sprite) {
+                anim.frames.push_back(sprite);
+                successCount++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded DRINK animation: %d frames", successCount);
+    return anim;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadMineAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.07f;  // 70ms per frame
+    anim.loop = false;       // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading MINE animation...");
+
+    // Load mine animation frames from player/pickaxe/ directory
+    // Try NN.png format (00.png, 01.png, etc.)
+    int successCount = 0;
+    for (int i = 0; i < 20; i++) {  // Try up to 20 frames
+        std::string path = StringUtils::format("player/pickaxe/%02d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            // Stop if frame doesn't exist
+            break;
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded MINE animation: %d frames", successCount);
+    return anim;
 }

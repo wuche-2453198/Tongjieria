@@ -455,6 +455,45 @@ void InventoryLayer::attachMouseHandlers() {
     };
 
     _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+
+    // Add keyboard listener for Q key (drop item)
+    auto keyboardListener = EventListenerKeyboard::create();
+    keyboardListener->onKeyPressed = [this](EventKeyboard::KeyCode keyCode, Event* event) {
+        if (keyCode == EventKeyboard::KeyCode::KEY_Q) {
+            // Drop the hovered item (if any)
+            if (_hoverIndex >= 0 && _hoverIndex < _slotCount) {
+                auto* inventory = Inventory::getInstance();
+                InventorySlot droppedItem = inventory->dropItem(_hoverIndex);
+
+                if (droppedItem.itemId != 0) {
+                    auto* itemMgr = ItemManager::getInstance();
+                    auto itemData = itemMgr->getItemData(droppedItem.itemId);
+
+                    CCLOG("========================================");
+                    CCLOG("InventoryLayer: Q key pressed - DROPPED ITEM");
+                    if (itemData) {
+                        CCLOG("Item: %s (ID: %d)", itemData->name.c_str(), droppedItem.itemId);
+                    } else {
+                        CCLOG("Item ID: %d", droppedItem.itemId);
+                    }
+                    CCLOG("Count: %d", droppedItem.count);
+                    CCLOG("From slot: %d (hovered)", _hoverIndex);
+                    CCLOG("TODO: Spawn item entity in world");
+                    CCLOG("========================================");
+
+                    // Stop event propagation to prevent PlayerInput from handling this event
+                    event->stopPropagation();
+                } else {
+                    CCLOG("InventoryLayer: Q key pressed - Hovered slot %d is empty", _hoverIndex);
+                }
+            } else {
+                CCLOG("InventoryLayer: Q key pressed - No slot hovered");
+            }
+        }
+    };
+    // Use FixedPriority with higher priority (lower number = higher priority)
+    // This ensures InventoryLayer handles Q key before PlayerInput system
+    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
 }
 
 int InventoryLayer::hitTestSlot(const Vec2& worldPos) const {

@@ -174,7 +174,10 @@ struct PlayerAnimationComponent {
         SWIM,
         BREAK,          // 左键破坏方块动画（2帧）
         PLACE,          // 右键放置方块动画（2帧）
-        WEAPON_SWING    // 手持武器时的挥剑动作（16帧）
+        WEAPON_SWING,   // 手持武器时的挥剑动作（16帧）
+        EAT,            // 吃东西动画
+        DRINK,          // 喝药水动画
+        MINE            // 镐子挖掘动画
     };
 
     AnimState currentState = AnimState::IDLE;

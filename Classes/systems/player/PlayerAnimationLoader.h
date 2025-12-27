@@ -109,6 +109,21 @@ private:
     static AnimationFrames loadWeaponSwingAnimation(cocos2d::Node* parentNode);
 
     /**
+     * @brief Load eat animation (eating food)
+     */
+    static AnimationFrames loadEatAnimation(cocos2d::Node* parentNode);
+
+    /**
+     * @brief Load drink animation (drinking potion)
+     */
+    static AnimationFrames loadDrinkAnimation(cocos2d::Node* parentNode);
+
+    /**
+     * @brief Load mine animation (mining with pickaxe)
+     */
+    static AnimationFrames loadMineAnimation(cocos2d::Node* parentNode);
+
+    /**
      * @brief Create sprite frame (common method)
      */
     static cocos2d::Sprite* createFrameSprite(

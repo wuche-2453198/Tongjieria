@@ -92,34 +92,6 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
             PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
         }
 
-        // ==================== Handle Item Dropping ====================
-        // Q key to drop current hotbar item
-        if (input.isActionJustPressed("DropItem")) {
-            int currentInvIndex = hotbar.getCurrentInventoryIndex();
-            auto* inventory = Inventory::getInstance();
-
-            InventorySlot droppedItem = inventory->dropItem(currentInvIndex);
-
-            if (droppedItem.itemId != 0) {
-                auto* itemMgr = ItemManager::getInstance();
-                auto itemData = itemMgr->getItemData(droppedItem.itemId);
-
-                CCLOG("========================================");
-                CCLOG("PlayerInputSystem: Q key pressed - DROPPED ITEM");
-                if (itemData) {
-                    CCLOG("Item: %s (ID: %d)", itemData->name.c_str(), droppedItem.itemId);
-                } else {
-                    CCLOG("Item ID: %d", droppedItem.itemId);
-                }
-                CCLOG("Count: %d", droppedItem.count);
-                CCLOG("From slot: %d", currentInvIndex);
-                CCLOG("TODO: Spawn item entity in world");
-                CCLOG("========================================");
-            } else {
-                CCLOG("PlayerInputSystem: Q key pressed - No item to drop");
-            }
-        }
-
         // ==================== Handle Block Interaction ====================
         // Mouse left click - break/destroy blocks (debug mode)
         if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_LEFT)) {

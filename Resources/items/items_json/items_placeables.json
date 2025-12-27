@@ -164,6 +164,15 @@
     "tags": [5, 512]
   },
   {
+    "id": 2103,
+    "name": "Anvil",
+    "type": 5,
+    "maxStack": 99,
+    "icon": "items/Placeables/machines/Anvil.png",
+    "value": 30,
+    "tags": [5, 512]
+  },
+  {
     "id": 2111,
     "name": "Wooden Chest",
     "type": 5,

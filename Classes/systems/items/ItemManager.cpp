@@ -23,11 +23,21 @@ ItemType convertToItemType(int rawType) {
     }
 }
 
+ItemType convertToItemType(const std::string& str) {
+    if (str == "Equipment") return ItemType::Equipment;
+    if (str == "Materials") return ItemType::Materials;
+    if (str == "Consumables") return ItemType::Consumables;
+    if (str == "Placeables") return ItemType::Placeables;
+    return ItemType::Unknown;
+}
+
 EquipType convertToEquipType(const std::string& str) {
     if (str == "helmet") return EquipType::Helmet;
     if (str == "chestplate") return EquipType::Chestplate;
     if (str == "leggings") return EquipType::Leggings;
     if (str == "accessory") return EquipType::Accessory;
+    if (str == "pickaxe") return EquipType::Pickaxe;
+    if (str == "weapon") return EquipType::Weapon;
     return EquipType::None;
 }
 
@@ -82,7 +92,17 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
         if (id == 0) continue;
 
         std::string name = itemJson.HasMember("name") ? itemJson["name"].GetString() : "";
-        ItemType type = convertToItemType(itemJson.HasMember("type") ? itemJson["type"].GetInt() : 0);
+
+        // Parse type field (supports both int and string)
+        ItemType type = ItemType::Unknown;
+        if (itemJson.HasMember("type")) {
+            if (itemJson["type"].IsInt()) {
+                type = convertToItemType(itemJson["type"].GetInt());
+            } else if (itemJson["type"].IsString()) {
+                type = convertToItemType(itemJson["type"].GetString());
+            }
+        }
+
         int maxStack = itemJson.HasMember("maxStack") ? itemJson["maxStack"].GetInt() : 1;
         std::string iconPath = itemJson.HasMember("icon") ? itemJson["icon"].GetString() : "";
         int value = itemJson.HasMember("value") ? itemJson["value"].GetInt() : 0;
@@ -105,6 +125,17 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
             defense = itemJson["defense"].GetInt();
         }
 
+        // Read consumable-specific fields
+        int healAmount = 0;
+        if (itemJson.HasMember("healAmount") && itemJson["healAmount"].IsInt()) {
+            healAmount = itemJson["healAmount"].GetInt();
+        }
+
+        std::string useAnimation = "";
+        if (itemJson.HasMember("useAnimation") && itemJson["useAnimation"].IsString()) {
+            useAnimation = itemJson["useAnimation"].GetString();
+        }
+
         auto entity = _registry.create();
         _registry.emplace<ItemId>(entity, id);
         _registry.emplace<ItemName>(entity, name);
@@ -115,6 +146,8 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
         _registry.emplace<ItemTags>(entity, tags);
         _registry.emplace<EquipTypeComponent>(entity, equipType);
         _registry.emplace<DefenseComponent>(entity, defense);
+        _registry.emplace<HealAmountComponent>(entity, healAmount);
+        _registry.emplace<UseAnimationComponent>(entity, useAnimation);
 
         _idToEntity[id] = entity;
     }
@@ -179,6 +212,12 @@ ItemDefinition ItemManager::entityToDefinition(entt::entity entity) const {
     }
     if (auto* defenseComp = _registry.try_get<DefenseComponent>(entity)) {
         def.defense = defenseComp->defense;
+    }
+    if (auto* healComp = _registry.try_get<HealAmountComponent>(entity)) {
+        def.healAmount = healComp->healAmount;
+    }
+    if (auto* animComp = _registry.try_get<UseAnimationComponent>(entity)) {
+        def.useAnimation = animComp->animation;
     }
 
     return def;

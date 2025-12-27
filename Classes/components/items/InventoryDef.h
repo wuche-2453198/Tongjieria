@@ -32,7 +32,9 @@ enum class EquipType {
     Helmet,          // 头盔
     Chestplate,      // 胸甲
     Leggings,        // 护腿
-    Accessory        // 饰品
+    Accessory,       // 饰品
+    Pickaxe,         // 镐子
+    Weapon           // 武器
 };
 
 struct ItemId {
@@ -82,6 +84,17 @@ struct DefenseComponent {
     DefenseComponent(int def = 0) : defense(def) {}
 };
 
+// Consumable item components
+struct HealAmountComponent {
+    int healAmount;
+    HealAmountComponent(int heal = 0) : healAmount(heal) {}
+};
+
+struct UseAnimationComponent {
+    std::string animation;
+    UseAnimationComponent(const std::string& anim = "") : animation(anim) {}
+};
+
 struct ItemDefinition {
     int id = 0;
     std::string name;
@@ -92,6 +105,10 @@ struct ItemDefinition {
     std::vector<int> tags;
     EquipType equipType = EquipType::None;  // Equipment type (None if not equipment)
     int defense = 0;                         // Defense value for armor
+
+    // Consumable item properties
+    int healAmount = 0;                      // Health restored when consumed
+    std::string useAnimation = "";           // Animation to play: "eat" or "drink"
 };
 
 

@@ -2,6 +2,7 @@
 #include "components/player/PlayerComponents.h"
 #include "systems/items/ItemManager.h"
 #include "systems/items/Inventory.h"
+#include "systems/player/PlayerSystems.h"
 
 USING_NS_CC;
 
@@ -21,14 +22,20 @@ bool ItemUseSystem::useItem(entt::registry& registry, entt::entity playerEntity,
     // Determine item type and call appropriate handler
     switch (itemData->type) {
         case ItemType::Equipment:
-            // Equipment items - could be weapons or tools
-            // Check tags to determine if it's a weapon
-            for (int tag : itemData->tags) {
-                if (tag >= 201 && tag <= 203) {  // 201=Sword, 202=Axe, 203=Pick
-                    if (tag == 201) {
-                        return useWeapon(registry, playerEntity, itemId);
-                    } else {
-                        return useTool(registry, playerEntity, itemId);
+            // Equipment items - check equipType to determine if it's weapon or tool
+            if (itemData->equipType == EquipType::Weapon) {
+                return useWeapon(registry, playerEntity, itemId);
+            } else if (itemData->equipType == EquipType::Pickaxe) {
+                return useTool(registry, playerEntity, itemId);
+            } else {
+                // Check tags for backward compatibility
+                for (int tag : itemData->tags) {
+                    if (tag >= 201 && tag <= 203) {  // 201=Sword, 202=Axe, 203=Pick
+                        if (tag == 201) {
+                            return useWeapon(registry, playerEntity, itemId);
+                        } else {
+                            return useTool(registry, playerEntity, itemId);
+                        }
                     }
                 }
             }
@@ -97,27 +104,29 @@ bool ItemUseSystem::useConsumable(entt::registry& registry, entt::entity playerE
     }
 
     auto& stats = registry.get<ecs::PlayerStatsComponent>(playerEntity);
+    auto& animation = registry.get<ecs::PlayerAnimationComponent>(playerEntity);
 
-    // TODO: Get heal values from item data when available
-    // For now, use placeholder values based on item name
-    int healHP = 0;
-    int healMP = 0;
+    // Get heal amount from item data
+    int healHP = itemData->healAmount;
 
-    if (itemData->name.find("Potion") != std::string::npos) {
-        healHP = 50;  // Placeholder
-    }
-
-    // Apply healing
+    // Apply healing if healAmount > 0
     if (healHP > 0) {
         stats.currentHealth = std::min(stats.currentHealth + static_cast<float>(healHP), stats.maxHealth);
         CCLOG("ItemUseSystem::useConsumable: Used %s, healed %d HP (now %.0f/%.0f)",
               itemData->name.c_str(), healHP, stats.currentHealth, stats.maxHealth);
     }
 
-    if (healMP > 0) {
-        stats.currentMana = std::min(stats.currentMana + static_cast<float>(healMP), stats.maxMana);
-        CCLOG("ItemUseSystem::useConsumable: Restored %d MP (now %.0f/%.0f)",
-              healMP, stats.currentMana, stats.maxMana);
+    // Play appropriate animation based on useAnimation field
+    if (!itemData->useAnimation.empty()) {
+        if (itemData->useAnimation == "eat") {
+            animation.isPlayingOneShot = true;  // Mark as one-shot animation
+            PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::EAT);
+            CCLOG("ItemUseSystem::useConsumable: Playing EAT animation");
+        } else if (itemData->useAnimation == "drink") {
+            animation.isPlayingOneShot = true;  // Mark as one-shot animation
+            PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::DRINK);
+            CCLOG("ItemUseSystem::useConsumable: Playing DRINK animation");
+        }
     }
 
     // Consume the item from inventory
@@ -125,7 +134,6 @@ bool ItemUseSystem::useConsumable(entt::registry& registry, entt::entity playerE
     inventory->removeItem(itemId, 1);
 
     // TODO: Play use sound
-    // TODO: Play use animation
 
     return true;
 }
@@ -140,9 +148,19 @@ bool ItemUseSystem::useTool(entt::registry& registry, entt::entity playerEntity,
         return false;
     }
 
+    auto& animation = registry.get<ecs::PlayerAnimationComponent>(playerEntity);
+
     CCLOG("ItemUseSystem::useTool: Using tool %s", itemData->name.c_str());
 
-    // TODO: Implement tool usage
+    // Check if it's a pickaxe
+    if (itemData->equipType == EquipType::Pickaxe) {
+        // Play mine animation
+        animation.isPlayingOneShot = true;  // Mark as one-shot animation
+        PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::MINE);
+        CCLOG("ItemUseSystem::useTool: Playing MINE animation");
+    }
+
+    // TODO: Implement full tool usage
     // - Axe: chop trees
     // - Pickaxe: mine blocks
     // - Check for target block in range

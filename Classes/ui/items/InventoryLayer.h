@@ -25,6 +25,9 @@ public:
     // Set equipment panel for cross-UI drag support
     void setEquipmentPanel(EquipmentPanel* panel);
 
+    // Get current hovered slot index (returns -1 if no slot is hovered)
+    int getHoveredSlotIndex() const { return _hoverIndex; }
+
 protected:
 
     enum class SlotKind { Normal, Coin, Ammo, Trash, Weapon };

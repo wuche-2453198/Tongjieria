@@ -48,6 +48,7 @@ bool IntegrationTestScene::init() {
     auto* itemMgr = ItemManager::getInstance();
     itemMgr->loadItems("items/items_json/items_equipment.json", false);
     itemMgr->loadItems("items/items_json/items_placeables.json", true);
+    itemMgr->loadItems("items/items_json/items_consumables.json", true);
 
     // Create physics environment
     createPhysicsEnvironment();
@@ -221,6 +222,12 @@ void IntegrationTestScene::setupTestItems() {
     inventory->addItem(1201, 1);
     CCLOG("IntegrationTestScene: Added Wooden Sword (1201)");
 
+    // Add pickaxes
+    inventory->addItem(1203, 1); // Wooden Pick
+    inventory->addItem(1213, 1); // Stone Pick
+    inventory->addItem(1223, 1); // Copper Pick
+    CCLOG("IntegrationTestScene: Added pickaxes");
+
     // Add armor pieces
     inventory->addItem(1101, 1); // Copper Helmet
     inventory->addItem(1102, 1); // Copper Chestplate
@@ -230,6 +237,21 @@ void IntegrationTestScene::setupTestItems() {
     // Add Dirt blocks (ID 2001)
     inventory->addItem(2001, 99);
     CCLOG("IntegrationTestScene: Added Dirt blocks (2001)");
+
+    // Add consumables - Food items (heals 20-50 HP, uses "eat" animation)
+    inventory->addItem(4001, 10);  // Apple x10
+    inventory->addItem(4002, 8);   // Apricot x8
+    inventory->addItem(4003, 5);   // Bacon x5
+    inventory->addItem(4004, 6);   // Coconut x6
+    inventory->addItem(4005, 4);   // Cooked Fish x4
+    CCLOG("IntegrationTestScene: Added 5 types of food items");
+
+    // Add consumables - Potions (heals 50-200 HP, uses "drink" animation)
+    inventory->addItem(4011, 15);  // Lesser Healing Potion x15
+    inventory->addItem(4012, 10);  // Healing Potion x10
+    inventory->addItem(4013, 5);   // Greater Healing Potion x5
+    inventory->addItem(4014, 3);   // Super Healing Potion x3
+    CCLOG("IntegrationTestScene: Added 4 types of potions");
 
     // Link weapon slots (40-49) to hotbar
     auto& hotbar = _registry.get<ecs::PlayerHotbarComponent>(_playerEntity);

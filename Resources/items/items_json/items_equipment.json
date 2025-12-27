@@ -466,7 +466,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/wooden_pick.png",
     "value": 5,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1211,
@@ -493,7 +494,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/stone_pick.png",
     "value": 10,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1214,
@@ -529,7 +531,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/copper_pick.png",
     "value": 15,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1231,
@@ -556,7 +559,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/iron_pick.png",
     "value": 25,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1241,
@@ -583,7 +587,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/silver_pick.png",
     "value": 40,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1251,
@@ -610,7 +615,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/gold_pick.png",
     "value": 60,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1261,
@@ -637,7 +643,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/aluminum_pick.png",
     "value": 35,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1271,
@@ -664,7 +671,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/lead_pick.png",
     "value": 20,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1281,
@@ -691,7 +699,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/zinc_pick.png",
     "value": 45,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1291,
@@ -718,7 +727,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/obdurite_pick.png",
     "value": 90,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1301,
@@ -745,7 +755,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/rhymestone_pick.png",
     "value": 120,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1311,
@@ -772,7 +783,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/magnetite_pick.png",
     "value": 110,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1321,
@@ -799,7 +811,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/irradium_pick.png",
     "value": 150,
-    "tags": [2, 203]
+    "tags": [2, 203],
+    "equipType": "pickaxe"
   },
   {
     "id": 1331,

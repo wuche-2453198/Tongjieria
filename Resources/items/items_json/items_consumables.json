@@ -1,11 +1,222 @@
 [
   {
     "id": 4001,
-    "name": "Varnish",
-    "type": 4,
+    "name": "Apple",
+    "type": "Consumables",
     "maxStack": 99,
-    "icon": "items/Consumables/potions/varnish.png",
+    "icon": "items/Consumables/food/Apple.png",
+    "value": 5,
+    "tags": [],
+    "healAmount": 20,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4002,
+    "name": "Apricot",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Apricot.png",
+    "value": 10,
+    "tags": [],
+    "healAmount": 25,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4003,
+    "name": "Bacon",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Bacon.png",
+    "value": 15,
+    "tags": [],
+    "healAmount": 30,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4004,
+    "name": "Coconut",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Coconut.png",
+    "value": 10,
+    "tags": [],
+    "healAmount": 25,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4005,
+    "name": "Cooked Fish",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/CookedFish.png",
     "value": 20,
-    "tags": [4, 401]
+    "tags": [],
+    "healAmount": 40,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4006,
+    "name": "Bread",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Apple.png",
+    "value": 8,
+    "tags": [],
+    "healAmount": 22,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4007,
+    "name": "Cheese",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Apricot.png",
+    "value": 12,
+    "tags": [],
+    "healAmount": 28,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4008,
+    "name": "Grilled Meat",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Bacon.png",
+    "value": 25,
+    "tags": [],
+    "healAmount": 45,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4009,
+    "name": "Fruit Salad",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/Coconut.png",
+    "value": 18,
+    "tags": [],
+    "healAmount": 35,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4010,
+    "name": "Roasted Turkey",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/food/CookedFish.png",
+    "value": 30,
+    "tags": [],
+    "healAmount": 50,
+    "useAnimation": "eat"
+  },
+  {
+    "id": 4011,
+    "name": "Lesser Healing Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/LesserHealingPotion.png",
+    "value": 20,
+    "tags": [],
+    "healAmount": 50,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4012,
+    "name": "Healing Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 40,
+    "tags": [],
+    "healAmount": 100,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4013,
+    "name": "Greater Healing Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 60,
+    "tags": [],
+    "healAmount": 150,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4014,
+    "name": "Super Healing Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 100,
+    "tags": [],
+    "healAmount": 200,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4015,
+    "name": "Restoration Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/LesserHealingPotion.png",
+    "value": 50,
+    "tags": [],
+    "healAmount": 120,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4016,
+    "name": "Regeneration Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 80,
+    "tags": [],
+    "healAmount": 80,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4017,
+    "name": "Life Elixir",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/LesserHealingPotion.png",
+    "value": 120,
+    "tags": [],
+    "healAmount": 180,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4018,
+    "name": "Vitality Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 70,
+    "tags": [],
+    "healAmount": 130,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4019,
+    "name": "Divine Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/LesserHealingPotion.png",
+    "value": 150,
+    "tags": [],
+    "healAmount": 250,
+    "useAnimation": "drink"
+  },
+  {
+    "id": 4020,
+    "name": "Miracle Potion",
+    "type": "Consumables",
+    "maxStack": 99,
+    "icon": "items/Consumables/potions/HealingPotion.png",
+    "value": 200,
+    "tags": [],
+    "healAmount": 300,
+    "useAnimation": "drink"
   }
 ]
