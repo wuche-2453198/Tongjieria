@@ -7,47 +7,60 @@
 #include "utils/tools.h"
 #include "cocos2d.h"
 #include "block_physics_system.h"
+#include "debug_system.h"
+
+#define PHYSICS_TICKET_DEBUG 0
+#define PHYSICS_LOG  0
 
 BlockPhysicsSystem::BlockPhysicsSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher),
-    _assetManager(registry.ctx().get<AssetManager>()),
-    _blockLayer(registry.ctx().get<BlockLayer>()),
-    _physicsLayer(registry.ctx().get<BlockPhysicsLayer>())
+    _assetManager(_registry.ctx().get<AssetManager>()),
+    _blockLayer(_registry.ctx().get<BlockWorld>().getLayer(LayerType::BLOCK)),
+    _physicsLayer(_registry.ctx().get<BlockPhysicsLayer>())
 {
+#if PHYSICS_LOG
+    CCLOG("[BlockPhyicsSystem] construct begin");
+#endif // PHYSICS_LOG
+
     _physicsNode = cocos2d::Node::create();
     _physicsNode->setPosition(cocos2d::Vec2(0.5f, 0.5f) * BLOCK_SIZE);
     _registry.ctx().get<WorldScene>()->addChild(_physicsNode);
     _body = cocos2d::PhysicsBody::create();
     _body->setDynamic(false);
     _physicsNode->addComponent(_body);
+
+#if PHYSICS_LOG 
+    CCLOG("[BlockPhyicsSystem] construct end");
+#endif // 
 }
 BlockPhysicsSystem::~BlockPhysicsSystem() = default;
 
 void BlockPhysicsSystem::update(float delta)
 {
-    // 1. 确认什么在域内
-    // 2. 确认什么要去除
-
-    // 3. 更新脏方块
-
     std::vector<Vec2i> toAdd = getAllAddIn();
     addAll(toAdd);
     std::vector<Vec2i> toRemove = getAllRemoveOut();
     removeAll(toRemove);
-
     updateDirtyBlock();
 }
 
 std::vector<Vec2i> BlockPhysicsSystem::getAllAddIn()
 {
+#if PHYSICS_TICKET_DEBUG
+    auto drawNode = DebugSystem::getDrawNode(_registry, "phy ticket");
+    drawNode->clear();
+#endif // PHYSICS_TICKET_DEBUG
+    
+
     auto view = _registry.view<Position, PhysicsTicket>();
     std::vector<Vec2i> toAdd;
     view.each([&](Position& worldPos, PhysicsTicket& ticket)
         {
-            // debug
+            // 获取粗碰撞体的范围
             Vec2i blockUpperLeft = getUpperLeft(worldPos, ticket);
             Vec2i blockLowerRight = getLowerRight(worldPos, ticket);
 
+            // 对于粗碰撞体内所有的方块
             for (int y = blockUpperLeft.y; y >= blockLowerRight.y; y--)
             {
                 for (int x = blockUpperLeft.x; x <= blockLowerRight.x; x++)
@@ -60,7 +73,12 @@ std::vector<Vec2i> BlockPhysicsSystem::getAllAddIn()
                     }
                 }
             }
+            
+#if PHYSICS_TICKET_DEBUG
+            drawNode->drawRect(blockUpperLeft * BLOCK_SIZE, blockLowerRight * BLOCK_SIZE, cocos2d::Color4F::YELLOW);
+#endif // PHYSICS_TICKET_DEBUG
         });
+
     return toAdd;
 }
 
@@ -187,12 +205,16 @@ cocos2d::PhysicsShapeBox* BlockPhysicsSystem::createBoxAtBlockPos(const Vec2i& b
     {
         return nullptr;
     }
+
+    auto blockState = _blockLayer.getBlockAtBlockPos(blockPos);
+
     auto box = cocos2d::PhysicsShapeBox::create(
         { BLOCK_SIZE, BLOCK_SIZE },
         { 0.1, 1, 1 },
         { blockPos * BLOCK_SIZE });
-
+#if PHYSICS_LOG
     CCLOG("create box at %d %d", blockPos.x, blockPos.y);
+#endif
     box->setTag(Vec2i::vec2ihash(blockPos));
     return box;
 }
