@@ -4,7 +4,7 @@
   "description": "白内障恶魔眼",
   
   "display": {
-    "spriteFolder": "Minor monster/CataractEye",
+    "spriteFolder": "Picture/Minor_monster/CataractEye",
     "spritePrefix": "Cataract_Eye",
     "frameCount": 2,
     "frameTime": 0.15,

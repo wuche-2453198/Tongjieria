@@ -4,7 +4,7 @@
   "description": "秃头僵尸 - 普通秃头僵尸",
   
   "display": {
-    "spriteFolder": "Minor monster/BaldZombie",
+    "spriteFolder": "Picture/Minor_monster/BaldZombie",
     "spritePrefix": "Bald_Zombie",
     "frameCount": 3,
     "frameSequence": [1, 2, 3, 2],

@@ -4,7 +4,7 @@
   "description": "大型恶魔眼",
   
   "display": {
-    "spriteFolder": "Minor monster/Bigger-DemonEye",
+    "spriteFolder": "Picture/Minor_monster/Bigger-DemonEye",
     "spritePrefix": "Bigger-DemonEye",
     "frameCount": 2,
     "frameTime": 0.18,

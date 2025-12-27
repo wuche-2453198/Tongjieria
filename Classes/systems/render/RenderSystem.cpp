@@ -1,6 +1,8 @@
 #include "RenderSystem.h"
 #include "SpriteManager.h"
+#include "AnimationCacheManager.h"
 #include "components/AllComponents.h"
+#include "components/render/SharedAnimationComponent.h"
 
 namespace ecs {
 
@@ -9,6 +11,8 @@ namespace ecs {
 void RenderSystem::update(float delta) {
     // 1. 创建新Sprite
     createSprites();
+
+    recreatePhysicsBodiesIfNeeded();
     
     // 2. 同步Transform到Sprite位置
     syncTransformToSprite();
@@ -23,8 +27,22 @@ void RenderSystem::update(float delta) {
 void RenderSystem::createSprites() {
     // 查找有RenderComponent和ParentNodeComponent，但没有SpriteStateComponent的实体
     auto view = _registry->view<RenderComponent, ParentNodeComponent>(entt::exclude<SpriteStateComponent>);
+
+#if defined(COCOS2D_DEBUG) && (COCOS2D_DEBUG > 0)
+    int entityCount = 0;
+    view.each([&entityCount](auto entity, RenderComponent& render, ParentNodeComponent& parent) {
+        entityCount++;
+    });
+    
+    if (entityCount > 0) {
+        CCLOG("RenderSystem::createSprites: Found %d entities needing sprites", entityCount);
+    }
+#endif
     
     view.each([this](auto entity, RenderComponent& render, ParentNodeComponent& parent) {
+        CCLOG("RenderSystem: Processing entity %u, resourceId='%s', parentNode=%p",
+              entt::to_integral(entity), render.spriteResourceId.c_str(), parent.parentNode);
+        
         if (!parent.parentNode) {
             CCLOG("RenderSystem: Entity %u has no parent node, skipping sprite creation",
                   entt::to_integral(entity));
@@ -49,6 +67,7 @@ void RenderSystem::createSprites() {
         auto& state = _registry->emplace<SpriteStateComponent>(entity);
         state.spriteCreated = true;
         state.spriteHandle = sprite;
+        state.lastResourceId = render.spriteResourceId;
         
         parent.attachedToParent = true;
         
@@ -98,6 +117,9 @@ void RenderSystem::createSprites() {
                 body->setGroup(physicsComp->group);
                 
                 sprite->setPhysicsBody(body);
+
+                body->setVelocity(cocos2d::Vec2::ZERO);
+                body->setAngularVelocity(0.0f);
                 
                 // 检查是否有初始速度组件，并应用速度
                 auto* initialVel = _registry->try_get<InitialVelocityComponent>(entity);
@@ -122,14 +144,73 @@ void RenderSystem::createSprites() {
     });
 }
 
+void RenderSystem::recreatePhysicsBodiesIfNeeded() {
+    auto view = _registry->view<PhysicsBodyComponent, SpriteStateComponent>();
+
+    view.each([this](auto entity, PhysicsBodyComponent& physicsComp, SpriteStateComponent& state) {
+        if (!physicsComp.needsCreation) {
+            return;
+        }
+        if (!state.spriteCreated || !state.spriteHandle) {
+            return;
+        }
+
+        auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
+
+        cocos2d::Vec2 prevVelocity = cocos2d::Vec2::ZERO;
+        float prevAngularVelocity = 0.0f;
+        bool prevEnabled = true;
+        if (auto* oldBody = sprite->getPhysicsBody()) {
+            prevVelocity = oldBody->getVelocity();
+            prevAngularVelocity = oldBody->getAngularVelocity();
+            prevEnabled = oldBody->isEnabled();
+        }
+
+        cocos2d::PhysicsMaterial material(physicsComp.density,
+                                          physicsComp.restitution,
+                                          physicsComp.friction);
+
+        cocos2d::PhysicsBody* body = nullptr;
+        if (physicsComp.shape == PhysicsBodyComponent::BodyShape::Circle) {
+            body = cocos2d::PhysicsBody::createCircle(physicsComp.radius, material, physicsComp.offset);
+        } else {
+            body = cocos2d::PhysicsBody::createBox(cocos2d::Size(physicsComp.width, physicsComp.height), material, physicsComp.offset);
+        }
+
+        if (!body) {
+            return;
+        }
+
+        body->setDynamic(physicsComp.dynamic);
+        body->setMass(physicsComp.density);
+        body->setRotationEnable(physicsComp.rotationEnabled);
+        body->setGravityEnable(physicsComp.gravityEnabled);
+        body->setVelocityLimit(physicsComp.velocityLimit);
+        body->setLinearDamping(physicsComp.linearDamping);
+        body->setAngularDamping(physicsComp.angularDamping);
+        body->setCategoryBitmask(physicsComp.categoryBitmask);
+        body->setContactTestBitmask(physicsComp.contactTestBitmask);
+        body->setCollisionBitmask(physicsComp.collisionBitmask);
+        body->setGroup(physicsComp.group);
+
+        sprite->setPhysicsBody(body);
+
+        body->setEnabled(prevEnabled);
+        body->setVelocity(prevVelocity);
+        body->setAngularVelocity(prevAngularVelocity);
+
+        physicsComp.needsCreation = false;
+    });
+}
+
 void RenderSystem::syncTransformToSprite() {
-    auto view = _registry->view<TransformComponent, SpriteStateComponent>();
+    auto view = _registry->view<TransformComponent, SpriteStateComponent>(entt::exclude<PhysicsBodyComponent>);
     
     view.each([this](auto entity, TransformComponent& transform, SpriteStateComponent& state) {
         if (!state.spriteCreated || !state.spriteHandle) return;
         
         auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
-        
+
         // 如果有物理体，从物理体读取位置（物理引擎驱动）
         auto* body = sprite->getPhysicsBody();
         if (body) {
@@ -146,6 +227,26 @@ void RenderSystem::syncRenderProperties() {
     
     view.each([](auto entity, RenderComponent& render, SpriteStateComponent& state) {
         if (!state.spriteCreated || !state.spriteHandle) return;
+
+        if (!render.spriteResourceId.empty() && state.lastResourceId != render.spriteResourceId) {
+            auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
+
+            auto* tempSprite = SpriteManager::getInstance().createSprite(render.spriteResourceId);
+            if (tempSprite) {
+                auto* frame = tempSprite->getSpriteFrame();
+                if (frame) {
+                    sprite->setSpriteFrame(frame);
+                } else if (tempSprite->getTexture()) {
+                    sprite->setTexture(tempSprite->getTexture());
+                    sprite->setTextureRect(tempSprite->getTextureRect(), tempSprite->isTextureRectRotated(), tempSprite->getContentSize());
+                }
+
+                sprite->setAnchorPoint(tempSprite->getAnchorPoint());
+
+                SpriteManager::getInstance().releaseSprite(tempSprite);
+                state.lastResourceId = render.spriteResourceId;
+            }
+        }
         
         // 如果禁用同步，跳过（允许Cocos2d Action控制）
         if (!render.enableSync) return;
@@ -175,8 +276,11 @@ void AnimationSystem::update(float delta) {
     // 1. 更新状态驱动的动画切换
     updateStateDrivenAnimation();
     
-    // 2. 更新帧动画播放
+    // 2. 更新帧动画播放（AnimationComponent）
     updateFrameAnimation(delta);
+    
+    // 3. 更新共享动画播放（SharedAnimationComponent）
+    updateSharedAnimation(delta);
 }
 
 void AnimationSystem::updateStateDrivenAnimation() {
@@ -221,8 +325,16 @@ void AnimationSystem::applyAnimationStateData(AnimationComponent& anim, const An
 void AnimationSystem::updateFrameAnimation(float delta) {
     auto view = _registry->view<AnimationComponent, SpriteStateComponent>();
     
-    view.each([delta](auto entity, AnimationComponent& anim, SpriteStateComponent& state) {
+    view.each([this, delta](auto entity, AnimationComponent& anim, SpriteStateComponent& state) {
         if (!anim.isPlaying || anim.frameSequence.empty() || !state.spriteHandle) {
+            return;
+        }
+        
+        // 检查实体是否在屏幕内（离屏动画暂停优化）
+        // Requirements: 6.4
+        auto* stateFlags = _registry->try_get<EntityStateFlags>(entity);
+        if (stateFlags && !stateFlags->isOnScreen) {
+            // 离屏实体跳过帧计时器更新，节省 CPU
             return;
         }
         
@@ -262,6 +374,68 @@ void AnimationSystem::updateFrameAnimation(float delta) {
     });
 }
 
+void AnimationSystem::updateSharedAnimation(float delta) {
+    auto view = _registry->view<SharedAnimationComponent, SpriteStateComponent>();
+    
+    view.each([this, delta](auto entity, SharedAnimationComponent& sharedAnim, SpriteStateComponent& state) {
+        if (!sharedAnim.isPlaying || sharedAnim.animationId.empty() || !state.spriteHandle) {
+            return;
+        }
+        
+        // 检查实体是否在屏幕内（离屏动画暂停优化）
+        // Requirements: 6.4
+        auto* stateFlags = _registry->try_get<EntityStateFlags>(entity);
+        if (stateFlags && !stateFlags->isOnScreen) {
+            // 离屏实体跳过帧计时器更新，节省 CPU
+            return;
+        }
+        
+        // 从缓存获取动画
+        auto* animation = AnimationCacheManager::getInstance().getAnimation(sharedAnim.animationId);
+        if (!animation) {
+            return;
+        }
+        
+        auto& frames = animation->getFrames();
+        if (frames.empty()) {
+            return;
+        }
+        
+        auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
+        float frameTime = animation->getDelayPerUnit();
+        
+        // 更新计时器（考虑播放速度）
+        sharedAnim.frameTimer += delta * sharedAnim.playbackSpeed;
+        
+        if (sharedAnim.frameTimer >= frameTime) {
+            sharedAnim.frameTimer -= frameTime;
+            
+            // 切换到下一帧
+            sharedAnim.currentFrameIndex++;
+            
+            // 检查是否到达末尾
+            if (sharedAnim.currentFrameIndex >= (int)frames.size()) {
+                if (sharedAnim.loop) {
+                    sharedAnim.currentFrameIndex = 0;
+                } else {
+                    sharedAnim.currentFrameIndex = (int)frames.size() - 1;
+                    sharedAnim.isPlaying = false;
+                    return;
+                }
+            }
+            
+            // 设置精灵帧
+            auto* animFrame = frames.at(sharedAnim.currentFrameIndex);
+            if (animFrame) {
+                auto* spriteFrame = animFrame->getSpriteFrame();
+                if (spriteFrame) {
+                    sprite->setSpriteFrame(spriteFrame);
+                }
+            }
+        }
+    });
+}
+
 // ==================== SpriteDestructionObserver 实现 ====================
 
 void SpriteDestructionObserver::registerToRegistry(entt::registry& registry) {
@@ -276,6 +450,7 @@ void SpriteDestructionObserver::onSpriteStateDestroy(entt::registry& registry, e
     auto* state = registry.try_get<SpriteStateComponent>(entity);
     if (state && state->spriteHandle) {
         auto* sprite = static_cast<cocos2d::Sprite*>(state->spriteHandle);
+        NodeEntityMap::getInstance().unregisterNode(sprite);
         SpriteManager::getInstance().releaseSprite(sprite);
         
         CCLOG("SpriteDestructionObserver: Released sprite for entity %u",

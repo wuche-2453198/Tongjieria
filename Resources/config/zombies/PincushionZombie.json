@@ -4,7 +4,7 @@
   "description": "针垫僵尸 - 浑身插满尖刺的僵尸，攻击力和防御力较高",
   
   "display": {
-    "spriteFolder": "Minor monster/PincushionZombie",
+    "spriteFolder": "Picture/Minor_monster/PincushionZombie",
     "spritePrefix": "PincushionZombie",
     "frameCount": 3,
     "frameSequence": [1, 2, 3, 2],

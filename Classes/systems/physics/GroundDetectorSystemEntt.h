@@ -36,12 +36,14 @@ public:
                 return;
 
             cocos2d::Vec2 velocity = body->getVelocity();
-            // 只检查Y轴速度判断是否在地面（允许在地面上水平移动）
-            ground.isOnGround = std::abs(velocity.y) < ground.stillThreshold;
+            ground.isOnGround = (ground.groundContactCount > 0);
+
+            ground.isStill = std::abs(velocity.x) < ground.stillThreshold &&
+                             std::abs(velocity.y) < ground.stillThreshold;
             
             // 动态切换阻尼：地面高阻尼防止滑行，空中低阻尼保持跳跃灵活性
             if (body) {
-                if (ground.isOnGround) {
+                if (ground.isOnGround && std::abs(velocity.y) <= ground.stillThreshold) {
                     body->setLinearDamping(GROUND_DAMPING);
                 } else {
                     body->setLinearDamping(AIR_DAMPING);

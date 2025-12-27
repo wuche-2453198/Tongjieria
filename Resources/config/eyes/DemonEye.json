@@ -4,7 +4,7 @@
   "description": "飞行追踪类怪物，缓慢转向追踪玩家",
   
   "display": {
-    "spriteFolder": "Minor monster/DemonEye",
+    "spriteFolder": "Picture/Minor_monster/DemonEye",
     "spritePrefix": "DemonEye",
     "frameCount": 2,
     "frameTime": 0.15,

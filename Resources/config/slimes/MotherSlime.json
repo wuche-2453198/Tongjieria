@@ -4,7 +4,7 @@
   "description": "史莱姆母体，死亡时会生成1-3只史莱姆宝宝",
 
   "display": {
-    "spriteFolder": "Minor monster/MotherSlime",
+    "spriteFolder": "Picture/Minor_monster/MotherSlime",
     "spritePrefix": "Mother_Slime",
     "frameCount": 2,
     "frameTime": 0.2,

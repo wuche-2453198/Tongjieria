@@ -1,7 +1,7 @@
 #ifndef __ECS_SYSTEM_WARRIORAISYSTEMENTT_H__
 #define __ECS_SYSTEM_WARRIORAISYSTEMENTT_H__
 
-#include "systems/core/ISystemEntt.h"
+#include "systems/npc/OptimizedAISystemBase.h"
 #include "systems/core/SystemPriority.h"
 #include "components/AllComponents.h"
 #include "cocos2d.h"
@@ -17,13 +17,23 @@ namespace ecs {
  * - 跳过洞和障碍物
  * - 尝试垂直对齐目标高度
  * - 追击失败时后退重试
+ * 
+ * 优化特性（继承自 OptimizedAISystemBase）：
+ * - 离屏实体降频更新
+ * - 空闲实体降频更新
+ * - 远距离实体使用简化 AI
+ * 
+ * Requirements: 5.1, 5.5, 5.6
  */
-class WarriorAISystemEntt : public ISystemEntt {
+class WarriorAISystemEntt : public OptimizedAISystemBase {
 public:
     const char* getName() const override { return "WarriorAISystem"; }
     int getPriority() const override { return SystemPriority::MOVEMENT; }
 
     void update(float delta) override {
+        // 增加帧计数器
+        incrementFrameCounter();
+        
         auto view = _registry->view<WarriorMovementComponent, GroundDetectorComponent,
                                      AggroComponent, SpriteStateComponent, RenderComponent, TransformComponent>();
         
@@ -31,6 +41,13 @@ public:
                                GroundDetectorComponent& ground, AggroComponent& aggro,
                                SpriteStateComponent& state, RenderComponent& render, TransformComponent& transform) {
             if (!state.spriteCreated || !state.spriteHandle) return;
+            
+            // 优化：检查是否应该更新此实体
+            auto* stateFlags = _registry->try_get<EntityStateFlags>(entity);
+            if (!shouldUpdateEntity(entity, stateFlags)) {
+                return; // 跳过此帧的更新
+            }
+            
             auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
             
             // 检测落地并判断跳跃是否成功
@@ -200,14 +217,15 @@ public:
                 body->setVelocity(currentVelocity);
                 warrior.isWalking = true;
             } else {
-                // 空中控制：允许在空中调整水平速度
-                if (!ground.isOnGround && warrior.isJumping) {
-                    cocos2d::Vec2 airVelocity = body->getVelocity();
-                    float targetVelX = warrior.walkSpeed * warrior.currentDirection;
-                    
-                    // 如果空中水平速度不足，强制设置为目标速度
-                    if (std::abs(airVelocity.x) < std::abs(targetVelX) * 0.5f) {
-                        airVelocity.x = targetVelX;
+                cocos2d::Vec2 airVelocity = body->getVelocity();
+
+                if (!warrior.isJumping && airVelocity.y <= 0.0f) {
+                    airVelocity.x = 0.0f;
+                    body->setVelocity(airVelocity);
+                } else if (warrior.isJumping) {
+                    float targetVelXAir = warrior.walkSpeed * warrior.currentDirection;
+                    if (airVelocity.y > 0.0f && std::abs(airVelocity.x) < std::abs(targetVelXAir) * 0.5f) {
+                        airVelocity.x = targetVelXAir;
                         body->setVelocity(airVelocity);
                     }
                 }
@@ -248,6 +266,7 @@ private:
         warrior.obstacleJumpTimer = warrior.obstacleJumpCooldown;
         warrior.stuckTime = 0.0f;
         ground.isOnGround = false;
+        ground.groundContactCount = 0;
         warrior.isJumping = true;
     }
 };

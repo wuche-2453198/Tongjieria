@@ -3,14 +3,23 @@
 
 #include "systems/core/ISystemEntt.h"
 #include "systems/core/SystemPriority.h"
+#include "systems/core/EntityDestructionManager.h"
+#include "systems/core/EntityPoolManager.h"
 #include "components/AllComponents.h"
 #include "cocos2d.h"
+#include <vector>
 
 namespace ecs {
 
 /**
  * @brief 投射物碰撞系统 - 处理投射物与障碍物、目标的碰撞
  * 需要通过PhysicsContactHandler在场景中注册使用
+ * 
+ * 使用延迟销毁机制：
+ * - 池化实体使用 EntityPoolManager.releaseProjectile() 归还到池中
+ * - 非池化实体使用 EntityDestructionManager.queueDestruction() 延迟销毁
+ * 
+ * Requirements: 3.4, 1.1
  */
 class ProjectileCollisionSystemEntt : public ISystemEntt {
 public:
@@ -18,8 +27,31 @@ public:
     int getPriority() const override { return SystemPriority::COLLISION; }
     
     void update(float delta) override {
-        // 碰撞处理通过handleProjectileCollision方法在物理接触监听器中调用
-        // 此update方法为空，因为碰撞处理是事件驱动的
+        // 延迟销毁在碰撞回调中标记的投射物
+        // 避免在物理回调期间销毁实体导致其他系统访问无效实体
+        // 
+        // Requirements: 3.4, 1.1
+        // - 池化实体使用 EntityPoolManager.releaseProjectile()
+        // - 非池化实体使用 EntityDestructionManager.queueDestruction()
+        for (auto entity : _entitiesToDestroy) {
+            if (_registry && _registry->valid(entity)) {
+                auto& poolManager = EntityPoolManager::getInstance();
+                
+                // 检查是否是池化实体
+                if (poolManager.isPooledEntity(*_registry, entity)) {
+                    // 池化实体：归还到池中复用
+                    poolManager.releaseProjectile(*_registry, entity);
+                    CCLOG(">>> PROJECTILE RELEASED: Entity %u returned to pool", 
+                          entt::to_integral(entity));
+                } else {
+                    // 非池化实体：使用延迟销毁队列
+                    EntityDestructionManager::getInstance().queueDestruction(*_registry, entity);
+                    CCLOG(">>> PROJECTILE QUEUED FOR DESTRUCTION: Entity %u", 
+                          entt::to_integral(entity));
+                }
+            }
+        }
+        _entitiesToDestroy.clear();
     }
 
     /**
@@ -53,6 +85,23 @@ public:
             destroyProjectile(projEntity);
             return true;
         }
+
+        if (otherEntity != ecs::INVALID_ENTITY) {
+            auto otherEnt = static_cast<entt::entity>(otherEntity);
+            if (_registry->valid(otherEnt)) {
+                auto* player = _registry->try_get<ecs::PlayerTag>(otherEnt);
+                auto* health = _registry->try_get<ecs::HealthComponent>(otherEnt);
+                if (player && health) {
+                    if (health->invincibleTimer <= 0.0f) {
+                        health->takeDamage(proj->damage);
+                        health->invincibleTimer = health->invincibleTime;
+                    }
+                    proj->hasHit = true;
+                    destroyProjectile(projEntity);
+                    return true;
+                }
+            }
+        }
         
         // 碰到KingSlime应用伤害
         if (otherEntity != ecs::INVALID_ENTITY) {
@@ -79,14 +128,17 @@ public:
     }
     
     /**
-     * @brief 销毁投射物
+     * @brief 销毁投射物 - 延迟销毁，避免在物理回调期间销毁实体
      */
     void destroyProjectile(entt::entity projEntity) {
         if (!_registry || !_registry->valid(projEntity)) return;
         
-        // 新架构：直接销毁实体，SpriteDestructionObserver会自动清理sprite
-        _registry->destroy(projEntity);
+        // 标记为待销毁，在update()中统一处理
+        _entitiesToDestroy.push_back(projEntity);
     }
+
+private:
+    std::vector<entt::entity> _entitiesToDestroy;
 };
 
 } // namespace ecs

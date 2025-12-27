@@ -4,7 +4,7 @@
   "description": "中型猩红喀迈拉 - 飞行敌怪，绕圈后周期性冲向玩家",
   
   "display": {
-    "spriteFolder": "Minor monster/Crimera",
+    "spriteFolder": "Picture/Minor_monster/Crimera",
     "spritePrefix": "Crimera",
     "frameCount": 2,
     "frameTime": 0.1,

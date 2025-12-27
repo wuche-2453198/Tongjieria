@@ -1,6 +1,6 @@
 #include "EaterCrimeraTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "systems/physics/PhysicsContactHandler.h"
 
 USING_NS_CC;
@@ -89,10 +89,8 @@ bool EaterCrimeraTestScene::init()
 
 void EaterCrimeraTestScene::setupEcsSystems()
 {
-  auto &factory = MonsterFactory::getInstance();
-  factory.clearConfigs();  // 清空之前场景的配置
-  // 加载噬魂怪和猩红喀迈拉配置
-  factory.loadConfigsFromDir("config/eaters");
+  auto &factory = MonsterMasterFactory::getInstance();
+  (void)factory; // 专用工厂已加载噬魂怪/猩红喀迈拉配置
 
   CCLOG("========== Setting up EnTT Systems for Eaters & Crimeras ==========");
 
@@ -100,12 +98,14 @@ void EaterCrimeraTestScene::setupEcsSystems()
 
   // 按优先级顺序添加Systems
   _systemManager.addSystem<ecs::AggroSystemEntt>();  // 必须：追踪玩家
+  _systemManager.addSystem<ecs::GroundDetectorSystemEntt>();
   _systemManager.addSystem<ecs::EaterOfSoulsAISystemEntt>();
+  _systemManager.addSystem<ecs::WarriorAISystemEntt>();
   
   // 新架构：使用RenderSystem和AnimationSystem
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>();
-  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();  // 同步物理位置
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();  // 统一物理同步系统
   
   // 基础系统
   _systemManager.addSystem<ecs::HealthSystemEntt>();
@@ -243,6 +243,11 @@ void EaterCrimeraTestScene::createFakePlayerEntity()
   transform.position.x = _fakePlayer->getPositionX();
   transform.position.y = _fakePlayer->getPositionY();
 
+  auto &health = _registry.emplace<ecs::HealthComponent>(playerEntity);
+  health.maxHealth = 1000.0f;
+  health.currentHealth = 1000.0f;
+  health.invincibleTime = 0.3f;
+
   _registry.emplace<ecs::PlayerTag>(playerEntity);
 
   _fakePlayerEntity = entt::to_integral(playerEntity);
@@ -257,9 +262,9 @@ void EaterCrimeraTestScene::createEatersAndCrimeras()
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  CCLOG("EaterCrimeraTestScene: Creating Eaters and Crimeras via MonsterFactory...");
+  CCLOG("EaterCrimeraTestScene: Creating Eaters and Crimeras via MonsterMasterFactory...");
 
-  auto &factory = MonsterFactory::getInstance();
+  auto &factory = MonsterMasterFactory::getInstance();
   
   // 怪物类型ID列表（3个噬魂怪 + 3个猩红喀迈拉）
   const char* monsterTypes[] = {
@@ -268,20 +273,29 @@ void EaterCrimeraTestScene::createEatersAndCrimeras()
     "EaterOfSouls_Large",
     "Crimera_Small",
     "Crimera_Medium",
-    "Crimera_Large"
+    "Crimera_Large",
+    "Face_Monster"
   };
-  const int monsterCount = 6;
+  const int monsterCount = 7;
 
   for (int i = 0; i < monsterCount; i++)
   {
-    // 分布位置（左侧3个噬魂怪，右侧3个猩红喀迈拉）
-    float xOffset = (i < 3) ? 0.0f : visibleSize.width / 2;
-    float yBase = origin.y + visibleSize.height / 2;
-    
-    float x = origin.x + 100.0f + xOffset + (rand() % 200);
-    float y = yBase + ((i % 3) - 1) * 150.0f + (rand() % 100 - 50);
+    float x = 0.0f;
+    float y = 0.0f;
 
-    // 使用MonsterFactory创建怪物
+    if (i == 6) {
+      x = origin.x + visibleSize.width * 0.75f;
+      y = origin.y + 160.0f;
+    } else {
+      // 分布位置（左侧3个噬魂怪，右侧3个猩红喀迈拉）
+      float xOffset = (i < 3) ? 0.0f : visibleSize.width / 2;
+      float yBase = origin.y + visibleSize.height / 2;
+
+      x = origin.x + 100.0f + xOffset + (rand() % 200);
+      y = yBase + ((i % 3) - 1) * 150.0f + (rand() % 100 - 50);
+    }
+
+    // 使用MasterFactory创建怪物
     ecs::EntityId entityId = factory.createMonster(_registry, monsterTypes[i], x, y, this);
     
     if (entityId != ecs::INVALID_ENTITY) {

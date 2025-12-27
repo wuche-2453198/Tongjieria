@@ -4,7 +4,7 @@
   "description": "丛林尖刺史莱姆，发射丛林尖刺造成中毒减益",
   
   "display": {
-    "spriteFolder": "Minor monster/Spiked_JungleSlime",
+    "spriteFolder": "Picture/Minor_monster/Spiked_JungleSlime",
     "spritePrefix": "Spiked_Jungle_Slime",
     "frameCount": 2,
     "frameTime": 0.2,
@@ -47,7 +47,7 @@
   
   "projectile": {
     "enabled": true,
-    "spritePath": "Projectile/Jungle_Spike.png",
+    "spritePath": "picture/Projectile/Jungle_Spike.png",
     "spriteWidth": 10.0,
     "spriteHeight": 20.0,
     "count": 4,

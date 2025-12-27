@@ -4,7 +4,7 @@
   "description": "瞳孔放大的恶魔眼",
   
   "display": {
-    "spriteFolder": "Minor monster/DilatedEye",
+    "spriteFolder": "Picture/Minor_monster/DilatedEye",
     "spritePrefix": "DilatedEye",
     "frameCount": 2,
     "frameTime": 0.15,

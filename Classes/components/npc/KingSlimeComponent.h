@@ -66,8 +66,15 @@ struct KingSlimeComponent
    * @brief 根据当前血量百分比连续更新缩放（线性插值）
    */
   void updateStage(float healthPercent) {
-    currentScale = 0.4f + 0.6f * healthPercent;
-    currentScale = std::max(0.4f, std::min(1.0f, currentScale));
+    healthPercent = std::max(0.0f, std::min(1.0f, healthPercent));
+
+    float maxScale = baseScale;
+    float minScaleValue = minScale;
+    if (minScaleValue > maxScale) {
+      std::swap(minScaleValue, maxScale);
+    }
+
+    currentScale = minScaleValue + (maxScale - minScaleValue) * healthPercent;
   }
   
   /**

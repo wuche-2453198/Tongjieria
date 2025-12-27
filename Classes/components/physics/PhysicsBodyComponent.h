@@ -44,6 +44,9 @@ struct PhysicsBodyComponent {
     int collisionBitmask = 0xFFFFFFFF;
     int group = 0;
     
+    // 池化支持：标记是否需要重新创建物理体
+    bool needsCreation = false;
+    
     PhysicsBodyComponent() = default;
 };
 

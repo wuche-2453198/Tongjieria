@@ -17,8 +17,14 @@ namespace ecs {
  * - 缓存精灵资源描述符
  * - 提供统一的精灵访问接口
  * - 管理精灵帧缓存
+ * - 支持批处理渲染（减少Draw Calls）
  * 
  * 设计模式：单例
+ * 
+ * 批处理模式：
+ * - 调用 enableBatchMode() 启用批处理
+ * - 使用相同纹理的Sprite会被添加到SpriteBatchNode
+ * - 可大幅减少Draw Calls（从N个降到1个）
  */
 class SpriteManager {
 public:
@@ -26,6 +32,49 @@ public:
         static SpriteManager instance;
         return instance;
     }
+    
+    // ==================== 批处理模式 ====================
+    
+    /**
+     * @brief 启用批处理模式
+     * @param atlasPath 纹理图集plist路径（如 "atlas/slimes_atlas.plist"）
+     * @param texturePath 纹理图片路径（如 "atlas/slimes_atlas.png"）
+     * @param parent 父节点（批处理节点将添加到此节点）
+     * @param zOrder 层级
+     * @return 是否成功
+     */
+    bool enableBatchMode(const std::string& atlasPath,
+                         const std::string& texturePath,
+                         cocos2d::Node* parent,
+                         int zOrder = 1);
+    
+    /**
+     * @brief 禁用批处理模式
+     */
+    void disableBatchMode();
+    
+    /**
+     * @brief 检查是否启用了批处理模式
+     */
+    bool isBatchModeEnabled() const { return _batchModeEnabled; }
+    
+    /**
+     * @brief 启用/禁用多边形精灵（AutoPolygon）
+     * 多边形精灵通过减少像素填充来提高性能
+     * 适用于有大量透明区域的精灵
+     */
+    void setUsePolygonSprites(bool use) { _usePolygonSprites = use; }
+    bool isUsingPolygonSprites() const { return _usePolygonSprites; }
+    
+    /**
+     * @brief 注册资源到图集的帧名称映射
+     * @param resourceId 资源ID（如 "GreenSlime_sprite"）
+     * @param frameNames 图集中的帧名称列表（如 ["GreenSlime_Green_Slime1", "GreenSlime_Green_Slime2"]）
+     */
+    void registerAtlasFrames(const std::string& resourceId, 
+                             const std::vector<std::string>& frameNames);
+    
+    // ==================== 原有接口 ====================
     
     /**
      * @brief 注册精灵资源描述符
@@ -103,6 +152,15 @@ private:
     
     // 精灵引用计数（用于管理释放）
     std::unordered_map<cocos2d::Sprite*, int> _spriteRefCount;
+    
+    // ==================== 批处理模式相关 ====================
+    bool _batchModeEnabled = false;
+    cocos2d::Node* _batchParent = nullptr;
+    int _batchZOrder = 1;
+    bool _usePolygonSprites = false;  // 是否使用多边形精灵（AutoPolygon）
+    
+    // 资源ID到图集帧名称的映射
+    std::unordered_map<std::string, std::vector<std::string>> _atlasFrameMapping;
 };
 
 /**

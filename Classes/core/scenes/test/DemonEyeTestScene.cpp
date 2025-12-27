@@ -1,6 +1,6 @@
 #include "DemonEyeTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "systems/physics/PhysicsContactHandler.h"
 
 USING_NS_CC;
@@ -89,10 +89,8 @@ bool DemonEyeTestScene::init()
 
 void DemonEyeTestScene::setupEcsSystems()
 {
-  auto &factory = MonsterFactory::getInstance();
-  factory.clearConfigs();  // 清空之前场景的配置
-  // 加载恶魔眼配置
-  factory.loadConfigsFromDir("config/eyes");
+  auto &factory = MonsterMasterFactory::getInstance();
+  (void)factory; // 专用工厂已加载恶魔眼配置
 
   CCLOG("========== Setting up EnTT Systems for DemonEyes ==========");
 
@@ -105,7 +103,7 @@ void DemonEyeTestScene::setupEcsSystems()
   // 新架构：使用RenderSystem和AnimationSystem
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>();
-  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();  // 同步物理位置
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();  // 统一物理同步系统
   
   // 基础系统
   _systemManager.addSystem<ecs::HealthSystemEntt>();
@@ -243,6 +241,11 @@ void DemonEyeTestScene::createFakePlayerEntity()
   transform.position.x = _fakePlayer->getPositionX();
   transform.position.y = _fakePlayer->getPositionY();
 
+  auto &health = _registry.emplace<ecs::HealthComponent>(playerEntity);
+  health.maxHealth = 1000.0f;
+  health.currentHealth = 1000.0f;
+  health.invincibleTime = 0.3f;
+
   _registry.emplace<ecs::PlayerTag>(playerEntity);
 
   _fakePlayerEntity = entt::to_integral(playerEntity);
@@ -257,9 +260,9 @@ void DemonEyeTestScene::createDemonEyes()
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  CCLOG("DemonEyeTestScene: Creating Demon Eyes via MonsterFactory...");
+  CCLOG("DemonEyeTestScene: Creating Demon Eyes via MonsterMasterFactory...");
 
-  auto &factory = MonsterFactory::getInstance();
+  auto &factory = MonsterMasterFactory::getInstance();
   
   // 恶魔眼类型ID列表
   const char* eyeTypes[] = {
@@ -277,7 +280,7 @@ void DemonEyeTestScene::createDemonEyes()
     float x = origin.x + 100.0f + (rand() % (int)(visibleSize.width - 200.0f));
     float y = origin.y + visibleSize.height / 2 + (rand() % (int)(visibleSize.height / 3));
 
-    // 使用MonsterFactory创建DemonEye
+    // 使用MasterFactory创建DemonEye
     ecs::EntityId entityId = factory.createMonster(_registry, eyeTypes[i], x, y, this);
     
     if (entityId != ecs::INVALID_ENTITY) {

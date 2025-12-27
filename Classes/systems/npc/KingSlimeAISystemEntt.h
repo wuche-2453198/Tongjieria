@@ -1,10 +1,10 @@
 #ifndef __ECS_SYSTEM_KINGSLIMEAISYSTEMENTT_H__
 #define __ECS_SYSTEM_KINGSLIMEAISYSTEMENTT_H__
 
-#include "systems/core/ISystemEntt.h"
+#include "systems/npc/OptimizedAISystemBase.h"
 #include "systems/core/SystemPriority.h"
 #include "components/AllComponents.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "systems/core/AnimationStateHelper.h"
 #include "cocos2d.h"
 #include <cmath>
@@ -25,8 +25,17 @@ namespace ecs {
  * - 15秒传送机制（仅在地面时）
  * - 随血量掉落生成小史莱姆
  * - 体型随血量缩放
+ * 
+ * 优化特性（继承自 OptimizedAISystemBase）：
+ * - 离屏实体降频更新
+ * - 空闲实体降频更新
+ * - 远距离实体使用简化 AI
+ * 
+ * 注意：Boss 通常不应该被优化跳过，因为它们是重要的游戏元素
+ * 
+ * Requirements: 5.1, 5.5, 5.6
  */
-class KingSlimeAISystemEntt : public ISystemEntt {
+class KingSlimeAISystemEntt : public OptimizedAISystemBase {
 public:
     const char* getName() const override { return "KingSlimeAISystem"; }
     int getPriority() const override { return SystemPriority::AI; }
@@ -39,6 +48,9 @@ private:
     cocos2d::Node* _sceneContext = nullptr;
 
     void update(float delta) override {
+        // 增加帧计数器
+        incrementFrameCounter();
+        
         auto view = _registry->view<KingSlimeComponent, JumpMovementComponent, 
                                    HealthComponent, AggroComponent, 
                                    SpriteStateComponent, RenderComponent, TransformComponent, 
@@ -50,6 +62,9 @@ private:
                                RenderComponent& render, TransformComponent& transform, GroundDetectorComponent& ground) {
             
             if (!kingSlime.isActive || health.currentHealth <= 0) return;
+            
+            // 注意：Boss 不应用优化跳过，因为它们是重要的游戏元素
+            // 但我们仍然可以使用状态标记进行其他优化
             
             // 获取动画状态组件（如果存在）
             auto* animState = _registry->try_get<AnimationStateComponent>(entity);
@@ -67,7 +82,7 @@ private:
             jump.jumpCooldown = 1.5f * cooldownMultiplier;
             
             // 传送系统更新
-            updateTeleportSystem(kingSlime, transform, aggro, ground, animState, delta);
+            updateTeleportSystem(entity, kingSlime, transform, aggro, ground, state, render, animState, delta);
             
             // 史莱姆生成系统
             updateSlimeSpawning(kingSlime, healthPercent, transform, state);
@@ -82,8 +97,9 @@ private:
         render.scale = kingSlime.currentScale;
     }
     
-    void updateTeleportSystem(KingSlimeComponent& kingSlime, TransformComponent& transform, 
+    void updateTeleportSystem(entt::entity entity, KingSlimeComponent& kingSlime, TransformComponent& transform, 
                              AggroComponent& aggro, GroundDetectorComponent& ground, 
+                             SpriteStateComponent& state, RenderComponent& render,
                              AnimationStateComponent* animState, float delta) {
         kingSlime.teleportTimer += delta;
         
@@ -97,31 +113,30 @@ private:
         }
         
         if (kingSlime.teleportTimer >= kingSlime.teleportInterval) {
-            if (aggro.targetEntity != ecs::INVALID_ENTITY && ground.isOnGround) {
+            if (aggro.targetEntity != ecs::INVALID_ENTITY && ground.isOnGround && !kingSlime.isTeleporting) {
                 CCLOG("KingSlime: Teleport ready! Executing immediate teleport");
                 
-                auto view = _registry->view<ecs::SpriteStateComponent, ecs::RenderComponent>();
-                for (auto entity : view) {
-                    if (_registry->try_get<ecs::KingSlimeComponent>(entity)) {
-                        auto& state = _registry->get<ecs::SpriteStateComponent>(entity);
-                        auto& render = _registry->get<ecs::RenderComponent>(entity);
-                        performTeleport(kingSlime, transform, aggro, state, render, animState);
-                        break;
-                    }
-                }
+                performTeleport(entity, kingSlime, transform, aggro, state, render, animState);
                 
                 kingSlime.teleportTimer = 0.0f;
             } else {
-                CCLOG("KingSlime: Teleport ready but waiting for conditions (HasTarget: %d, OnGround: %d)", 
-                      aggro.targetEntity != ecs::INVALID_ENTITY ? 1 : 0, ground.isOnGround ? 1 : 0);
+                CCLOG("KingSlime: Teleport ready but waiting for conditions (HasTarget: %d, OnGround: %d, IsTeleporting: %d)", 
+                      aggro.targetEntity != ecs::INVALID_ENTITY ? 1 : 0, ground.isOnGround ? 1 : 0, kingSlime.isTeleporting ? 1 : 0);
             }
         }
     }
     
-    void performTeleport(KingSlimeComponent& kingSlime, TransformComponent& transform, 
+    void performTeleport(entt::entity entity, KingSlimeComponent& kingSlime, TransformComponent& transform, 
                         AggroComponent& aggro, SpriteStateComponent& state, RenderComponent& render,
                         AnimationStateComponent* animState) {
         auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
+        
+        // Validate entity before accessing it
+        if (!_registry->valid(targetEntity)) {
+            CCLOG("KingSlime: Target entity is invalid, cannot perform teleport");
+            return;
+        }
+        
         auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
         
         if (targetTransform && state.spriteCreated && state.spriteHandle) {
@@ -162,46 +177,76 @@ private:
             auto fadeOutAction = cocos2d::FadeOut::create(0.5f);
             auto disappearAction = cocos2d::Spawn::create(shrinkAction, fadeOutAction, nullptr);
             
-            auto teleportAction = cocos2d::CallFunc::create([teleportPos, &transform, sprite, &render, currentScale]() {
-                transform.position = teleportPos;
-                sprite->setPosition(teleportPos);
-                
-                if (sprite->getPhysicsBody()) {
-                    sprite->getPhysicsBody()->setVelocity(cocos2d::Vec2::ZERO);
+            // Teleport action - directly modify sprite without lambda
+            auto teleportAction = cocos2d::CallFunc::create([teleportPos, sprite]() {
+                if (sprite) {
+                    sprite->setPosition(teleportPos);
+                    if (sprite->getPhysicsBody()) {
+                        sprite->getPhysicsBody()->setVelocity(cocos2d::Vec2::ZERO);
+                    }
+                    sprite->setScale(0.1f);
+                    sprite->setOpacity(0);
+                    CCLOG("KingSlime: Teleported to (%.1f, %.1f)", teleportPos.x, teleportPos.y);
                 }
-                
-                sprite->setScale(0.1f);
-                sprite->setOpacity(0);
-                
-                CCLOG("KingSlime: Teleported to (%.1f, %.1f) near player (physics synced)", 
-                      teleportPos.x, teleportPos.y);
+            });
+
+            auto* registryPtr = _registry;
+            auto switchToTeleportInState = cocos2d::CallFunc::create([registryPtr, entity]() {
+                if (!registryPtr) return;
+                if (!registryPtr->valid(entity)) return;
+
+                auto* kingSlimePtr = registryPtr->try_get<KingSlimeComponent>(entity);
+                if (kingSlimePtr) {
+                    kingSlimePtr->aiState = KingSlimeComponent::TELEPORTING_IN;
+                }
+
+                if (auto* animStatePtr = registryPtr->try_get<AnimationStateComponent>(entity)) {
+                    AnimationStateHelper::updateAnimationState(*animStatePtr,
+                        AnimationStateHelper::kingSlimeStateToAnimationState(
+                            kingSlimePtr ? kingSlimePtr->aiState : KingSlimeComponent::TELEPORTING_IN),
+                        true);
+                }
             });
             
             auto scaleAction = cocos2d::ScaleTo::create(0.5f, currentScale);
             auto fadeInAction = cocos2d::FadeIn::create(0.5f);
             auto appearAction = cocos2d::Spawn::create(scaleAction, fadeInAction, nullptr);
             
-            auto resetAction = cocos2d::CallFunc::create([&render, &kingSlime, currentScale, animState]() {
-                render.opacity = 255;
-                render.scale = currentScale;
-                kingSlime.isTeleporting = false;
-                
-                // 重新启用RenderComponent同步
-                render.enableSync = true;
-                
-                // 设置传送入动画状态，然后回到待机
-                kingSlime.aiState = KingSlimeComponent::IDLE;
-                if (animState) {
-                    AnimationStateHelper::updateAnimationState(*animState,
-                        AnimationStateHelper::kingSlimeStateToAnimationState(kingSlime.aiState), true);
+            auto finishAction = cocos2d::CallFunc::create([registryPtr, entity, sprite, currentScale]() {
+                if (sprite) {
+                    sprite->setScale(currentScale);
+                    sprite->setOpacity(255);
+                    CCLOG("KingSlime: Teleport animation complete");
+                }
+
+                if (!registryPtr) return;
+                if (!registryPtr->valid(entity)) return;
+
+                if (auto* renderPtr = registryPtr->try_get<RenderComponent>(entity)) {
+                    renderPtr->enableSync = true;
+                    renderPtr->scale = currentScale;
+                    renderPtr->opacity = 255;
+                }
+
+                auto* kingSlimePtr = registryPtr->try_get<KingSlimeComponent>(entity);
+                if (kingSlimePtr) {
+                    kingSlimePtr->isTeleporting = false;
+                    kingSlimePtr->aiState = KingSlimeComponent::IDLE;
+                }
+
+                if (auto* animStatePtr = registryPtr->try_get<AnimationStateComponent>(entity)) {
+                    AnimationStateHelper::updateAnimationState(*animStatePtr,
+                        AnimationStateHelper::kingSlimeStateToAnimationState(KingSlimeComponent::IDLE),
+                        true);
                 }
             });
             
             auto teleportSequence = cocos2d::Sequence::create(
                 disappearAction,
                 teleportAction,
+                switchToTeleportInState,
                 appearAction,
-                resetAction,
+                finishAction,
                 nullptr
             );
             
@@ -251,21 +296,14 @@ private:
             spawnPos = bossPosition;
         }
         
-        auto& factory = MonsterFactory::getInstance();
+        auto& factory = MonsterMasterFactory::getInstance();
         
-        std::string configPath = "config/slimes/" + slimeType + ".json";
-        factory.loadSingleConfig(configPath);
-        
-        if (factory.getConfig(slimeType)) {
-            auto slimeEntityId = factory.createMonster(*_registry, slimeType, spawnPos.x, spawnPos.y, _sceneContext);
-            if (slimeEntityId != ecs::INVALID_ENTITY) {
-                CCLOG("KingSlime: Spawned %s at (%.1f, %.1f)", slimeType.c_str(), 
-                      spawnPos.x, spawnPos.y);
-            } else {
-                CCLOG("ERROR: Failed to create %s minion!", slimeType.c_str());
-            }
+        auto slimeEntityId = factory.createMonster(*_registry, slimeType, spawnPos.x, spawnPos.y, _sceneContext);
+        if (slimeEntityId != ecs::INVALID_ENTITY) {
+            CCLOG("KingSlime: Spawned %s at (%.1f, %.1f)", slimeType.c_str(), 
+                  spawnPos.x, spawnPos.y);
         } else {
-            CCLOG("ERROR: Failed to load %s config!", slimeType.c_str());
+            CCLOG("ERROR: Failed to create %s minion!", slimeType.c_str());
         }
     }
     

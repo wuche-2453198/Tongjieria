@@ -1,6 +1,6 @@
 #include "SlimeTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "components/render/SpriteComponent.h"
 #include "systems/physics/PhysicsContactHandler.h"
 
@@ -79,9 +79,8 @@ bool SlimeTestScene::init()
 
 void SlimeTestScene::setupEcsSystems()
 {
-  auto &factory = MonsterFactory::getInstance();
-  factory.clearConfigs();  // 清空之前场景的配置
-  factory.loadConfigsFromDir("config/slimes");
+  auto &factory = MonsterMasterFactory::getInstance();
+  (void)factory; // 工厂在构造时已加载史莱姆配置
 
   // ==================== 使用EnTTSystems（史莱姆专用）====================
   CCLOG("========== Setting up EnTT Systems for Slimes ==========");
@@ -104,7 +103,7 @@ void SlimeTestScene::setupEcsSystems()
   // 新架构：使用RenderSystem和AnimationSystem替代旧的渲染系统
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>();
-  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();  // 保留用于物理同步
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();  // 统一物理同步系统
   
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
@@ -229,6 +228,11 @@ void SlimeTestScene::createFakePlayerEntity()
   auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
   transform.position.x = _fakePlayer->getPositionX();
   transform.position.y = _fakePlayer->getPositionY();
+
+  auto &health = _registry.emplace<ecs::HealthComponent>(playerEntity);
+  health.maxHealth = 1000.0f;
+  health.currentHealth = 1000.0f;
+  health.invincibleTime = 0.3f;
   
   _registry.emplace<ecs::PlayerTag>(playerEntity);
   
@@ -246,7 +250,7 @@ void SlimeTestScene::createEcsSlime()
 {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
-  auto &factory = MonsterFactory::getInstance();
+  auto &factory = MonsterMasterFactory::getInstance();
 
   CCLOG("SlimeTestScene: visibleSize=(%.1f, %.1f), origin=(%.1f, %.1f)",
         visibleSize.width, visibleSize.height, origin.x, origin.y);

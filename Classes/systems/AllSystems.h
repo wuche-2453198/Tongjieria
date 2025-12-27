@@ -17,6 +17,11 @@
 #include "systems/core/LifetimeSystemEntt.h"
 #include "systems/core/AnimationConfigLoader.h"
 #include "systems/core/AnimationStateHelper.h"
+#include "systems/core/ObjectPool.h"
+#include "systems/core/EntityPoolManager.h"
+#include "systems/core/EntityStateUpdateSystem.h"
+#include "systems/core/EventSystem.h"              // 事件系统
+#include "systems/core/EntityDestructionManager.h" // 延迟实体销毁管理器
 
 // 战斗系统
 #include "systems/combat/HealthSystemEntt.h"
@@ -26,26 +31,31 @@
 // 渲染系统
 #include "systems/render/RenderSystem.h"
 #include "systems/render/SpriteManager.h"
-#include "systems/render/SlimeRenderSystemEntt.h"
-#include "systems/render/SlimeSyncSystemEntt.h"
+#include "systems/render/GameAtlasManager.h"       // 统一图集管理器
+#include "systems/render/BatchRenderManager.h"
+#include "systems/render/SlimeAtlasHelper.h"       // 史莱姆图集批处理辅助
+#include "systems/render/AnimationCacheManager.h"  // 动画缓存管理器
 
 // 物理系统
 #include "systems/physics/PhysicsContactHandler.h"
 #include "systems/physics/GroundDetectorSystemEntt.h"
 #include "systems/physics/SlowFallSystemEntt.h"
 #include "systems/physics/JumpMovementSystemEntt.h"
+#include "systems/physics/PhysicsSyncSystemEntt.h"   // 统一物理同步系统
 
 // NPC系统
 #include "systems/npc/AggroSystemEntt.h"
-#include "systems/npc/MonsterAnimationSystemEntt.h"
-#include "systems/npc/MonsterGroundDetectorSystemEntt.h"
-#include "systems/npc/MonsterSyncSystemEntt.h"
+#include "systems/npc/OptimizedAISystemBase.h"     // 优化的AI系统基类
 
 // NPC AI系统
 #include "systems/npc/WarriorAISystemEntt.h"
 #include "systems/npc/DemonEyeAISystemEntt.h"
+#include "systems/npc/DemonAISystemEntt.h"
 #include "systems/npc/EaterOfSoulsAISystemEntt.h"
+#include "systems/npc/VultureAISystemEntt.h"
 #include "systems/npc/AntlionAISystemEntt.h"
+#include "systems/npc/BatAISystemEntt.h"
+#include "systems/npc/AngryBonesAISystemEntt.h"
 #include "systems/npc/KingSlimeAISystemEntt.h"
 
 // 物品/投射物系统

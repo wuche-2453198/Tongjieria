@@ -3,6 +3,7 @@
 
 #include "systems/core/ISystemEntt.h"
 #include "systems/core/SystemPriority.h"
+#include "systems/core/EntityDestructionManager.h"
 #include "components/AllComponents.h"
 #include "cocos2d.h"
 
@@ -17,13 +18,45 @@ public:
     int getPriority() const override { return SystemPriority::AI - 10; }
 
     void update(float delta) override {
+        entt::entity cachedPlayer = entt::null;
+        TransformComponent* cachedPlayerTransform = nullptr;
+        {
+            auto playerView = _registry->view<PlayerTag, TransformComponent>();
+            for (auto entity : playerView) {
+                cachedPlayer = entity;
+                cachedPlayerTransform = &playerView.get<TransformComponent>(entity);
+                break;
+            }
+        }
+
         // 遍历所有具有仇恨组件的实体
         auto aggroView = _registry->view<AggroComponent, TransformComponent>();
         
-        aggroView.each([this](auto entity, AggroComponent& aggro, 
+        aggroView.each([this, cachedPlayer, cachedPlayerTransform](auto entity, AggroComponent& aggro, 
                              TransformComponent& transform) {
+            // Requirements 2.2, 2.3: 在每帧开始时验证现有目标实体有效性
+            // 清除无效或待销毁的目标引用
+            if (aggro.targetEntity != INVALID_ENTITY) {
+                if (!isEntityReferenceValid(*_registry, aggro.targetEntity)) {
+                    // 目标实体无效或待销毁，清除引用
+                    aggro.targetEntity = INVALID_ENTITY;
+                    aggro.distanceToTarget = 99999.0f;
+                    aggro.directionToTarget = cocos2d::Vec2::ZERO;
+                    if (aggro.hasAggro) {
+                        aggro.hasAggro = false;
+                        CCLOG("Entity %u: Target entity invalid or pending destruction, clearing reference",
+                              entt::to_integral(entity));
+                    }
+                }
+            }
+            
             // EnTT高效查找：根据targetTag直接获取目标实体
-            entt::entity target = findTargetByTag(aggro.targetTag);
+            entt::entity target = entt::null;
+            if (aggro.targetTag == "Player") {
+                target = cachedPlayer;
+            } else {
+                target = findTargetByTag(aggro.targetTag);
+            }
             // 转换entt::entity到EntityId（都是uint32_t）
             aggro.targetEntity = (target == entt::null) ? INVALID_ENTITY : entt::to_integral(target);
 
@@ -38,9 +71,18 @@ public:
             }
 
             // 计算到目标的距离和方向
-            auto* targetTransform = _registry->try_get<TransformComponent>(target);
-            if (!targetTransform)
+            TransformComponent* targetTransform = nullptr;
+            if (aggro.targetTag == "Player") {
+                if (target == cachedPlayer) {
+                    targetTransform = cachedPlayerTransform;
+                }
+            }
+            if (!targetTransform) {
+                targetTransform = _registry->try_get<TransformComponent>(target);
+            }
+            if (!targetTransform) {
                 return;
+            }
 
             cocos2d::Vec2 diff = targetTransform->position - transform.position;
             aggro.distanceToTarget = diff.length();

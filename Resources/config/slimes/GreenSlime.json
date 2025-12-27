@@ -4,7 +4,7 @@
   "description": "基础史莱姆，无特殊能力",
   
   "display": {
-    "spriteFolder": "Minor monster/GreenSlime",
+    "spriteFolder": "Picture/Minor_monster/GreenSlime",
     "spritePrefix": "Green_Slime",
     "frameCount": 2,
     "frameTime": 0.15,

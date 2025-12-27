@@ -4,7 +4,7 @@
   "description": "紫色史莱姆，体型比蓝史莱姆大1.1倍",
   
   "display": {
-    "spriteFolder": "Minor monster/PurpleSlime",
+    "spriteFolder": "Picture/Minor_monster/PurpleSlime",
     "spritePrefix": "Purple_Slime",
     "frameCount": 2,
     "frameTime": 0.14,

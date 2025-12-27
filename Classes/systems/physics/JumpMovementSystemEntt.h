@@ -17,13 +17,14 @@ public:
     int getPriority() const override { return SystemPriority::MOVEMENT - 10; }
 
     void update(float delta) override {
-        auto view = _registry->view<JumpMovementComponent, SpriteStateComponent, RenderComponent, GroundDetectorComponent, AggroComponent>();
+        auto view = _registry->view<JumpMovementComponent, SpriteStateComponent, RenderComponent, GroundDetectorComponent, AggroComponent, TransformComponent>();
         
         view.each([this, delta](auto entity, JumpMovementComponent& jump,
                                SpriteStateComponent& state,
                                RenderComponent& render,
                                GroundDetectorComponent& ground,
-                               AggroComponent& aggro) {
+                               AggroComponent& aggro,
+                               TransformComponent& transform) {
             if (!state.spriteCreated || !state.spriteHandle)
                 return;
 
@@ -57,7 +58,9 @@ public:
                     auto targetEntity = static_cast<entt::entity>(aggro.targetEntity);
                     auto* targetTransform = _registry->try_get<TransformComponent>(targetEntity);
                     if (targetTransform) {
-                        float heightDiff = targetTransform->position.y - body->getPosition().y;
+                        // 使用transform.position而不是body->getPosition()
+                        // body->getPosition()返回的是相对于精灵的偏移量，不是世界坐标
+                        float heightDiff = targetTransform->position.y - transform.position.y;
                         impulse = jump.calculateChaseImpulse(aggro.directionToTarget.x,
                                                             heightDiff,
                                                             aggro.distanceToTarget);
@@ -81,6 +84,7 @@ public:
                 jump.readyToJump = false;
                 jump.jumpTimer = 0.0f;
                 ground.isOnGround = false;
+                ground.groundContactCount = 0;
 
                 CCLOG("Entity %u: Jump (%.1f, %.1f) %s", entt::to_integral(entity), 
                       impulse.x, impulse.y, jump.isChasing ? "CHASE" : "PATROL");

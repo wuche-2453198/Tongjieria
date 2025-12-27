@@ -4,7 +4,7 @@
   "description": "绿色恶魔眼",
   
   "display": {
-    "spriteFolder": "Minor monster/GreenEye",
+    "spriteFolder": "Picture/Minor_monster/GreenEye",
     "spritePrefix": "GreenEye",
     "frameCount": 2,
     "frameTime": 0.15,

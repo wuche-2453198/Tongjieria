@@ -4,7 +4,7 @@
   "description": "蓝色史莱姆",
 
   "display": {
-    "spriteFolder": "Minor monster/BlueSlime",
+    "spriteFolder": "Picture/Minor_monster/BlueSlime",
     "spritePrefix": "Blue_Slime",
     "frameCount": 2,
     "frameTime": 0.15,

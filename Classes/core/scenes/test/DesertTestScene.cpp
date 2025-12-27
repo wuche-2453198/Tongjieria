@@ -1,6 +1,6 @@
 #include "DesertTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "systems/physics/PhysicsContactHandler.h"
 
 USING_NS_CC;
@@ -12,7 +12,7 @@ Scene *DesertTestScene::createScene()
   physicsWorld->setGravity(Vec2(0, -980));
 
   // 调试物理体
-  // physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+  physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 
   physicsWorld->setSpeed(1.0f);
   physicsWorld->setSubsteps(8);
@@ -50,7 +50,7 @@ bool DesertTestScene::init()
 
   // 添加说明
   auto infoLabel = Label::createWithTTF(
-      "Desert Monsters: Various desert creatures and their behaviors",
+      "Desert Monsters: Antlion. WASD:Move Player R:Toggle",
       "fonts/Marker Felt.ttf", 16);
   if (infoLabel != nullptr)
   {
@@ -90,10 +90,8 @@ bool DesertTestScene::init()
 
 void DesertTestScene::setupEcsSystems()
 {
-  auto &factory = MonsterFactory::getInstance();
-  factory.clearConfigs();  // 清空之前场景的配置
-  // 加载沙漠怪物配置（准备用于用户设计的沙漠怪物）
-  factory.loadConfigsFromDir("config/desert");
+  auto &factory = MonsterMasterFactory::getInstance();
+  (void)factory; // 专用工厂已加载沙漠怪物配置
 
   // 注册沙球射弹精灵资源（匹配AntlionAISystemEntt中的大写ID）
   ecs::SpriteResourceDescriptor sandBallDesc;
@@ -140,6 +138,7 @@ void DesertTestScene::setupEcsSystems()
   // 添加各种AI系统，支持不同类型的怪物
   _systemManager.addSystem<ecs::EaterOfSoulsAISystemEntt>(); // 支持噬魂怪类型
   _systemManager.addSystem<ecs::DemonEyeAISystemEntt>();     // 支持飞行类型
+  _systemManager.addSystem<ecs::VultureAISystemEntt>();      // 支持秃鹰类型
   _systemManager.addSystem<ecs::WarriorAISystemEntt>();      // 支持近战类型
   _systemManager.addSystem<ecs::KingSlimeAISystemEntt>();    // 支持史莱姆类型
   _systemManager.addSystem<ecs::AntlionAISystemEntt>();      // 支持蚁狮类型
@@ -147,7 +146,7 @@ void DesertTestScene::setupEcsSystems()
   // 新架构：使用RenderSystem
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>(); // 动画系统
-  _systemManager.addSystem<ecs::MonsterSyncSystemEntt>();  // 同步物理位置
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();  // 统一物理同步系统
   
   // 射弹系统（蚁狮需要）
   _systemManager.addSystem<ecs::ProjectileSystemEntt>();
@@ -307,6 +306,11 @@ void DesertTestScene::createFakePlayerEntity()
   transform.position.x = _fakePlayer->getPositionX();
   transform.position.y = _fakePlayer->getPositionY();
 
+  auto &health = _registry.emplace<ecs::HealthComponent>(playerEntity);
+  health.maxHealth = 1000.0f;
+  health.currentHealth = 1000.0f;
+  health.invincibleTime = 0.3f;
+
   _registry.emplace<ecs::PlayerTag>(playerEntity);
 
   _fakePlayerEntity = entt::to_integral(playerEntity);
@@ -323,30 +327,35 @@ void DesertTestScene::createDesertMonsters()
 
   CCLOG("DesertTestScene: Creating desert monsters...");
 
-  auto &factory = MonsterFactory::getInstance();
+  auto &factory = MonsterMasterFactory::getInstance();
   
   // 创建蚁狮怪物
-  const char* desertMonsters[] = {
-    "Antlion"
-  };
-  const int monsterCount = 1;
+  float antlionX = origin.x + visibleSize.width / 2;
+  float antlionY = origin.y + 80; // 略高于地面，让蚁狮"埋"在地下
   
-  for (int i = 0; i < monsterCount; i++) {
-    // 蚁狮放置在地面上的固定位置（用于测试）
-    float x = origin.x + visibleSize.width / 2;
-    float y = origin.y + 80; // 略高于地面，让蚁狮"埋"在地下
-    
-    ecs::EntityId entityId = factory.createMonster(_registry, desertMonsters[0], x, y, this);
-    
-    if (entityId != ecs::INVALID_ENTITY) {
-      CCLOG("DesertTestScene: Created %s at (%.1f, %.1f), entity=%u",
-            desertMonsters[0], x, y, entityId);
-    } else {
-      CCLOG("DesertTestScene: Failed to create %s", desertMonsters[0]);
-    }
+  ecs::EntityId antlionId = factory.createMonster(_registry, "Antlion", antlionX, antlionY, this);
+  
+  if (antlionId != ecs::INVALID_ENTITY) {
+    CCLOG("DesertTestScene: Created Antlion at (%.1f, %.1f), entity=%u",
+          antlionX, antlionY, antlionId);
+  } else {
+    CCLOG("DesertTestScene: Failed to create Antlion");
   }
 
-  CCLOG("DesertTestScene: Created %d desert monsters", monsterCount);
+  // 创建秃鹰怪物
+  float vultureX = origin.x + visibleSize.width * 0.70f;
+  float vultureY = origin.y + 160;
+
+  ecs::EntityId vultureId = factory.createMonster(_registry, "Vulture", vultureX, vultureY, this);
+
+  if (vultureId != ecs::INVALID_ENTITY) {
+    CCLOG("DesertTestScene: Created Vulture at (%.1f, %.1f), entity=%u",
+          vultureX, vultureY, vultureId);
+  } else {
+    CCLOG("DesertTestScene: Failed to create Vulture");
+  }
+  
+  CCLOG("DesertTestScene: Created Antlion + Vulture");
 }
 
 void DesertTestScene::setupSharedContactListener()

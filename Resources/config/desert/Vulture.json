@@ -1,0 +1,55 @@
+{
+  "id": "Vulture",
+  "type": "Vulture",
+  "description": "秃鹰 - 初始栖息，玩家靠近或受击后升空盘旋并猛扑",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Vulture",
+    "spritePrefix": "Vulture",
+    "frameCount": 6,
+    "frameTime": 0.1,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": -1
+  },
+
+  "physics": {
+    "bodyWidth": 38.0,
+    "bodyHeight": 38.0,
+    "bodyHeightOffset": 0.0,
+    "mass": 1.0,
+    "restitution": 0.0,
+    "friction": 0.5,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+
+  "movement": {
+    "type": "vulture",
+    "flySpeed": 180.0,
+    "maxSpeed": 400.0,
+    "acceleration": 360.0,
+    "wobbleAmplitude": 10.0,
+    "wobbleFrequency": 2.0,
+
+    "activationRange": 200.0,
+    "hoverDistance": 150.0,
+    "dashTriggerDistance": 80.0,
+    "dashReturnDistance": 120.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 350.0,
+    "deaggroRange": 450.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 45.0,
+    "attackDamage": 15.0,
+    "attackRange": 30.0,
+    "attackCooldown": 1.0,
+    "defense": 2.0
+  }
+}

@@ -4,7 +4,7 @@
   "description": "黄色史莱姆",
 
   "display": {
-    "spriteFolder": "Minor monster/YellowSlime",
+    "spriteFolder": "Picture/Minor_monster/YellowSlime",
     "spritePrefix": "Yellow_Slime",
     "frameCount": 2,
     "frameTime": 0.12,

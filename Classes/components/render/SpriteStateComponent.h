@@ -1,6 +1,8 @@
 #ifndef __ECS_COMPONENT_SPRITESTATECOMPONENT_H__
 #define __ECS_COMPONENT_SPRITESTATECOMPONENT_H__
 
+#include <string>
+
 namespace ecs {
 
 /**
@@ -16,6 +18,8 @@ namespace ecs {
 struct SpriteStateComponent {
     bool spriteCreated = false;        // 精灵是否已创建
     void* spriteHandle = nullptr;      // 精灵句柄（由SpriteManager管理）
+
+    std::string lastResourceId;
     
     SpriteStateComponent() = default;
 };

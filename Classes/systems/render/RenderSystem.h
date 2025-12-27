@@ -37,6 +37,8 @@ public:
 private:
     // 创建精灵（首次渲染）
     void createSprites();
+
+    void recreatePhysicsBodiesIfNeeded();
     
     // 同步Transform到Sprite位置
     void syncTransformToSprite();
@@ -56,6 +58,8 @@ private:
  * - 根据帧序列切换SpriteFrame
  * - 处理循环和停止逻辑
  * - 支持基于AI状态的动画切换（通过AnimationStateComponent）
+ * - 支持共享动画组件（SharedAnimationComponent）
+ * - 离屏动画暂停优化（Requirements: 6.4）
  */
 class AnimationSystem : public ISystemEntt {
 public:
@@ -65,8 +69,11 @@ public:
     void update(float delta) override;
     
 private:
-    // 更新帧动画
+    // 更新帧动画（AnimationComponent）
     void updateFrameAnimation(float delta);
+    
+    // 更新共享动画（SharedAnimationComponent）
+    void updateSharedAnimation(float delta);
     
     // 更新状态驱动的动画切换
     void updateStateDrivenAnimation();

@@ -34,8 +34,11 @@ if(APPLE OR WINDOWS)
 endif()
 
 # add cross-platforms source files and header files (auto-scan)
-file(GLOB_RECURSE GAME_SOURCE "Classes/*.cpp")
-file(GLOB_RECURSE GAME_HEADER "Classes/*.h")
+file(GLOB_RECURSE GAME_SOURCE CONFIGURE_DEPENDS "Classes/*.cpp")
+file(GLOB_RECURSE GAME_HEADER CONFIGURE_DEPENDS "Classes/*.h")
+
+# Exclude legacy integrated factory implementation (decoupled by new factory system)
+list(REMOVE_ITEM GAME_SOURCE "Classes/core/factory/MonsterFactory.cpp")
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml

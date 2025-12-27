@@ -12,6 +12,8 @@
 // ==================== 核心组件 ====================
 #include "components/core/TransformComponent.h"
 #include "components/core/LifetimeComponent.h"
+#include "components/core/EntityStateFlags.h"
+#include "components/core/PooledEntity.h"
 
 // ==================== 玩家组件 ====================
 #include "components/player/PlayerTag.h"
@@ -36,6 +38,7 @@
 #include "components/render/SpriteStateComponent.h"
 #include "components/render/ParentNodeComponent.h"
 #include "components/render/SlimeSpriteComponent.h"
+#include "components/render/SharedAnimationComponent.h"
 
 // ==================== NPC组件 ====================
 #include "components/npc/EnemyTag.h"
@@ -46,14 +49,21 @@
 #include "components/npc/MonsterSpriteComponent.h"
 #include "components/npc/WarriorMovementComponent.h"
 #include "components/npc/DemonEyeMovementComponent.h"
+#include "components/npc/BatMovementComponent.h"
+#include "components/npc/PounceAttackComponent.h"
+#include "components/npc/VultureMovementComponent.h"
 #include "components/npc/EaterOfSoulsMovementComponent.h"
 #include "components/npc/AntlionMovementComponent.h"
+#include "components/npc/DemonMovementComponent.h"
+#include "components/npc/DemonAttackComponent.h"
 #include "components/npc/KingSlimeComponent.h"
 
 // ==================== 物品/投射物组件 ====================
 #include "components/item/ProjectileComponent.h"
 #include "components/item/ProjectileAttackComponent.h"
 #include "components/item/ProjectileSpriteComponent.h"
+#include "components/item/DelayedAccelerationComponent.h"
+#include "components/item/NoVelocityRotationTag.h"
 
 
 #endif // __ECS_ALL_COMPONENTS_H__

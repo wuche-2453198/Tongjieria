@@ -4,7 +4,7 @@
   "description": "紫色恶魔眼",
   
   "display": {
-    "spriteFolder": "Minor monster/PurpleEye",
+    "spriteFolder": "Picture/Minor_monster/PurpleEye",
     "spritePrefix": "PurpleEye",
     "frameCount": 2,
     "frameTime": 0.15,

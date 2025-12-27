@@ -1,6 +1,6 @@
 #include "ZombieTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "systems/physics/PhysicsContactHandler.h"
 
 USING_NS_CC;
@@ -77,9 +77,8 @@ bool ZombieTestScene::init()
 
 void ZombieTestScene::setupEcsSystems()
 {
-  auto &factory = MonsterFactory::getInstance();
-  factory.clearConfigs();  // 清空之前场景的配置
-  factory.loadConfigsFromDir("config/zombies");
+  auto &factory = MonsterMasterFactory::getInstance();
+  (void)factory; // 默认工厂已加载僵尸配置
 
   // ==================== 使用EnTT版本Systems（僵尸专用）====================
   CCLOG("========== Setting up EnTT Systems for Zombies ==========");
@@ -88,7 +87,7 @@ void ZombieTestScene::setupEcsSystems()
   
   // 按优先级顺序添加Systems（仅僵尸相关）
   _systemManager.addSystem<ecs::AggroSystemEntt>();
-  _systemManager.addSystem<ecs::MonsterGroundDetectorSystemEntt>();
+  _systemManager.addSystem<ecs::GroundDetectorSystemEntt>();
   _systemManager.addSystem<ecs::WarriorAISystemEntt>();
   _systemManager.addSystem<ecs::HealthSystemEntt>();
   _systemManager.addSystem<ecs::CombatSystemEntt>();
@@ -97,6 +96,10 @@ void ZombieTestScene::setupEcsSystems()
   // 新解耦渲染系统
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>();
+
+  // 统一物理同步系统：从物理体同步位置到Transform
+  // 否则AI会使用不更新的Transform.position，导致卡住检测误判（周期性自动跳）
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();
   
   // 注册Sprite销毁监听器
   ecs::SpriteDestructionObserver::registerToRegistry(_registry);
@@ -265,6 +268,11 @@ void ZombieTestScene::createFakePlayerEntity()
   auto& transform = _registry.emplace<ecs::TransformComponent>(playerEntity);
   transform.position.x = _fakePlayer->getPositionX();
   transform.position.y = _fakePlayer->getPositionY();
+
+  auto& health = _registry.emplace<ecs::HealthComponent>(playerEntity);
+  health.maxHealth = 1000.0f;
+  health.currentHealth = 1000.0f;
+  health.invincibleTime = 0.3f;
   
   _registry.emplace<ecs::PlayerTag>(playerEntity);
   
@@ -279,7 +287,7 @@ void ZombieTestScene::createEcsZombie()
 {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
-  auto &factory = MonsterFactory::getInstance();
+  auto &factory = MonsterMasterFactory::getInstance();
   
   float groundTop = origin.y + 50.0f;
   

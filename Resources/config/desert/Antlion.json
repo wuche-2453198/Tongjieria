@@ -3,7 +3,7 @@
   "name": "蚁狮",
   "type": "Antlion",
   "display": {
-    "spriteFolder": "Minor monster/Antlion",
+    "spriteFolder": "Picture/Minor_monster/Antlion",
     "spritePrefix": "Antlion",
     "frameCount": 5,
     "frameSequence": [1, 2, 3, 4, 5],

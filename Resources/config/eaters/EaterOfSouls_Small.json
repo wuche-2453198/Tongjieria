@@ -4,7 +4,7 @@
   "description": "小型噬魂怪 - 飞行敌怪，绕圈后周期性冲向玩家",
   
   "display": {
-    "spriteFolder": "Minor monster/36px-Eater_of_Souls",
+    "spriteFolder": "Picture/Minor_monster/36px-Eater_of_Souls",
     "spritePrefix": "36px-Eater_of_Souls",
     "frameCount": 2,
     "frameTime": 0.1,

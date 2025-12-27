@@ -1,6 +1,9 @@
 #ifndef __ECS_COMPONENT_GROUNDDETECTORCOMPONENT_H__
 #define __ECS_COMPONENT_GROUNDDETECTORCOMPONENT_H__
 
+#include <cstdint>
+#include <unordered_set>
+
 namespace ecs {
 
 /**
@@ -12,6 +15,8 @@ struct GroundDetectorComponent
   bool isStill = false;         // 是否静止
   float stillThreshold = 10.0f; // 静止判断速度阈值
   int groundContactCount = 0;   // 地面接触计数（用于处理同时接触多个地面）
+
+  std::unordered_set<std::uintptr_t> groundContactKeys;
 
   GroundDetectorComponent() = default;
 

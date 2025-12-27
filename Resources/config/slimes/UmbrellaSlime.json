@@ -4,7 +4,7 @@
   "description": "伞史莱姆，下落时像撑着伞一样缓缓飘落",
   
   "display": {
-    "spriteFolder": "Minor monster/UmbrellaSlime",
+    "spriteFolder": "Picture/Minor_monster/UmbrellaSlime",
     "spritePrefix": "Umbrella_Slime",
     "frameCount": 2,
     "frameTime": 0.25,

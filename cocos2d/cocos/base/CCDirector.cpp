@@ -278,7 +278,6 @@ void Director::drawScene()
     }
 
     pushMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
-    
     if (_runningScene)
     {
 #if (CC_USE_PHYSICS || (CC_USE_3D_PHYSICS && CC_ENABLE_BULLET_INTEGRATION) || CC_USE_NAVMESH)
@@ -301,15 +300,14 @@ void Director::drawScene()
     }
 
     updateFrameRate();
-    
     if (_displayStats)
     {
 #if !CC_STRIP_FPS
         showStats();
 #endif
     }
-    
-   _renderer->render();
+     
+    _renderer->render();
 
     _eventDispatcher->dispatchEvent(_eventAfterDraw);
 

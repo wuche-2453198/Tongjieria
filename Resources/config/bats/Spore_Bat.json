@@ -1,0 +1,52 @@
+{
+  "id": "Spore_Bat",
+  "type": "Bat",
+  "description": "Spore Bat - common flying enemy, intermittently swoops toward the player",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Spore_Bat",
+    "spritePrefix": "Spore_Bat",
+    "frameCount": 4,
+    "frameTime": 0.08,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1,
+    "frameSequence": [1, 2, 3, 4]
+  },
+
+  "physics": {
+    "bodyWidth": 28.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": 0.0,
+    "mass": 1.0,
+    "friction": 0.0,
+    "restitution": 0.9,
+    "collisionGroup": -1,
+    "useGravity": false
+  },
+
+  "movement": {
+    "type": "fly",
+    "flySpeed": 170.0,
+    "maxSpeed": 360.0,
+    "acceleration": 240.0,
+    "turnRate": 2.4,
+    "wobbleAmplitude": 0.25,
+    "wobbleFrequency": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 800.0,
+    "deaggroRange": 1000.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 30.0,
+    "attackDamage": 10.0,
+    "attackRange": 25.0,
+    "attackCooldown": 1.0,
+    "defense": 0.0
+  }
+}

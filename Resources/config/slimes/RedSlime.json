@@ -4,7 +4,7 @@
   "description": "红色史莱姆",
   
   "display": {
-    "spriteFolder": "Minor monster/RedSlime",
+    "spriteFolder": "Picture/Minor_monster/RedSlime",
     "spritePrefix": "Red_Slime",
     "frameCount": 2,
     "frameTime": 0.15,

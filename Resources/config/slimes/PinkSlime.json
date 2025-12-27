@@ -4,7 +4,7 @@
   "description": "粉色史莱姆，特别小巧可爱",
   
   "display": {
-    "spriteFolder": "Minor monster/PinkSlime",
+    "spriteFolder": "Picture/Minor_monster/PinkSlime",
     "spritePrefix": "Pink_Slime",
     "frameCount": 2,
     "frameTime": 0.12,

@@ -21,6 +21,8 @@ public:
   // 恶魔眼测试场景按钮回调
   void menuDemonEyeTestCallback(cocos2d::Ref *pSender);
 
+  void menuDemonTestCallback(cocos2d::Ref *pSender);
+
   // 史莱姆王测试场景按钮回调
   void menuKingSlimeTestCallback(cocos2d::Ref *pSender);
 
@@ -29,6 +31,10 @@ public:
 
   // 沙漠测试场景按钮回调
   void menuDesertTestCallback(cocos2d::Ref *pSender);
+
+  void menuBatTestCallback(cocos2d::Ref *pSender);
+
+  void menuSkeletonTestCallback(cocos2d::Ref *pSender);
 
   // implement the "static create()" method manually
   CREATE_FUNC(MainMenuScene);

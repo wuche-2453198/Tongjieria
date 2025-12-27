@@ -1,7 +1,7 @@
 #ifndef __ECS_SYSTEM_EATEROFSOULSAISYSTEMENTT_H__
 #define __ECS_SYSTEM_EATEROFSOULSAISYSTEMENTT_H__
 
-#include "systems/core/ISystemEntt.h"
+#include "systems/npc/OptimizedAISystemBase.h"
 #include "systems/core/SystemPriority.h"
 #include "components/AllComponents.h"
 #include "cocos2d.h"
@@ -20,13 +20,23 @@ namespace ecs {
  * - 先在一定距离外绕着玩家转圈
  * - 周期性冲向玩家
  * - 飞行（无重力）
+ * 
+ * 优化特性（继承自 OptimizedAISystemBase）：
+ * - 离屏实体降频更新
+ * - 空闲实体降频更新
+ * - 远距离实体使用简化 AI
+ * 
+ * Requirements: 5.1, 5.5, 5.6
  */
-class EaterOfSoulsAISystemEntt : public ISystemEntt {
+class EaterOfSoulsAISystemEntt : public OptimizedAISystemBase {
 public:
     const char* getName() const override { return "EaterOfSoulsAISystem"; }
     int getPriority() const override { return SystemPriority::MOVEMENT; }
 
     void update(float delta) override {
+        // 增加帧计数器
+        incrementFrameCounter();
+        
         auto view = _registry->view<EaterOfSoulsMovementComponent, AggroComponent,
                                      SpriteStateComponent, RenderComponent, TransformComponent>();
         
@@ -35,6 +45,13 @@ public:
                                RenderComponent& render, TransformComponent& transform) {
             
             if (!state.spriteCreated || !state.spriteHandle) return;
+            
+            // 优化：检查是否应该更新此实体
+            auto* stateFlags = _registry->try_get<EntityStateFlags>(entity);
+            if (!shouldUpdateEntity(entity, stateFlags)) {
+                return; // 跳过此帧的更新
+            }
+            
             auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
 
             // 获取目标位置（如果有仇恨）

@@ -4,7 +4,7 @@
   "description": "大型僵尸 - 体型较大，生命值和攻击力更高",
 
   "display": {
-    "spriteFolder": "Minor monster/Bigger-Zombie",
+    "spriteFolder": "Picture/Minor_monster/Bigger-Zombie",
     "spritePrefix": "Bigger-Zombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],

@@ -2,52 +2,138 @@
 
 namespace ecs {
 
+// ==================== 图集模式实现 ====================
+
+bool SpriteManager::enableBatchMode(const std::string& atlasPath,
+                                    const std::string& texturePath,
+                                    cocos2d::Node* parent,
+                                    int zOrder) {
+    if (!parent) {
+        CCLOG("SpriteManager: Cannot enable batch mode, parent is null");
+        return false;
+    }
+    
+    _batchModeEnabled = false;
+    _batchParent = nullptr;
+    _batchZOrder = 1;
+    
+    // 加载图集到SpriteFrameCache（全局缓存）
+    auto* cache = cocos2d::SpriteFrameCache::getInstance();
+    cache->addSpriteFramesWithFile(atlasPath, texturePath);
+    
+    // 预加载纹理到TextureCache
+    auto* texture = cocos2d::Director::getInstance()->getTextureCache()->addImage(texturePath);
+    if (!texture) {
+        CCLOG("SpriteManager: Failed to load texture: %s", texturePath.c_str());
+        return false;
+    }
+    
+    _batchModeEnabled = true;
+    _batchParent = parent;
+    _batchZOrder = zOrder;
+    
+    CCLOG("SpriteManager: Atlas loaded to SpriteFrameCache - auto-batching enabled!");
+    return true;
+}
+
+void SpriteManager::disableBatchMode() {
+    _batchModeEnabled = false;
+    _batchParent = nullptr;
+    _atlasFrameMapping.clear();
+}
+
+void SpriteManager::registerAtlasFrames(const std::string& resourceId,
+                                        const std::vector<std::string>& frameNames) {
+    _atlasFrameMapping[resourceId] = frameNames;
+}
+
+// ==================== 精灵创建 ====================
+
 void SpriteManager::registerResource(const SpriteResourceDescriptor& descriptor) {
     _resourceDescriptors[descriptor.resourceId] = descriptor;
-    CCLOG("SpriteManager: Registered resource '%s' (path=%s, frames=%zu)",
-          descriptor.resourceId.c_str(),
-          descriptor.spritePath.c_str(),
-          descriptor.framePaths.size());
 }
 
 cocos2d::Sprite* SpriteManager::createSprite(const std::string& resourceId) {
     auto it = _resourceDescriptors.find(resourceId);
     if (it == _resourceDescriptors.end()) {
-        CCLOG("SpriteManager: Resource '%s' not found", resourceId.c_str());
+        CCLOG("SpriteManager: Resource '%s' not found in descriptors", resourceId.c_str());
         return nullptr;
     }
     
     const auto& desc = it->second;
     cocos2d::Sprite* sprite = nullptr;
     
-    // 如果有单帧路径，使用单帧创建
+    CCLOG("SpriteManager: Creating sprite for '%s', batchMode=%d", 
+          resourceId.c_str(), _batchModeEnabled ? 1 : 0);
+    
+    // 优先使用SpriteFrameCache中的图集帧
+    if (_batchModeEnabled) {
+        auto atlasIt = _atlasFrameMapping.find(resourceId);
+        if (atlasIt != _atlasFrameMapping.end() && !atlasIt->second.empty()) {
+            const std::string& frameName = atlasIt->second[0];
+            CCLOG("SpriteManager: Found atlas frame mapping: '%s' -> '%s'", 
+                  resourceId.c_str(), frameName.c_str());
+            
+            // 使用createWithSpriteFrameName直接从缓存创建（最高效）
+            sprite = cocos2d::Sprite::createWithSpriteFrameName(frameName);
+            if (sprite) {
+                CCLOG("SpriteManager: Created sprite from atlas frame '%s'", frameName.c_str());
+                sprite->setAnchorPoint(desc.anchorPoint);
+                sprite->retain();
+                _spriteRefCount[sprite] = 1;
+                return sprite;
+            } else {
+                CCLOG("SpriteManager: Failed to create sprite from frame name '%s'", frameName.c_str());
+            }
+            
+            // 备用：从SpriteFrameCache获取SpriteFrame
+            auto* frame = cocos2d::SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
+            if (frame) {
+                sprite = cocos2d::Sprite::createWithSpriteFrame(frame);
+                if (sprite) {
+                    CCLOG("SpriteManager: Created sprite from SpriteFrame '%s'", frameName.c_str());
+                    sprite->setAnchorPoint(desc.anchorPoint);
+                    sprite->retain();
+                    _spriteRefCount[sprite] = 1;
+                    return sprite;
+                }
+            } else {
+                CCLOG("SpriteManager: SpriteFrame '%s' not found in cache", frameName.c_str());
+            }
+        } else {
+            CCLOG("SpriteManager: No atlas frame mapping for '%s'", resourceId.c_str());
+        }
+    }
+    
+    // 非图集模式：从文件创建
+    CCLOG("SpriteManager: Falling back to file-based sprite creation for '%s'", resourceId.c_str());
     if (!desc.spritePath.empty()) {
-        sprite = cocos2d::Sprite::create(desc.spritePath);
-        if (!sprite) {
-            CCLOG("SpriteManager: Failed to create sprite from '%s'", desc.spritePath.c_str());
-            return nullptr;
+        CCLOG("SpriteManager: Using spritePath: '%s'", desc.spritePath.c_str());
+        // 尝试使用AutoPolygon创建多边形精灵（减少像素填充）
+        if (_usePolygonSprites) {
+            auto pinfo = cocos2d::AutoPolygon::generatePolygon(desc.spritePath);
+            sprite = cocos2d::Sprite::create(pinfo);
+        } else {
+            sprite = cocos2d::Sprite::create(desc.spritePath);
         }
     }
-    // 如果有多帧，使用第一帧创建
     else if (!desc.framePaths.empty()) {
-        sprite = cocos2d::Sprite::create(desc.framePaths[0]);
-        if (!sprite) {
-            CCLOG("SpriteManager: Failed to create sprite from frame '%s'", desc.framePaths[0].c_str());
-            return nullptr;
+        CCLOG("SpriteManager: Using framePaths[0]: '%s'", desc.framePaths[0].c_str());
+        if (_usePolygonSprites) {
+            auto pinfo = cocos2d::AutoPolygon::generatePolygon(desc.framePaths[0]);
+            sprite = cocos2d::Sprite::create(pinfo);
+        } else {
+            sprite = cocos2d::Sprite::create(desc.framePaths[0]);
         }
     }
-    else {
-        CCLOG("SpriteManager: Resource '%s' has no sprite path", resourceId.c_str());
+    
+    if (!sprite) {
+        CCLOG("SpriteManager: Failed to create sprite for '%s'", resourceId.c_str());
         return nullptr;
     }
     
-    // 设置锚点
     sprite->setAnchorPoint(desc.anchorPoint);
-    
-    // retain以便外部管理
     sprite->retain();
-    
-    // 记录引用计数
     _spriteRefCount[sprite] = 1;
     
     return sprite;
@@ -69,6 +155,9 @@ cocos2d::Sprite* SpriteManager::createSpriteAndAttach(const std::string& resourc
     return sprite;
 }
 
+
+// ==================== 动画帧获取 ====================
+
 const cocos2d::Vector<cocos2d::SpriteFrame*>& SpriteManager::getAnimationFrames(const std::string& resourceId) {
     // 检查缓存
     auto cacheIt = _animationFrameCache.find(resourceId);
@@ -76,23 +165,41 @@ const cocos2d::Vector<cocos2d::SpriteFrame*>& SpriteManager::getAnimationFrames(
         return cacheIt->second;
     }
     
-    // 懒加载动画帧
-    loadAnimationFrames(resourceId);
+    // 优先从SpriteFrameCache获取图集帧
+    if (_batchModeEnabled) {
+        auto atlasIt = _atlasFrameMapping.find(resourceId);
+        if (atlasIt != _atlasFrameMapping.end() && !atlasIt->second.empty()) {
+            cocos2d::Vector<cocos2d::SpriteFrame*> frames;
+            auto* cache = cocos2d::SpriteFrameCache::getInstance();
+            
+            for (const auto& frameName : atlasIt->second) {
+                auto* frame = cache->getSpriteFrameByName(frameName);
+                if (frame) {
+                    frames.pushBack(frame);
+                }
+            }
+            
+            if (!frames.empty()) {
+                _animationFrameCache[resourceId] = frames;
+                return _animationFrameCache[resourceId];
+            }
+        }
+    }
     
+    // 从文件加载
+    loadAnimationFrames(resourceId);
     return _animationFrameCache[resourceId];
 }
 
 void SpriteManager::loadAnimationFrames(const std::string& resourceId) {
     auto it = _resourceDescriptors.find(resourceId);
     if (it == _resourceDescriptors.end()) {
-        CCLOG("SpriteManager: Cannot load frames for unknown resource '%s'", resourceId.c_str());
         return;
     }
     
     const auto& desc = it->second;
     cocos2d::Vector<cocos2d::SpriteFrame*> frames;
     
-    // 加载所有帧
     for (const auto& framePath : desc.framePaths) {
         auto* texture = cocos2d::Director::getInstance()->getTextureCache()->addImage(framePath);
         if (texture) {
@@ -103,15 +210,10 @@ void SpriteManager::loadAnimationFrames(const std::string& resourceId) {
             if (frame) {
                 frames.pushBack(frame);
             }
-        } else {
-            CCLOG("SpriteManager: Failed to load frame '%s'", framePath.c_str());
         }
     }
     
     _animationFrameCache[resourceId] = frames;
-    
-    CCLOG("SpriteManager: Loaded %zu frames for resource '%s'",
-          frames.size(), resourceId.c_str());
 }
 
 bool SpriteManager::preloadResource(const std::string& resourceId) {
@@ -120,13 +222,11 @@ bool SpriteManager::preloadResource(const std::string& resourceId) {
         return false;
     }
     
-    // 如果有多帧，预加载动画帧
     if (!it->second.framePaths.empty()) {
         loadAnimationFrames(resourceId);
         return _animationFrameCache.find(resourceId) != _animationFrameCache.end();
     }
     
-    // 如果是单帧，预加载纹理
     if (!it->second.spritePath.empty()) {
         auto* texture = cocos2d::Director::getInstance()->getTextureCache()->addImage(it->second.spritePath);
         return texture != nullptr;
@@ -147,14 +247,14 @@ void SpriteManager::releaseSprite(cocos2d::Sprite* sprite) {
             _spriteRefCount.erase(it);
         }
     } else {
-        // 如果没有在引用计数中，直接释放
         sprite->removeFromParent();
         sprite->release();
     }
 }
 
 void SpriteManager::clearAll() {
-    // 释放所有精灵
+    disableBatchMode();
+    
     for (auto& pair : _spriteRefCount) {
         if (pair.first) {
             pair.first->removeFromParent();
@@ -162,12 +262,8 @@ void SpriteManager::clearAll() {
         }
     }
     _spriteRefCount.clear();
-    
-    // 清空缓存
     _animationFrameCache.clear();
     _resourceDescriptors.clear();
-    
-    CCLOG("SpriteManager: Cleared all resources");
 }
 
 bool SpriteManager::hasResource(const std::string& resourceId) const {

@@ -4,7 +4,7 @@
   "description": "冰雪史莱姆，攻击有概率赋予冷冻减益",
 
   "display": {
-    "spriteFolder": "Minor monster/IceSlime",
+    "spriteFolder": "Picture/Minor_monster/IceSlime",
     "spritePrefix": "Ice_Slime",
     "frameCount": 2,
     "frameTime": 0.18,

@@ -4,7 +4,7 @@
   "description": "大型秃头僵尸 - 体型较大的秃头僵尸，生命值和攻击力更高",
 
   "display": {
-    "spriteFolder": "Minor monster/Bigger-BaldZombie",
+    "spriteFolder": "Picture/Minor_monster/Bigger-BaldZombie",
     "spritePrefix": "Bigger-Bald_Zombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],

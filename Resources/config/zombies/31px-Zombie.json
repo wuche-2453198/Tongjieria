@@ -4,7 +4,7 @@
   "description": "小型僵尸 - 体型较小但移动速度较快的僵尸",
 
   "display": {
-    "spriteFolder": "Minor monster/31px-Zombie",
+    "spriteFolder": "Picture/Minor_monster/31px-Zombie",
     "spritePrefix": "31px-Zombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],

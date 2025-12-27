@@ -1,12 +1,50 @@
 #include "KingSlimeTestScene.h"
 #include "core/scenes/MainMenuScene.h"
-#include "core/factory/MonsterFactory.h"
+#include "core/factory/monster/MonsterMasterFactory.h"
 #include "components/render/SpriteComponent.h"
 #include "systems/physics/PhysicsContactHandler.h"
+#include "systems/render/GameAtlasManager.h"
 #include "ui/CocosGUI.h"
+#include <chrono>
+#include <cstdint>
 #include <entt/entt.hpp>
+#include <memory>
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+ #include "platform/desktop/CCGLViewImpl-desktop.h"
+#endif
 
 USING_NS_CC;
+
+namespace {
+
+struct FrameProfileState {
+  using Clock = std::chrono::steady_clock;
+
+  Clock::time_point lastFrameBegin;
+  Clock::time_point updateBegin;
+  Clock::time_point drawBegin;
+  bool hasLastFrame = false;
+
+  double lastUpdateMs = 0.0;
+  double lastDrawMs = 0.0;
+
+  double totalFrameMs = 0.0;
+  double totalUpdateMs = 0.0;
+  double totalDrawMs = 0.0;
+  double totalRestMs = 0.0;
+
+  double maxFrameMs = 0.0;
+  double maxUpdateMs = 0.0;
+  double maxDrawMs = 0.0;
+  double maxRestMs = 0.0;
+
+  std::uint64_t frames = 0;
+  float timerSeconds = 0.0f;
+  float reportIntervalSeconds = 1.0f;
+};
+
+}
 
 Scene *KingSlimeTestScene::createScene()
 {
@@ -19,7 +57,7 @@ Scene *KingSlimeTestScene::createScene()
 
   // 提高物理引擎精度
   physicsWorld->setSpeed(1.0f);
-  physicsWorld->setSubsteps(8);
+  physicsWorld->setSubsteps(4);  // 从8降到4，平衡精度和性能
 
   auto layer = KingSlimeTestScene::create();
   scene->addChild(layer);
@@ -83,11 +121,104 @@ bool KingSlimeTestScene::init()
   createFakePlayerEntity();
   setupInputListeners();
   
+  // 尝试启用批处理模式（如果图集存在）
+  // 使用统一的GameAtlasManager，包含所有史莱姆和投射物
+  if (ecs::GameAtlasManager::getInstance().initialize()) {
+    // 同时启用SpriteManager的批处理模式
+    ecs::SpriteManager::getInstance().enableBatchMode("atlas/game_atlas.plist", 
+                                                       "atlas/game_atlas.png", this);
+    CCLOG("KingSlimeTestScene: Game atlas loaded - auto-batching enabled!");
+  } else {
+    CCLOG("KingSlimeTestScene: Game atlas not found - using individual sprites");
+  }
+  
   // 延迟1秒生成Boss，确保所有系统已初始化
   this->scheduleOnce([this](float dt) {
     spawnKingSlimeBoss();
     createDamageButton();  // 创建伤害按钮
   }, 1.0f, "spawn_boss");
+
+  {
+    auto state = std::make_shared<FrameProfileState>();
+    state->reportIntervalSeconds = 1.0f;
+
+    auto beforeUpdateListener = EventListenerCustom::create(Director::EVENT_BEFORE_UPDATE, [state](EventCustom*) {
+      auto now = FrameProfileState::Clock::now();
+      if (state->hasLastFrame) {
+        const double frameMs = std::chrono::duration<double, std::milli>(now - state->lastFrameBegin).count();
+        double restMs = frameMs - state->lastUpdateMs - state->lastDrawMs;
+        if (restMs < 0.0) {
+          restMs = 0.0;
+        }
+
+        state->frames += 1;
+        state->totalFrameMs += frameMs;
+        state->totalUpdateMs += state->lastUpdateMs;
+        state->totalDrawMs += state->lastDrawMs;
+        state->totalRestMs += restMs;
+
+        if (frameMs > state->maxFrameMs) state->maxFrameMs = frameMs;
+        if (state->lastUpdateMs > state->maxUpdateMs) state->maxUpdateMs = state->lastUpdateMs;
+        if (state->lastDrawMs > state->maxDrawMs) state->maxDrawMs = state->lastDrawMs;
+        if (restMs > state->maxRestMs) state->maxRestMs = restMs;
+
+        state->timerSeconds += static_cast<float>(frameMs / 1000.0);
+        if (state->timerSeconds >= state->reportIntervalSeconds && state->frames > 0) {
+          const double fps = static_cast<double>(state->frames) / static_cast<double>(state->timerSeconds);
+          const double avgFrame = state->totalFrameMs / static_cast<double>(state->frames);
+          const double avgUpdate = state->totalUpdateMs / static_cast<double>(state->frames);
+          const double avgDraw = state->totalDrawMs / static_cast<double>(state->frames);
+          const double avgRest = state->totalRestMs / static_cast<double>(state->frames);
+
+          cocos2d::log("=== Frame Perf (%.2fs) fps=%.1f avg(ms): frame=%.3f update=%.3f draw=%.3f rest=%.3f max(ms): frame=%.3f update=%.3f draw=%.3f rest=%.3f",
+            state->timerSeconds,
+            fps,
+            avgFrame,
+            avgUpdate,
+            avgDraw,
+            avgRest,
+            state->maxFrameMs,
+            state->maxUpdateMs,
+            state->maxDrawMs,
+            state->maxRestMs);
+
+          state->totalFrameMs = 0.0;
+          state->totalUpdateMs = 0.0;
+          state->totalDrawMs = 0.0;
+          state->totalRestMs = 0.0;
+          state->maxFrameMs = 0.0;
+          state->maxUpdateMs = 0.0;
+          state->maxDrawMs = 0.0;
+          state->maxRestMs = 0.0;
+          state->frames = 0;
+          state->timerSeconds = 0.0f;
+        }
+      }
+
+      state->updateBegin = now;
+      state->lastFrameBegin = now;
+      state->hasLastFrame = true;
+    });
+
+    auto afterUpdateListener = EventListenerCustom::create(Director::EVENT_AFTER_UPDATE, [state](EventCustom*) {
+      auto now = FrameProfileState::Clock::now();
+      state->lastUpdateMs = std::chrono::duration<double, std::milli>(now - state->updateBegin).count();
+    });
+
+    auto beforeDrawListener = EventListenerCustom::create(Director::EVENT_BEFORE_DRAW, [state](EventCustom*) {
+      state->drawBegin = FrameProfileState::Clock::now();
+    });
+
+    auto afterDrawListener = EventListenerCustom::create(Director::EVENT_AFTER_DRAW, [state](EventCustom*) {
+      auto now = FrameProfileState::Clock::now();
+      state->lastDrawMs = std::chrono::duration<double, std::milli>(now - state->drawBegin).count();
+    });
+
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(beforeUpdateListener, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(afterUpdateListener, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(beforeDrawListener, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(afterDrawListener, this);
+  }
   
   this->scheduleUpdate();
 
@@ -100,6 +231,7 @@ void KingSlimeTestScene::setupEcsSystems()
   CCLOG("========== Setting up EnTT Systems for King Slime Arena ==========");
   
   _systemManager.setRegistry(&_registry);
+  _systemManager.setPerformanceProfiling(true, 1.0f, 8);
   
   // 基础系统
   _systemManager.addSystem<ecs::HealthSystemEntt>();
@@ -124,7 +256,12 @@ void KingSlimeTestScene::setupEcsSystems()
   // 新架构：使用RenderSystem和AnimationSystem
   _systemManager.addSystem<ecs::RenderSystem>();
   _systemManager.addSystem<ecs::AnimationSystem>();
-  _systemManager.addSystem<ecs::SlimeSyncSystemEntt>();  // 保留用于物理同步
+  
+  // 优化：使用统一的物理同步系统，替代以下重复系统：
+  // - SlimeRenderSystemEntt（已移除）
+  // - SlimeSyncSystemEntt（已移除）
+  // - MonsterSyncSystemEntt（已移除）
+  _systemManager.addSystem<ecs::PhysicsSyncSystemEntt>();
   
   // 注册精灵销毁观察者
   ecs::SpriteDestructionObserver::registerToRegistry(_registry);
@@ -137,7 +274,7 @@ void KingSlimeTestScene::setupEcsSystems()
     kingSlimeAI->setSceneContext(this);
   }
   
-  CCLOG("EnTT Systems initialized: %zu systems (including KingSlimeAI)", _systemManager.getSystemCount());
+  CCLOG("EnTT Systems initialized: %zu systems (optimized: merged sync systems)", _systemManager.getSystemCount());
   CCLOG("===========================================");
 }
 
@@ -305,6 +442,18 @@ void KingSlimeTestScene::update(float delta)
   updateCameraFollow();
   updateBossHealthBar();
   _systemManager.update(delta);
+  
+  // 性能监控：每秒输出一次Draw Call数量
+  static float debugTimer = 0.0f;
+  debugTimer += delta;
+  if (debugTimer >= 1.0f) {
+    auto* renderer = Director::getInstance()->getRenderer();
+    CCLOG("Performance: DrawCalls=%lu, Vertices=%lu, Entities=%zu",
+          renderer->getDrawnBatches(),
+          renderer->getDrawnVertices(),
+          _registry.storage<entt::entity>().size());
+    debugTimer = 0.0f;
+  }
 }
 
 void KingSlimeTestScene::updateFakePlayerMovement(float delta)
@@ -433,8 +582,36 @@ void KingSlimeTestScene::onDamageButtonClicked(Ref* sender)
 void KingSlimeTestScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 {
   _keysPressed[keyCode] = true;
+
+  if (keyCode == EventKeyboard::KeyCode::KEY_F1) {
+    static int capMode = 0;
+    capMode = (capMode + 1) % 3;
+
+    if (capMode == 0) {
+      Director::getInstance()->setAnimationInterval(1.0f / 60.0f);
+      cocos2d::log("KingSlimeTestScene: Frame cap set to 60FPS");
+    } else if (capMode == 1) {
+      Director::getInstance()->setAnimationInterval(1.0f / 240.0f);
+      cocos2d::log("KingSlimeTestScene: Frame cap set to 240FPS");
+    } else {
+      Director::getInstance()->setAnimationInterval(0.0f);
+      cocos2d::log("KingSlimeTestScene: Frame cap set to UNLIMITED");
+    }
+  }
+
+  if (keyCode == EventKeyboard::KeyCode::KEY_F2) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+    static bool vsyncDisabled = false;
+    vsyncDisabled = !vsyncDisabled;
+    glfwSwapInterval(vsyncDisabled ? 0 : 1);
+    cocos2d::log("KingSlimeTestScene: VSync %s", vsyncDisabled ? "OFF" : "ON");
+#else
+    CCLOG("KingSlimeTestScene: VSync toggle is not supported on this platform");
+#endif
+  }
   
   if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
+    Director::getInstance()->setAnimationInterval(1.0f / 60.0f);
     auto mainMenuScene = MainMenuScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, mainMenuScene));
   }
@@ -451,14 +628,8 @@ void KingSlimeTestScene::spawnKingSlimeBoss()
 {
   CCLOG("========== Spawning King Slime Boss ==========");
   
-  // 加载Boss配置
-  auto& factory = MonsterFactory::getInstance();
-  factory.loadSingleConfig("config/bosses/KingSlime.json");
-  
-  if (!factory.getConfig("KingSlime")) {
-    CCLOG("ERROR: Failed to load KingSlime configuration!");
-    return;
-  }
+  // 使用新总工厂（KingSlimeFactory 已自加载配置）
+  auto& factory = MonsterMasterFactory::getInstance();
   
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();

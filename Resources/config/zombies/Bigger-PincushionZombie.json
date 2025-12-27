@@ -4,7 +4,7 @@
   "description": "大型针垫僵尸 - 体型巨大且浑身尖刺，极高的攻击力和防御力",
 
   "display": {
-    "spriteFolder": "Minor monster/Bigger-PincushionZombie",
+    "spriteFolder": "Picture/Minor_monster/Bigger-PincushionZombie",
     "spritePrefix": "Bigger-PincushionZombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],

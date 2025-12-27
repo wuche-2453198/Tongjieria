@@ -5,6 +5,7 @@
 #include "components/AllComponents.h"
 #include "components/render/SpriteComponent.h"
 #include <entt/entt.hpp>
+#include <cstdint>
 
 namespace ecs {
 
@@ -20,6 +21,7 @@ class PhysicsContactHandler {
 public:
     // 法线阈值常量
     static constexpr float GROUND_NORMAL_THRESHOLD = -0.3f;  // 地面法线Y阈值
+    static constexpr float GROUND_NORMAL_X_MAX = 0.6f;
     static constexpr float WALL_NORMAL_X_THRESHOLD = 0.7f;   // 墙壁法线X阈值
     static constexpr float WALL_NORMAL_Y_THRESHOLD = 0.3f;   // 墙壁法线Y阈值
 
@@ -32,10 +34,24 @@ public:
         cocos2d::Node* dynamicNode = nullptr;
         cocos2d::Node* staticNode = nullptr;
         cocos2d::Vec2 normal;           // 指向动态物体的法线
+        std::uintptr_t contactKey = 0;
         bool isValid = false;           // 是否有效（存在动态-静态对）
         bool isGroundContact = false;   // 是否为地面接触
         bool isWallContact = false;     // 是否为墙壁接触
     };
+
+    static std::uintptr_t makeContactKey(cocos2d::PhysicsContact& contact) {
+        auto* shapeA = contact.getShapeA();
+        auto* shapeB = contact.getShapeB();
+        std::uintptr_t a = reinterpret_cast<std::uintptr_t>(shapeA);
+        std::uintptr_t b = reinterpret_cast<std::uintptr_t>(shapeB);
+        if (a > b) {
+            std::uintptr_t tmp = a;
+            a = b;
+            b = tmp;
+        }
+        return a ^ (b << 1);
+    }
 
     /**
      * @brief 解析碰撞信息
@@ -64,6 +80,8 @@ public:
         
         info.dynamicNode = info.dynamicBody->getNode();
         info.staticNode = info.staticBody->getNode();
+
+        info.contactKey = makeContactKey(contact);
         
         if (!info.dynamicNode) {
             info.isValid = false;
@@ -75,7 +93,8 @@ public:
         if (!dynamicIsA) info.normal = -info.normal;
         
         // 判断接触类型
-        info.isGroundContact = (info.normal.y < GROUND_NORMAL_THRESHOLD);
+        info.isGroundContact = (info.normal.y < GROUND_NORMAL_THRESHOLD) &&
+                               (std::abs(info.normal.x) < GROUND_NORMAL_X_MAX);
         info.isWallContact = (std::abs(info.normal.x) > WALL_NORMAL_X_THRESHOLD && 
                               std::abs(info.normal.y) < WALL_NORMAL_Y_THRESHOLD);
         info.isValid = true;
@@ -99,8 +118,10 @@ public:
         
         auto* ground = registry.try_get<GroundDetectorComponent>(entity);
         if (ground) {
-            ground->isOnGround = true;
-            ground->groundContactCount++;
+            if (ground->groundContactKeys.insert(info.contactKey).second) {
+                ground->isOnGround = true;
+                ground->groundContactCount++;
+            }
         }
     }
 
@@ -110,7 +131,7 @@ public:
      * @param info 碰撞信息
      */
     static void handleGroundContactSeparate(entt::registry& registry, const ContactInfo& info) {
-        if (!info.isValid || !info.isGroundContact) return;
+        if (!info.isValid) return;
         
         EntityId entityId = NodeEntityMap::getInstance().findEntity(info.dynamicNode);
         if (entityId == INVALID_ENTITY) return;
@@ -120,10 +141,15 @@ public:
         
         auto* ground = registry.try_get<GroundDetectorComponent>(entity);
         if (ground) {
-            ground->groundContactCount--;
-            if (ground->groundContactCount <= 0) {
-                ground->isOnGround = false;
-                ground->groundContactCount = 0;
+            auto it = ground->groundContactKeys.find(info.contactKey);
+            if (it != ground->groundContactKeys.end()) {
+                ground->groundContactKeys.erase(it);
+                ground->groundContactCount--;
+                if (ground->groundContactCount <= 0) {
+                    ground->isOnGround = false;
+                    ground->groundContactCount = 0;
+                    ground->groundContactKeys.clear();
+                }
             }
         }
     }
@@ -163,6 +189,42 @@ public:
             if (customBeginHandler) {
                 if (!customBeginHandler(contact, info)) {
                     return true;  // 自定义处理器已处理，跳过默认处理
+                }
+            }
+            {
+                auto* bodyA = contact.getShapeA() ? contact.getShapeA()->getBody() : nullptr;
+                auto* bodyB = contact.getShapeB() ? contact.getShapeB()->getBody() : nullptr;
+                cocos2d::Node* nodeA = bodyA ? bodyA->getNode() : nullptr;
+                cocos2d::Node* nodeB = bodyB ? bodyB->getNode() : nullptr;
+
+                EntityId idA = nodeA ? NodeEntityMap::getInstance().findEntity(nodeA) : INVALID_ENTITY;
+                EntityId idB = nodeB ? NodeEntityMap::getInstance().findEntity(nodeB) : INVALID_ENTITY;
+
+                if (idA != INVALID_ENTITY && idB != INVALID_ENTITY) {
+                    auto entA = static_cast<entt::entity>(idA);
+                    auto entB = static_cast<entt::entity>(idB);
+                    if (registry.valid(entA) && registry.valid(entB)) {
+                        auto* combatA = registry.try_get<CombatComponent>(entA);
+                        auto* playerB = registry.try_get<PlayerTag>(entB);
+                        auto* healthB = registry.try_get<HealthComponent>(entB);
+                        if (combatA && playerB && healthB) {
+                            if (combatA->attackTimer <= 0.0f && healthB->invincibleTimer <= 0.0f) {
+                                healthB->takeDamage(combatA->attackDamage);
+                                healthB->invincibleTimer = healthB->invincibleTime;
+                                combatA->attackTimer = combatA->attackCooldown;
+                            }
+                        }
+                        auto* combatB = registry.try_get<CombatComponent>(entB);
+                        auto* playerA = registry.try_get<PlayerTag>(entA);
+                        auto* healthA = registry.try_get<HealthComponent>(entA);
+                        if (combatB && playerA && healthA) {
+                            if (combatB->attackTimer <= 0.0f && healthA->invincibleTimer <= 0.0f) {
+                                healthA->takeDamage(combatB->attackDamage);
+                                healthA->invincibleTimer = healthA->invincibleTime;
+                                combatB->attackTimer = combatB->attackCooldown;
+                            }
+                        }
+                    }
                 }
             }
             

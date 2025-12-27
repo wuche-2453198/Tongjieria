@@ -4,7 +4,7 @@
   "description": "小型针垫僵尸 - 体型较小但浑身插满尖刺的僵尸",
 
   "display": {
-    "spriteFolder": "Minor monster/32px-PincushionZombie",
+    "spriteFolder": "Picture/Minor_monster/32px-PincushionZombie",
     "spritePrefix": "32px-PincushionZombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],

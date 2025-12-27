@@ -1,7 +1,7 @@
 #ifndef __ECS_SYSTEM_DEMONEYEAISYSTEMENTT_H__
 #define __ECS_SYSTEM_DEMONEYEAISYSTEMENTT_H__
 
-#include "systems/core/ISystemEntt.h"
+#include "systems/npc/OptimizedAISystemBase.h"
 #include "systems/core/SystemPriority.h"
 #include "components/AllComponents.h"
 #include "systems/core/AnimationStateHelper.h"
@@ -22,13 +22,23 @@ namespace ecs {
  * - 缓慢转向，转弯速率较慢
  * - 撞墙/物块时弧形回弹
  * - 被击退时弧形轨迹回弹
+ * 
+ * 优化特性（继承自 OptimizedAISystemBase）：
+ * - 离屏实体降频更新
+ * - 空闲实体降频更新
+ * - 远距离实体使用简化 AI
+ * 
+ * Requirements: 5.1, 5.5, 5.6
  */
-class DemonEyeAISystemEntt : public ISystemEntt {
+class DemonEyeAISystemEntt : public OptimizedAISystemBase {
 public:
     const char* getName() const override { return "DemonEyeAISystem"; }
     int getPriority() const override { return SystemPriority::MOVEMENT; }
 
     void update(float delta) override {
+        // 增加帧计数器
+        incrementFrameCounter();
+        
         auto view = _registry->view<DemonEyeMovementComponent, AggroComponent,
                                      SpriteStateComponent, RenderComponent, TransformComponent>();
         
@@ -40,6 +50,13 @@ public:
             auto* animState = _registry->try_get<AnimationStateComponent>(entity);
             
             if (!state.spriteCreated || !state.spriteHandle) return;
+            
+            // 优化：检查是否应该更新此实体
+            auto* stateFlags = _registry->try_get<EntityStateFlags>(entity);
+            if (!shouldUpdateEntity(entity, stateFlags)) {
+                return; // 跳过此帧的更新
+            }
+            
             auto* sprite = static_cast<cocos2d::Sprite*>(state.spriteHandle);
 
             // 获取目标位置（如果有仇恨）

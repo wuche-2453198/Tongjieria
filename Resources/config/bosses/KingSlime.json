@@ -3,7 +3,7 @@
   "type": "KingSlime",
   
   "display": {
-    "spriteFolder": "Bosses/KingSlime",
+    "spriteFolder": "Picture/Bosses/KingSlime",
     "spritePrefix": "King_Slime",
     "frameCount": 4,
     "frameSequence": [1, 2, 3, 4],

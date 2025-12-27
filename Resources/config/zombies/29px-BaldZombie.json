@@ -4,7 +4,7 @@
   "description": "小型秃头僵尸 - 体型较小但移动较快的秃头僵尸",
 
   "display": {
-    "spriteFolder": "Minor monster/29px-BaldZombie",
+    "spriteFolder": "Picture/Minor_monster/29px-BaldZombie",
     "spritePrefix": "29px-Bald_Zombie",
     "frameCount": 3,
     "frameSequence": [ 1, 2, 3, 2 ],
