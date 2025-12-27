@@ -8,6 +8,10 @@
       "behavior": "dirt_behavior",
       "texture": "blocks\\textures\\dirt.png"
     },
+    "mining": {
+      "hardness": 1.0,
+      "tool": "shovel"
+    },
     "collision": {
       "enable": true,
       "shape": [ 1, 1 ],

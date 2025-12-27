@@ -8,6 +8,10 @@
       "behavior": "dirt_behavior",
       "texture": "blocks\\textures\\dirt_wall.png"
     },
+    "mining": {
+      "hardness": 1.0,
+      "tool": "hammer"
+    },
     "collision": {
       "enable": false
     }

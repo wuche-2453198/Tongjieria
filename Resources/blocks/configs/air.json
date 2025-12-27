@@ -3,7 +3,6 @@
   "name": "Air",
   "origin": {
     "base": {
-      "wall": false,
       "replaceable": true,
       "behavior": "air_behavior",
       "texture": "blocks\\textures\\air.png"
