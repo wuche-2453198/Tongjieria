@@ -112,10 +112,10 @@ MiningProgress::MiningProgress() = default;
 MiningProgress::MiningProgress(float progress) : progress(progress) {}
 
 
-WorldScene::WorldScene(World* world) : _world(world) {}
+WorldScene::WorldScene(cocos2d::Scene* world) : _world(world) {}
 WorldScene::~WorldScene() = default;
-World& WorldScene::operator*() const { return *_world; }
-World* WorldScene::operator->() const { return _world; }
+cocos2d::Scene& WorldScene::operator*() const { return *_world; }
+cocos2d::Scene* WorldScene::operator->() const { return _world; }
 WorldScene::operator bool() const { return _world != nullptr; }
 
 CustomcommandPack::CustomcommandPack() = default;
