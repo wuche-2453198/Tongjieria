@@ -7,9 +7,6 @@
 
 #define RENDER_LOG
 
-constexpr int BLOCK_Z_ORDER = 0;
-constexpr int WALL_Z_ORDER = -1;
-
 ChunkRenderSystem::ChunkRenderSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher), _assetManager(_registry.ctx().get<AssetManager>()) {};
 ChunkRenderSystem::~ChunkRenderSystem() = default;
