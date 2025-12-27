@@ -64,7 +64,7 @@ private:
     * @param pack Çø¿éäÖÈ¾Ö¸Áî°ü
     * @param id Çø¿éäÖÈ¾Ë÷Òı»º´æ
     */
-    void constructPack(const Vec2i chunkPos, const ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id);
+    void constructPack(LayerType layerType, const Vec2i chunkPos, const ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id);
 
     AssetManager& _assetManager;
 };

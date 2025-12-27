@@ -5,6 +5,11 @@
 #include "chunk_render_system.h"
 #include "utils/tools.h"
 
+#define RENDER_LOG
+
+constexpr int BLOCK_Z_ORDER = 0;
+constexpr int WALL_Z_ORDER = -1;
+
 ChunkRenderSystem::ChunkRenderSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher), _assetManager(_registry.ctx().get<AssetManager>()) {};
 ChunkRenderSystem::~ChunkRenderSystem() = default;
@@ -19,8 +24,8 @@ void ChunkRenderSystem::update(float delta)
 void ChunkRenderSystem::createCommand()
 {
     // 获取已经生成但没有渲染指令的区块
-    auto view = _registry.view<Position, ChunkBlocks>(entt::exclude<CustomcommandPack>);
-    view.each([&](entt::entity entity, Position& pos, ChunkBlocks& blocks)
+    auto view = _registry.view<Position, ChunkHead, ChunkBlocks>(entt::exclude<CustomcommandPack>);
+    view.each([&](entt::entity entity, Position& pos, ChunkHead& head, ChunkBlocks& blocks)
         {
             // 获取当前相机的区块位置
             Vec2i cameraChunkPos =
@@ -33,7 +38,7 @@ void ChunkRenderSystem::createCommand()
             auto& batchs = _registry.emplace<CustomcommandPack>(entity);
             auto& batchIDs = _registry.emplace<ChunkRenderBatchID>(entity);
 
-            constructPack(chunkPos, blocks, batchs, batchIDs);
+            constructPack(head.getLayerType(), chunkPos, blocks, batchs, batchIDs);
         });
 }
 
@@ -57,8 +62,8 @@ void ChunkRenderSystem::cutCommand()
 
 void ChunkRenderSystem::updateDirtyBlock()
 {
-    auto view = _registry.view<Position, ChunkBlocks, CustomcommandPack, ChunkRenderBatchID, DirtyChunkTag>();
-    view.each([&](entt::entity entity, Position& pos, ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id, DirtyChunkTag tag)
+    auto view = _registry.view<Position, ChunkHead, ChunkBlocks, CustomcommandPack, ChunkRenderBatchID, DirtyChunkTag>();
+    view.each([&](entt::entity entity, Position& pos, ChunkHead& head, ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id, DirtyChunkTag tag)
         {
             // 清理区块命令和渲染缓存
             pack.releaseAllCommand();
@@ -66,7 +71,7 @@ void ChunkRenderSystem::updateDirtyBlock()
 
             Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
 
-            constructPack(chunkPos, blocks, pack, id);
+            constructPack(head.getLayerType(), chunkPos, blocks, pack, id);
             
             for (auto& dirtyBlock : tag.dirtyBlocks)
             {
@@ -79,7 +84,7 @@ void ChunkRenderSystem::updateDirtyBlock()
         });
 }
 
-void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id)
+void ChunkRenderSystem::constructPack(LayerType layerType, const Vec2i chunkPos, const ChunkBlocks& blocks, CustomcommandPack& pack, ChunkRenderBatchID& id)
 {
     std::unordered_map<entt::id_type, std::vector<Vec2i>> blockbatch;
 
@@ -109,7 +114,9 @@ void ChunkRenderSystem::constructPack(const Vec2i chunkPos, const ChunkBlocks& b
         // 加载纹理
         auto texture = _assetManager.getTexture(texturePath);
 
-        auto batchCommand = new BlockBatchCommand(0, positions, texture);
+        int order = layerType == LayerType::BLOCK ? BLOCK_Z_ORDER : WALL_Z_ORDER;
+
+        auto batchCommand = new BlockBatchCommand(order, positions, texture);
         batchCommand->setUseTransform(false);   // 不使用transform，直接使用block的位置
         pack.commands.push_back(batchCommand);  // 添加到batchs中
         id.addBatchID(blockID, top);            // 记录batchID和top
