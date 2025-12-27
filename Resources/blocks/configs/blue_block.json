@@ -1,0 +1,7 @@
+{
+  "id": "blue_block",
+  "name": "Blue Block",
+  "texture": "blocks\\textures\\blue_block.png",
+  "replaceable" : false,
+  "collision" : true
+}
