@@ -1,14 +1,24 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME Mygame)
+
+set(APP_NAME Tongjieria)
 
 project(${APP_NAME})
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 if(XCODE)
     if(NOT DEFINED CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET)
         SET (CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 8.0)
     endif()
+endif()
+
+if(MSVC)
+    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/std:c++20>")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/std:c++20>")
 endif()
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test Mygame into root project
@@ -17,6 +27,7 @@ if(NOT DEFINED BUILD_ENGINE_DONE) # to test Mygame into root project
 
     include(CocosBuildSet)
     add_subdirectory(${COCOS2DX_ROOT_PATH}/cocos ${ENGINE_BINARY_PATH}/cocos/core)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnoise)
 endif()
 
 # record sources, headers, resources...
@@ -31,16 +42,10 @@ if(APPLE OR WINDOWS)
 endif()
 
 # add cross-platforms source files and header files 
-list(APPEND GAME_SOURCE
-     Classes/AppDelegate.cpp
-     Classes/SplashScene.cpp
-     Classes/MainMenuScene.cpp
-     )
-list(APPEND GAME_HEADER
-     Classes/AppDelegate.h
-     Classes/SplashScene.h
-     Classes/MainMenuScene.h
-     )
+ file(GLOB_RECURSE GAME_SOURCE_CLASSES "Classes/*.cpp")
+ file(GLOB_RECURSE GAME_HEADER_CLASSES "Classes/*.h")
+ list(APPEND GAME_SOURCE ${GAME_SOURCE_CLASSES})
+ list(APPEND GAME_HEADER ${GAME_HEADER_CLASSES})
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
@@ -108,9 +113,11 @@ else()
 endif()
 
 target_link_libraries(${APP_NAME} cocos2d)
+target_link_libraries(${APP_NAME} libnoise)
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt/src
 )
 
 # mark app resources
