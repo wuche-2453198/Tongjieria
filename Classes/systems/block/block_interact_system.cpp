@@ -4,9 +4,10 @@
 #include "systems/block_layer/block_layer.h"
 #include "block_interact_system.h"
 
+#define ON_DESTORY_LOG 1
+
 BlockInteractSystem::BlockInteractSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher), 
-    _blockLayer(_registry.ctx().get<BlockLayer>()),
     _assetManager(_registry.ctx().get<AssetManager>())
 {
     _behaviorRegistry = std::make_unique<BlockBehaviorRegistry>();
@@ -23,61 +24,66 @@ BlockInteractSystem::~BlockInteractSystem()
 
 void BlockInteractSystem::onBlockPlaced(const BlockPlacedEvent& event)
 {
+    // 获取对应的层
+    auto& layer = _blockWorld.getLayer(event.layer);
     // 调用行为
     auto behavior = _behaviorRegistry->getBehavior(event.id);
     if (behavior) behavior->onBlockPlaced(event);
 
+    // 创建新的方块
     BlockHandle newState(event.blockPos, event.id);
-    _blockLayer.setBlockAtBlockPos(event.blockPos, newState);
+    layer.setBlockAtBlockPos(event.blockPos, newState);
 
-    auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
+    // 分发对应的标配
+    auto chunkID = layer.getChunkEntity(BlockLayer::blockPosToChunkPos(event.blockPos));
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 
 void BlockInteractSystem::onBlockDestroyed(const BlockDestroyEvent& event)
 {
+    // 获取对应的层
+    auto& layer = _blockWorld.getLayer(event.layer);
     // 调用行为
     auto behavior = _behaviorRegistry->getBehavior(event.id);
     if (behavior) behavior->onBlockDestroyed(event);
 
-    BlockHandle newState(event.blockPos, entt::hashed_string("air"));
-    _blockLayer.setBlockAtBlockPos(event.blockPos, newState);
+#if ON_DESTORY_LOG
+    std::string layerstr = event.layer == LayerType::BLOCK ? "block" : "wall";
+    CCLOG("[BlockInteractSystem]: onDestroyed: %s %d, %d",layerstr.c_str(), event.blockPos.x, event.blockPos.y);
+#endif // 
 
-    auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
+
+    BlockHandle newState(event.blockPos, entt::hashed_string("air"));
+    layer.setBlockAtBlockPos(event.blockPos, newState);
+
+    Vec2i chunkPos = BlockLayer::blockPosToChunkPos(event.blockPos);
+    if (!layer.hasChunkExist(chunkPos))
+    {
+        return;
+    }
+    auto chunkID = layer.getChunkEntity(chunkPos);
     addDirtyTag(chunkID, BlockLayer::blockPosToChunkLocalPos(event.blockPos));
 }
 
 void BlockInteractSystem::onBlockMined(const BlockMinedEvent& event)
 {
+    // 获取对应的层
+    auto& layer = _blockWorld.getLayer(event.layer);
+
+    // 执行方块行为
     auto behavior = _behaviorRegistry->getBehavior(event.id);
     if (behavior) behavior->onBlockMined(event);
-
-    BlockHandle handle = _blockLayer.getBlockAtBlockPos(event.blockPos);
-
-    entt::entity blockEntity;
-    if (!handle.blockEntiy.has_value())
+    
+    auto blockEntity = layer.getBlockEntityAt(event.blockPos);
+    if (!blockEntity.has_value())
     {
-        // 创建一个新的方块实体
-        blockEntity = _registry.create();
-
-        _registry.emplace<Position>(blockEntity, event.blockPos * BLOCK_SIZE);
-        _registry.emplace<ActiveBlock>(blockEntity, handle.id.value(), event.blockPos);
-
-        auto chunkID = _blockLayer.getChunk(BlockLayer::blockPosToChunkPos(event.blockPos));
-        _registry.get<ChunkBlocks>(chunkID).
-            addEntity(BlockLayer::blockPosToChunkLocalPos(event.blockPos), blockEntity);
+        blockEntity = layer.addBlockEntity(event.blockPos).first;
     }
-    else
-    {
-        blockEntity = handle.blockEntiy.value();
-    }
-
-    auto& block = _registry.get<ActiveBlock>(blockEntity);
-
     // 防止重复加入
-    if (!_registry.all_of<MiningTag>(blockEntity))
+    if (!_registry.all_of<MiningTag>(blockEntity.value()))
     {
-        block.saveEmplace<MiningTag>(_registry, blockEntity, event.miningFactor, event.miner);
+        auto& block = _registry.get<BlockEntityHead>(blockEntity.value());
+        block.saveEmplace<MiningTag>(_registry, blockEntity.value(), event.miningFactor, event.miner);
     }
 }
 

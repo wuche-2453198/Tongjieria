@@ -6,7 +6,7 @@
 #pragma once
 
 class AssetManager;
-class BlockLayer;
+class BlockWorld;
 class BlockBehaviorRegistry;
 
 /**
@@ -34,5 +34,4 @@ private:
     std::unique_ptr<BlockBehaviorRegistry> _behaviorRegistry;
 
     AssetManager& _assetManager;
-    BlockLayer& _blockLayer;
 };
