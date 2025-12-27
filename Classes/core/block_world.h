@@ -1,5 +1,6 @@
 #include <optional>
 #include "entt/entt.hpp"
+#include "core/consts.h"
 #include "utils/vec2i.h" 
 #pragma once
 
@@ -8,18 +9,8 @@ using optional_entity = std::optional<entt::entity>;
 using state = uint32_t;
 
 /**
-* @brief 方块类型枚举。
-*/
-enum class BlockType
-{
-    BLOCK, WALL
-};
-
-/**
 * @brief 方块状态结构体。
 * 本质是一个方块的描述符。用于传递方块信息。
-*
-* @todo 完善方块状态
 */
 struct BlockHandle {
     BlockHandle(
@@ -27,7 +18,7 @@ struct BlockHandle {
         optional_id block_id = std::nullopt, 
         optional_entity entity = std::nullopt,
         state state_code = 0, 
-        BlockType type = BlockType::BLOCK)
+        LayerType type = LayerType::BLOCK)
         : blockPos(pos), id(block_id), blockEntiy(entity),
           stateCode(state_code), blockType(type) {}
 
@@ -49,7 +40,7 @@ struct BlockHandle {
     optional_id id;                 ///< 方块id
     optional_entity blockEntiy;     ///< 方块实体
     state stateCode;                ///< 方块状态码
-    BlockType blockType;            ///< 方块类型
+    LayerType blockType;            ///< 方块类型
 };
 
 namespace cocos2d
@@ -79,80 +70,96 @@ public:
     BlockWorld(entt::registry& registry, entt::dispatcher& dispatcher);
     ~BlockWorld();
 
+    BlockLayer& getLayer(LayerType layer) const;
+
     /**
     * @brief 获取指定位置的方块状态。
     * 
-    * @param pos 方块在世界中的位置
+    * @param layer 方块所在层
+    * @param blockPos 方块在世界中的位置
     * @return 方块状态
     */
-    BlockHandle getBlockAtBlockPos(const Vec2i& BlockPos) const;
+    BlockHandle getBlockAtBlockPos(LayerType layer, const Vec2i& blockPos) const;
 
     /**
     * @brief 获取指定世界位置的方块状态。
     * 
-    * @param pos 世界坐标
+    * @param layer 方块所在层
+    * @param worldPos 世界坐标
     * @return 方块状态
     */
-    BlockHandle getBlockAtWorldPos(const cocos2d::Vec2& worldPos) const;
+    BlockHandle getBlockAtWorldPos(LayerType layer, const cocos2d::Vec2& worldPos) const;
 
     /**
     * @brief 尝试与指定位置的方块交互。
     * 
-    * @param pos 方块坐标
+    * @param layer 方块所在层
+    * @param blockPos 方块坐标
     * @param interactor 交互者实体
     * @return 是否成功交互
     */
-    bool tryInteract(const Vec2i& pos, entt::entity interactor);
+    bool tryInteract(LayerType layer, const Vec2i& blockPos, entt::entity interactor);
 
     /**
     * @brief 尝试与指定位置的方块交互。
     * 
-    * @param pos 世界坐标
+    * @param layer 方块所在层
+    * @param worldPos 世界坐标
     * @param interactor 交互者实体
     * @return 是否成功交互
     */
-    bool tryInteractAtWorldPos(const cocos2d::Vec2& pos, entt::entity interactor);
+    bool tryInteractAtWorldPos(LayerType layer, const cocos2d::Vec2& worldPos, entt::entity interactor);
 
     /**
-    * @brief 尝试挖掘指定位置的方块
+    * @brief 尝试挖掘指定位置的方块。
     * 
-    * @param 
+    * @param layer 方块所在层
+    * @param blockPos 方块坐标
+    * @param mineFactor 挖掘强度
+    * @param miner 挖掘者实体
     */
-    bool tryMine(const Vec2i& blockPos, entt::entity interactor);
+    bool tryMine(LayerType layer, const Vec2i& blockPos, float mineFactor, entt::entity miner);
 
     /**
     * @brief 尝试挖掘指定世界位置的方块
+    * 
+    * @param layer 方块所在层
+    * @param worldPos 世界坐标
+    * @param mineFactor 挖掘强度
+    * @param miner 挖掘者实体
     */
-    bool tryMineAtWorldPos(const cocos2d::Vec2& worldPos, entt::entity interactor);
+    bool tryMineAtWorldPos(LayerType layer, const cocos2d::Vec2& worldPos, float mineFactor, entt::entity miner);
 
     /**
     * @brief 尝试破坏指定位置的方块。
     * 
-    * @param pos 方块坐标
+    * @param layer 方块所在层
+    * @param blockPos 方块坐标
     * @param destroyer 破坏者实体
     * @return 是否成功破坏
     */
-    bool tryDestroy(const Vec2i& pos, entt::entity destroyer);
+    bool tryDestroy(LayerType layer, const Vec2i& blockPos, entt::entity destroyer);
 
     /**
     * @brief 尝试破坏指定位置的方块。
     * 
-    * @param pos 世界坐标
+    * @param layer 方块所在层
+    * @param worldPos 世界坐标
     * @param destroyer 破坏者实体
     * @return 是否成功破坏
     */
-    bool tryDestroyAtWorldPos(const cocos2d::Vec2& pos, entt::entity destroyer);
+    bool tryDestroyAtWorldPos(LayerType layer, const cocos2d::Vec2& worldPos, entt::entity destroyer);
 
     /**
     * @brief 尝试放置方块到指定位置。
     * 
-    * @param pos 方块坐标
+    * @param blockPos 方块坐标
     * @param block_id 要放置的方块类型ID
     * @param block_state 要放置的方块状态
     * @param placer 放置者实体
     * @return 是否成功放置
     */
-    bool TryPlace(const Vec2i& pos, entt::id_type block_id, state block_state, entt::entity placer);
+    bool tryPlace(const Vec2i& blockPos, entt::id_type blockID, state blockState, entt::entity placer);
 
     /**
     * @brief 尝试放置方块到指定位置。
@@ -163,10 +170,12 @@ public:
     * @param placer 放置者实体
     * @return 是否成功放置
     */
-    bool TryPlaceAtWorldPos(const cocos2d::Vec2& pos, entt::id_type block_id, state block_state, entt::entity placer);
+    bool tryPlaceAtWorldPos(const cocos2d::Vec2& blockPos, entt::id_type blockID, state blockState, entt::entity placer);
+
 private:
-    entt::registry& _registry;  ///< 世界组件总线
-    entt::dispatcher& _dispatcher; ///< 世界事件总线
-    const BlockLayer& _blockLayer; ///< 方块层
-    AssetManager& _assetManager; ///< 资源管理器
+    entt::registry& _registry;                          ///< 世界组件总线
+    entt::dispatcher& _dispatcher;                      ///< 世界事件总线
+    std::unique_ptr<BlockLayer> _blockLayer = nullptr;  ///< 实体方块层
+    std::unique_ptr<BlockLayer>_wallLayer = nullptr;    ///< 墙层
+    AssetManager& _assetManager;                        ///< 资源管理器
 };
