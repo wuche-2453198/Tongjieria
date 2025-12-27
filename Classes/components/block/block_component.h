@@ -95,6 +95,9 @@ struct BlockState
 {
     BlockState() : id(entt::null), stateCode(0) {}
     BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
+    
+    static const BlockState AIR; /// 空气方块 主要用于调试
+
     entt::id_type id;   ///< 方块ID
     state stateCode;    ///< 方块状态
 };

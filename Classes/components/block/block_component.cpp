@@ -30,6 +30,8 @@ int ChunkHead::getPriority() const { return _priority; }
 
 void ChunkHead::setPriority(int priority) { _priority = priority; }
 
+const BlockState BlockState::AIR = { entt::hashed_string("air"), 0 };
+
 ChunkBlocks::ChunkBlocks() = default;
 ChunkBlocks::~ChunkBlocks() = default;
 
