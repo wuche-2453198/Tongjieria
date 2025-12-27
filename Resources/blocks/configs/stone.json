@@ -1,7 +1,21 @@
 {
   "id": "stone",
   "name": "Stone",
-  "texture": "blocks\\textures\\stone.png",
-  "replaceable" : false,
-  "collision" : true
+  "origin": {
+    "base": {
+      "wall": false,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\stone.png"
+    },
+    "mining": {
+      "hardness": 3.0,
+      "tool": "pickaxe"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
 }

@@ -1,10 +1,10 @@
+#pragma once
 #include <unordered_map>
 #include <string>
 #include <optional>
 #include "cocos2d.h"
 #include "json/rapidjson.h"
 #include "json/document.h"
-#pragma once
 
 namespace tools {
 
@@ -39,17 +39,99 @@ protected:
 bool is_json(const std::string& file_name);
 
 std::vector<std::string> get_all_json(const std::string& folder_path);
-std::optional<bool> get_bool(const rapidjson::Value& json, const std::string& name);
-bool get_bool_or(const rapidjson::Value& json, const std::string& name, bool default_val);
-std::optional<int> get_int(const rapidjson::Value& json, const std::string& name);
-int get_int_or(const rapidjson::Value& json, const std::string& name, int default_val);
-std::optional<std::string> get_str(const rapidjson::Value& json, const std::string& name);
-std::string get_str_or(const rapidjson::Value& json, const std::string& name, const std::string& default_val);
-std::optional<float> get_float(const rapidjson::Value& json, const std::string& name);
-float get_float_or(const rapidjson::Value& json, const std::string& name, float default_val);
-std::optional<int> get_val(const rapidjson::Value& json, const std::string& name);
-std::optional<int> get_obj(const rapidjson::Value& json, const std::string& name);
-std::optional<int> get_list(const rapidjson::Value& json, const std::string& name);
+
+template<typename T>
+T get_or(const rapidjson::Value& config, const char* tag, T default_value) {
+    // 检查tag是否存在
+    if (!config.HasMember(tag)) {
+        return default_value;
+    }
+
+    const auto& value = config[tag];
+
+    // 根据类型判断
+    if constexpr (std::is_same_v<T, bool>) 
+    {
+        if (value.IsBool()) 
+        {
+            return value.GetBool();
+        }
+    }
+    else if constexpr (std::is_same_v<T, int>) 
+    {
+        if (value.IsInt()) 
+        {
+            return value.GetInt();
+        }
+    }
+    else if constexpr (std::is_same_v<T, float>) 
+    {
+        if (value.IsFloat()) 
+        {
+            return value.GetFloat();
+        }
+    }
+    else if constexpr (std::is_same_v<T, std::string>) 
+    {
+        if (value.IsString()) 
+        {
+            return std::string(value.GetString(), value.GetStringLength());
+        }
+    }
+    else if constexpr (std::is_same_v<T, const char*>)
+    {
+        if (value.IsString())
+        {
+            return std::string(value.GetString());
+        }
+    }
+    return default_value;
+}
+
+template<typename T>
+std::optional<T> get(const rapidjson::Value& config, const std::string& tag) {
+    // 检查tag是否存在
+    if (!config.HasMember(tag.c_str())) 
+    {
+        return std::nullopt;
+    }
+
+    const auto& value = config[tag.c_str()];
+
+    // 根据类型判断
+    if constexpr (std::is_same_v<T, bool>)
+    {
+        if (value.IsBool())
+        {
+            return std::make_optional(value.GetBool());
+        }
+    }
+    else if constexpr (std::is_same_v<T, int>)
+    {
+        if (value.IsInt())
+        {
+            return value.GetInt();
+        }
+    }
+    else if constexpr (std::is_same_v<T, float>)
+    {
+        if (value.IsFloat())
+        {
+            return value.GetFloat();
+        }
+    }
+    else if constexpr (std::is_same_v<T, std::string>)
+    {
+        if (value.IsString())
+        {
+            return std::string(value.GetString());
+        }
+    }
+    return std::nullopt;
+}
+
+const rapidjson::Value* get_array(const rapidjson::Value& config, const std::string& tag);
+const rapidjson::Value* get_obj(const rapidjson::Value& config, const std::string& tag);
 
 class MouseDebugTool
 {

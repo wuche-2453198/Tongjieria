@@ -1,12 +1,12 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME Mygame)
+
+set(APP_NAME Tongjieria)
 
 project(${APP_NAME})
 
-# Enable C++17 for ECS framework features
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Force UTF-8 encoding for MSVC
@@ -20,12 +20,18 @@ if(XCODE)
     endif()
 endif()
 
+if(MSVC)
+    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/std:c++20>")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/std:c++20>")
+endif()
+
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test Mygame into root project
     set(COCOS2DX_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cocos2d)
     set(CMAKE_MODULE_PATH ${COCOS2DX_ROOT_PATH}/cmake/Modules/)
 
     include(CocosBuildSet)
     add_subdirectory(${COCOS2DX_ROOT_PATH}/cocos ${ENGINE_BINARY_PATH}/cocos/core)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnoise)
 endif()
 
 # record sources, headers, resources...
@@ -40,61 +46,10 @@ if(APPLE OR WIN32)
 endif()
 
 # add cross-platforms source files and header files
-list(APPEND GAME_SOURCE
-     Classes/AppDelegate.cpp
-     Classes/SplashScene.cpp
-     Classes/MainMenuScene.cpp
-     Classes/ItemsTestScene.cpp
-     Classes/PlayerTestScene.cpp
-     Classes/IntegrationTestScene.cpp
-     Classes/systems/items/ItemManager.cpp
-     Classes/systems/items/Inventory.cpp
-     Classes/systems/items/EquipmentValidator.cpp
-     Classes/ui/items/InventoryLayer.cpp
-     Classes/ui/items/EquipmentPanel.cpp
-     Classes/systems/items/RecipeManager.cpp
-     Classes/systems/items/StationDetector.cpp
-     Classes/systems/items/CraftingMatcher.cpp
-     Classes/systems/items/CraftingExecutor.cpp
-     Classes/ui/items/CraftBar.cpp
-     Classes/core/PlayerInput.cpp
-     Classes/systems/player/PlayerFactory.cpp
-     Classes/systems/player/PlayerSystems.cpp
-     Classes/systems/player/PlayerInventoryIntegration.cpp
-     Classes/systems/player/PlayerAnimationLoader.cpp
-     Classes/systems/player/ItemUseSystem.cpp
-     Classes/core/GameManager.cpp
-
-     )
-list(APPEND GAME_HEADER
-     Classes/AppDelegate.h
-     Classes/SplashScene.h
-     Classes/MainMenuScene.h
-     Classes/ItemsTestScene.h
-     Classes/PlayerTestScene.h
-     Classes/IntegrationTestScene.h
-     Classes/components/items/InventoryDef.h
-     Classes/systems/items/ItemManager.h
-     Classes/systems/items/Inventory.h
-     Classes/systems/items/EquipmentValidator.h
-     Classes/ui/items/InventoryLayer.h
-     Classes/ui/items/EquipmentPanel.h
-     Classes/components/items/CraftingDef.h
-     Classes/systems/items/RecipeManager.h
-     Classes/systems/items/StationDetector.h
-     Classes/systems/items/CraftingMatcher.h
-     Classes/systems/items/CraftingExecutor.h
-     Classes/ui/items/CraftBar.h
-     Classes/components/player/PlayerComponents.h
-     Classes/core/PlayerInput.h
-     Classes/systems/player/PlayerFactory.h
-     Classes/systems/player/PlayerSystems.h
-     Classes/systems/player/PlayerInventoryIntegration.h
-     Classes/systems/player/PlayerAnimationLoader.h
-     Classes/systems/player/ItemUseSystem.h
-     Classes/core/GameManager.h
-
-     )
+ file(GLOB_RECURSE GAME_SOURCE_CLASSES "Classes/*.cpp")
+ file(GLOB_RECURSE GAME_HEADER_CLASSES "Classes/*.h")
+ list(APPEND GAME_SOURCE ${GAME_SOURCE_CLASSES})
+ list(APPEND GAME_HEADER ${GAME_HEADER_CLASSES})
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
@@ -162,15 +117,16 @@ else()
 endif()
 
 target_link_libraries(${APP_NAME} cocos2d)
+target_link_libraries(${APP_NAME} libnoise)
 
-# Set C++17 standard for the game target (required for ECS framework)
-set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+# Set C++20 standard for the game target
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt-main/entt-main/single_include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt/src
 )
 
 # mark app resources

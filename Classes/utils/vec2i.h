@@ -37,6 +37,7 @@ public:
     bool operator!=(const Vec2i& vec) const;
     operator cocos2d::Vec2() const;
     operator cocos2d::Vec3() const;
+    float dis();
 
     static size_t vec2ihash(const Vec2i& v);
 

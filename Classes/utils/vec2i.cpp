@@ -45,6 +45,11 @@ Vec2i::operator cocos2d::Vec3() const {
     return cocos2d::Vec3(x, y, 0);
 }
 
+float Vec2i::dis()
+{
+    return sqrt(x * x + y * y);
+}
+
 size_t Vec2i::vec2ihash(const Vec2i& v)
 {
     std::size_t h1 = std::hash<int32_t>{}(v.x);

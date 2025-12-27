@@ -1,0 +1,336 @@
+#pragma once
+#include <memory>
+#include <optional>
+#include "cocos2d.h"
+#include "entt/entt.hpp"
+#include "core/consts.h"
+#include "utils/vec2i.h"
+#include "systems/block_layer/block_layer.h"
+
+namespace cocos2d 
+{
+    class Vec2;
+    class CustomCommand;
+};
+
+class Vec2i;
+
+/**
+* @brief 组件基类接口。
+* 
+* @tease 真的有用吗？
+*/
+class IComponent {};
+
+/**
+* @brief 浮点数位置组件。所有有位置的对象都应该带有这个组件。
+* 
+* @note 不兼容UI，UI应该有专用的位置组件。
+*/
+class Position : public IComponent 
+{
+public:
+    Position();
+    Position(float x, float y);
+    Position(const Vec2i& vec);
+    Position(const cocos2d::Vec2& vec);
+
+    operator cocos2d::Vec2() const;
+
+    const cocos2d::Vec2& getPostion() const;
+    void setPosition(const cocos2d::Vec2& pos);
+private:
+    cocos2d::Vec2 pos; ///< 位置
+};
+
+/**
+* @brief 加载票。任何持有票且有位置的实体会被区块加载系统读取，加载一定半径的区块。
+* 让玩家以外的实体持有永久加载票是危险的，需要谨慎使用。
+*
+* @see ChunkLoadingSystem
+* 
+* @tease 半径设为1000可以获得核弹。
+*/
+struct LoadingTicket 
+{
+    LoadingTicket() = default;
+    LoadingTicket(entt::entity entity_id, unsigned int radius, bool is_permanent)
+        :entity_id(entity_id), radius(radius), is_permanent(is_permanent) {};
+    LoadingTicket(entt::entity entity_id, unsigned int radius, float doration)
+        :entity_id(entity_id), radius(radius), doration(doration) {};
+
+    entt::entity entity_id;
+    unsigned int radius = 0;
+    bool is_permanent = false;
+    float doration = -1;
+};
+
+/**
+* @brief 区块头，包含这个区块的基本信息。
+* 
+* @see ChunkLoadSystem
+* 
+* @tease 原来区块是一个整体来着（本来区块类包含了区块的所有信息，包括方块和渲染），
+* 还有一个温暖的家（blockLayer），后来被万恶的开发者分尸后扔到大路上了（registry），
+* 这个是他的头。
+*/
+class ChunkHead : public IComponent 
+{
+public:
+    ChunkHead(LayerType layerType);
+    ChunkHead(LayerType layerType, int priority);
+    ~ChunkHead();
+
+    LayerType getLayerType() const;
+    int getPriority() const;
+    void setPriority(int priority);
+
+    static inline int UNLOADING_PRIORITY = 0; ///< 卸载优先级阈值
+private:
+    LayerType _layerType;   ///< 区块所在层类型
+    int _priority = 0;      ///< 区块优先级
+};
+
+struct BlockState
+{
+    BlockState() : id(entt::null), stateCode(0) {}
+    BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
+    
+    static const BlockState AIR; /// 空气方块 主要用于调试
+
+    entt::id_type id;   ///< 方块ID
+    state stateCode;    ///< 方块状态
+};
+
+using BlockArray = std::array<std::array<BlockState, CHUNK_SIZE>, CHUNK_SIZE>;
+
+/**
+* @brief 区块网格，存储这个区块下的所有方块。
+* 
+* @note 注意！所有对区块的操作函数都不检查输入的位置。
+* 如果想安全地操作方块，使用：BlockLayer
+* 
+* @see BlockLoadSystem
+* 
+* @tease 这个是他的身体。
+*/
+class ChunkBlocks : public IComponent {
+public:
+    ChunkBlocks();
+    ~ChunkBlocks();
+
+    /**
+    * @brief 获取指定位置的方块。
+    * 
+    * @return 方块ID和状态码
+    */
+    BlockState getBlockAt(const Vec2i& localPos) const;
+
+    /**
+    * @brief 
+    */
+    void setBlockAt(const Vec2i& pos, BlockState blockState);
+
+    /**
+    * @brief 设置指定位置的方块状态。
+    */
+    void setBlockState(const Vec2i& localPos, state stateCode);
+
+    /**
+    * @brief 这个区块是否存在方块实体。
+    */
+    bool hasChunkEntity();
+
+    /**
+    * @brief 指定位置是否有方块实体。
+    */
+    bool hasChunkEntityAt(const Vec2i& localPos);
+
+    /**
+    * @brief 获取指定位置的方块实体。
+    */
+    entt::entity getEntityAt(const Vec2i& localPos);
+
+    /**
+    * @brief 设置指定位置的方块实体。
+    */
+    void addEntity(const Vec2i& localPos, entt::entity entity);
+
+    /**
+    * @brief 移除指定位置的方块实体。
+    */
+    void removeEntity(const Vec2i localPos);
+
+    /**
+    * @brief 获取方块实体映射
+    */
+    const std::unordered_map<Vec2i, entt::entity>& getEntityMapping();
+
+    /**
+    * @brief 获取所有方块实体
+    */
+    std::vector<entt::entity> getEntites();
+    /**
+    * @brief 局部位置是否合法。
+    */
+    bool isPosValied(const Vec2i& pos) const;
+    const BlockArray& const getBlockView() const;
+private:
+    BlockArray _blocks;                                     ///< 区块内的方块数组
+    std::unordered_map<Vec2i, entt::entity> _blockEntities; ///< 这个区块加载的方块实体列表
+};
+
+/**
+* @brief 物理票，任何希望可以与物理世界互动的实体都应该持有这个组件。
+* 
+* 这个组件本质是一个粗物理体，用于物理碰撞检测。使用者可以通过修改这个组件达到优化碰撞检测的目的。
+* 
+* @see BlockPhysicsSystem
+* 
+* @tease 同理，范围设置为10000获得氢弹。
+*/
+struct PhysicsTicket
+{
+    PhysicsTicket() = default;
+    PhysicsTicket(const cocos2d::Vec2& size, const cocos2d::Vec2& offset)
+        : size(size), offset(offset) {}
+
+    cocos2d::Vec2 size;        ///< 粗物理体大小
+    cocos2d::Vec2 offset;      ///< 粗物理体偏移
+};
+
+/**
+* @class BlockEntityHead
+* 
+* @brief 方块实体头。
+* 
+* 存储着方块实体的基本信息。
+* - 在方块实体中，这个组件应该是第一个被添加的组件。
+* - 应当使用saveEmplace和saveRemove来添加和移除组件。
+*   否则方块实体可能不会被正确地清除。
+* 
+* @see BlockEntityCleanSystem
+*/
+struct BlockEntityHead
+{
+    BlockEntityHead(LayerType layer, entt::id_type id, const Vec2i& blockPos);
+
+    /**
+    * @brief 
+    */
+    template<typename T, typename... Args>
+    T& saveEmplace(entt::registry& registry, entt::entity entity, Args&&... args)
+    {
+        auto& component = registry.emplace<T>(entity, std::forward<Args>(args)...);
+        componentCount++;
+        return component;
+    }
+
+    template<typename T>
+    void saveRemove(entt::registry& registry, entt::entity entity)
+    {
+        registry.remove<T>(entity);
+        componentCount--;
+    }
+    LayerType layer;
+    entt::id_type id;
+    Vec2i blockPos;
+    int componentCount = 0;
+};
+
+struct MiningProgress
+{
+    MiningProgress();
+    MiningProgress(float progress);
+    float progress = 0.0f;
+};
+
+class World;
+
+/**
+* @brief 世界场景。
+* 
+* 这个类用于在registry中获取world对象。
+* 实际上是World的引用。
+* 
+* @note 这个类在registry中是单例的，所以不能使用entt::registry::view来获取。
+* 
+* @see World
+* 
+* @tease 瓦，还有指针组件。
+*/
+class WorldScene
+{
+public:
+    WorldScene(World* world);
+    ~WorldScene();
+    World& operator*() const;
+    World* operator->() const;
+    operator bool() const;
+private:
+    World* _world = nullptr;
+};
+
+class RenderComponent;
+
+/**
+* @brief 渲染包。一个自定义渲染对象会在其中提交自己所有的命令。
+* 这个包在提交到registry会被渲染系统读取并转发给cocos渲染管线。
+* 
+* @see CommandSystem
+* 
+* @tease 你怎么在registry中被删除两次了呀，害得我19号晚上两个小时消失了。
+*/
+class CustomcommandPack : public IComponent {
+public:
+    CustomcommandPack();
+    ~CustomcommandPack();
+    CustomcommandPack(CustomcommandPack&& other) noexcept;
+
+    void releaseAllCommand();
+
+    std::vector<RenderComponent*> commands; ///< 渲染命令列表
+};
+
+/**
+* @brief 脏方块标记。
+* 
+* 这个给标记不会在组件管线中直接使用。它会集成到DirtyChunkTag中。
+* 
+* @see DirtyChunkTag
+*/
+struct DirtyBlock
+{
+    DirtyBlock(const Vec2i& pos)
+        : localPos(pos) {};
+    bool isClean();
+    Vec2i localPos;
+    bool collisionDirty = true;
+    bool renderDirty = true;
+};
+
+struct NeedGen {};
+struct NeedLoad {};
+
+/**
+* @brief 脏区块标记。
+* 
+* 这个组件用于标记一个区块内的方块是否需要重新计算碰撞和渲染。
+*/
+struct DirtyChunkTag
+{
+    DirtyChunkTag();
+    void addDirtyBlock(const Vec2i& pos);
+    bool isAllClean();
+    std::vector<DirtyBlock> dirtyBlocks;
+};
+
+struct MiningTag
+{
+    MiningTag(float factor, entt::entity miner) : factor(factor), miner(miner) {}
+    entt::entity miner =  entt::null;
+    float factor;
+};
+
+struct MiningProgressRenderChangeTag {};
+

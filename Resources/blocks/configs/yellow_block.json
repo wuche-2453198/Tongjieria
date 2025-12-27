@@ -1,7 +1,0 @@
-{
-  "id": "yellow_block",
-  "name": "Yellow Block",
-  "texture": "blocks\\textures\\yellow_block.png",
-  "replaceable" : false,
-  "collision" : true
-}

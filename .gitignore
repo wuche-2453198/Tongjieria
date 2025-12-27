@@ -94,3 +94,4 @@ DocumentLayout.backup.json
 /cocos2d/
 /md文件说明/
 /.claude/
+/Classes/systems/block/block_physics_system.cpp
