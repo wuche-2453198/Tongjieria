@@ -214,9 +214,9 @@ void EquipmentPanel::attachMouseHandlers() {
 int EquipmentPanel::hitTestEquipSlot(const Vec2& worldPos) const {
     Vec2 localPos = this->convertToNodeSpace(worldPos);
 
-    CCLOG("EquipmentPanel hitTest: world=(%.1f, %.1f) -> local=(%.1f, %.1f), LayerPos=(%.1f, %.1f)",
-          worldPos.x, worldPos.y, localPos.x, localPos.y,
-          this->getPosition().x, this->getPosition().y);
+    // CCLOG("EquipmentPanel hitTest: world=(%.1f, %.1f) -> local=(%.1f, %.1f), LayerPos=(%.1f, %.1f)",
+    //       worldPos.x, worldPos.y, localPos.x, localPos.y,
+    //       this->getPosition().x, this->getPosition().y);
 
     for (int i = 0; i < EQUIPMENT_SLOT_COUNT; ++i) {
         if (getEquipSlotRect(i).containsPoint(localPos)) {

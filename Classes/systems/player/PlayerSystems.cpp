@@ -2,6 +2,7 @@
 #include "core/PlayerInput.h"
 #include "PlayerAnimationLoader.h"
 #include "PlayerInventoryIntegration.h"
+#include "systems/items/ItemManager.h"
 #include <cmath>
 
 USING_NS_CC;
@@ -17,11 +18,13 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
     // Iterate over all player entities
     auto view = registry.view<ecs::PlayerTag,
                               ecs::PlayerMovementComponent,
-                              ecs::PlayerHotbarComponent>();
+                              ecs::PlayerHotbarComponent,
+                              ecs::PlayerAnimationComponent>();
 
     for (auto entity : view) {
         auto& movement = view.get<ecs::PlayerMovementComponent>(entity);
         auto& hotbar = view.get<ecs::PlayerHotbarComponent>(entity);
+        auto& animation = view.get<ecs::PlayerAnimationComponent>(entity);
 
         // ==================== Update Movement Input ====================
         movement.isMovingLeft = input.isActionPressed("MoveLeft");
@@ -51,21 +54,35 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
 
         // ==================== Handle Hotbar Switching ====================
         // Number keys 1-9 switch hotbar slots
+        bool hotbarChanged = false;
+        int newSlotIndex = -1;
+
         for (int i = 0; i < 9; i++) {
             auto keyCode = static_cast<EventKeyboard::KeyCode>(
                 static_cast<int>(EventKeyboard::KeyCode::KEY_1) + i
             );
             if (input.isKeyJustPressed(keyCode)) {
-                hotbar.selectSlot(i);
-                CCLOG("Hotbar slot changed to: %d", i);
+                hotbar.selectSlot(i);  // KEY_1 -> slot 0, KEY_2 -> slot 1, etc.
+                newSlotIndex = i;
+                hotbarChanged = true;
+                CCLOG("Hotbar slot changed to: %d (key: %d)", i, i + 1);
                 break;
             }
         }
 
-        // Number key 0 selects slot 10
+        // Number key 0 selects slot 9 (10th slot)
         if (input.isKeyJustPressed(EventKeyboard::KeyCode::KEY_0)) {
-            hotbar.selectSlot(9);
-            CCLOG("Hotbar slot changed to: 9");
+            hotbar.selectSlot(9);  // KEY_0 -> slot 9
+            newSlotIndex = 9;
+            hotbarChanged = true;
+            CCLOG("Hotbar slot changed to: 9 (key: 0)");
+        }
+
+        // Dispatch hotbar changed event for UI updates
+        if (hotbarChanged) {
+            auto event = EventCustom("Event_HotbarChanged");
+            event.setUserData(&newSlotIndex);
+            Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
         }
 
         // ==================== Handle Item Usage ====================
@@ -75,12 +92,108 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
             PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
         }
 
-        // Mouse left click to use item (alternative to J key)
+        // ==================== Handle Item Dropping ====================
+        // Q key to drop current hotbar item
+        if (input.isActionJustPressed("DropItem")) {
+            int currentInvIndex = hotbar.getCurrentInventoryIndex();
+            auto* inventory = Inventory::getInstance();
+
+            InventorySlot droppedItem = inventory->dropItem(currentInvIndex);
+
+            if (droppedItem.itemId != 0) {
+                auto* itemMgr = ItemManager::getInstance();
+                auto itemData = itemMgr->getItemData(droppedItem.itemId);
+
+                CCLOG("========================================");
+                CCLOG("PlayerInputSystem: Q key pressed - DROPPED ITEM");
+                if (itemData) {
+                    CCLOG("Item: %s (ID: %d)", itemData->name.c_str(), droppedItem.itemId);
+                } else {
+                    CCLOG("Item ID: %d", droppedItem.itemId);
+                }
+                CCLOG("Count: %d", droppedItem.count);
+                CCLOG("From slot: %d", currentInvIndex);
+                CCLOG("TODO: Spawn item entity in world");
+                CCLOG("========================================");
+            } else {
+                CCLOG("PlayerInputSystem: Q key pressed - No item to drop");
+            }
+        }
+
+        // ==================== Handle Block Interaction ====================
+        // Mouse left click - break/destroy blocks (debug mode)
         if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_LEFT)) {
-            // Only use item on left click if not clicking on UI
-            // TODO: Add UI hit test to prevent using items when clicking UI elements
-            CCLOG("PlayerInputSystem: Left click - using hotbar item");
+            // Get mouse position (world coordinates for block interaction)
+            Vec2 mouseWorldPos = input.getMouseWorldPosition();
+            Vec2 mouseScreenPos = input.getMouseScreenPosition();
+
+            // TODO: Add UI hit test to prevent interaction when clicking UI elements
+            // For now, output debug info
+            CCLOG("========================================");
+            CCLOG("PlayerInputSystem: LEFT CLICK - BREAK BLOCK");
+            CCLOG("Mouse screen position: (%.1f, %.1f)", mouseScreenPos.x, mouseScreenPos.y);
+            CCLOG("Mouse world position: (%.1f, %.1f)", mouseWorldPos.x, mouseWorldPos.y);
+            CCLOG("TODO: Implement block breaking logic");
+            CCLOG("========================================");
+
+            // Trigger break animation using transitionToState to properly hide previous frames
+            animation.isPlayingOneShot = true;
+            PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::BREAK);
+            CCLOG("PlayerInputSystem: Triggered BREAK animation with %d frames", animation.totalFrames);
+
+            // Also use hotbar item (existing functionality)
             PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
+        }
+
+        // Mouse right click - use weapon / place blocks
+        if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_RIGHT)) {
+            // Get mouse position (world coordinates for block placement)
+            Vec2 mouseWorldPos = input.getMouseWorldPosition();
+            Vec2 mouseScreenPos = input.getMouseScreenPosition();
+
+            // Get current hotbar item
+            int currentItemId = PlayerInventoryBridge::getCurrentHotbarItemId(registry, entity);
+
+            CCLOG("========================================");
+            CCLOG("PlayerInputSystem: RIGHT CLICK");
+            CCLOG("Mouse screen position: (%.1f, %.1f)", mouseScreenPos.x, mouseScreenPos.y);
+            CCLOG("Mouse world position: (%.1f, %.1f)", mouseWorldPos.x, mouseWorldPos.y);
+            CCLOG("Current hotbar item ID: %d", currentItemId);
+
+            // Check if holding a weapon
+            bool isWeapon = false;
+            if (currentItemId > 0) {
+                auto* itemMgr = ItemManager::getInstance();
+                const auto* itemData = itemMgr->getItemData(currentItemId);
+                if (itemData) {
+                    // Check if item has weapon tag (tag 2 or 201)
+                    for (int tag : itemData->tags) {
+                        if (tag == 2 || tag == 201) {
+                            isWeapon = true;
+                            break;
+                        }
+                    }
+                    CCLOG("Item: %s, Tags count: %d, Is Weapon: %s",
+                          itemData->name.c_str(),
+                          (int)itemData->tags.size(),
+                          isWeapon ? "YES" : "NO");
+                }
+            }
+
+            if (isWeapon) {
+                // Trigger weapon swing animation using transitionToState
+                CCLOG("WEAPON DETECTED - Triggering WEAPON_SWING animation");
+                animation.isPlayingOneShot = true;
+                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING);
+                CCLOG("PlayerInputSystem: Triggered WEAPON_SWING animation with %d frames", animation.totalFrames);
+            } else {
+                // Trigger place animation using transitionToState
+                CCLOG("NO WEAPON - Triggering PLACE animation");
+                animation.isPlayingOneShot = true;
+                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::PLACE);
+                CCLOG("PlayerInputSystem: Triggered PLACE animation with %d frames", animation.totalFrames);
+            }
+            CCLOG("========================================");
         }
 
         // TODO: Mouse wheel to switch hotbar (need to extend PlayerInput to support mouse wheel)
@@ -319,18 +432,34 @@ void PlayerAnimationSystem::update(entt::registry& registry, float dt) {
                               ecs::PlayerStatsComponent,
                               ecs::PlayerSpriteComponent>();
 
+    // DEBUG: Check how many player entities exist
+    static int debugCounter = 0;
+    int playerCount = 0;
+
     for (auto entity : view) {
+        playerCount++;
+
+        // Print debug info every 5 seconds
+        if (debugCounter++ % 300 == 0) {
+            CCLOG("==================== PLAYER DEBUG ====================");
+            CCLOG("Number of player entities: %d", playerCount);
+            CCLOG("====================================================");
+        }
         auto& animation = view.get<ecs::PlayerAnimationComponent>(entity);
         auto& movement = view.get<ecs::PlayerMovementComponent>(entity);
         auto& stats = view.get<ecs::PlayerStatsComponent>(entity);
         auto& sprite = view.get<ecs::PlayerSpriteComponent>(entity);
 
-        // Determine which animation should be playing
-        auto targetState = determineAnimationState(movement, stats, sprite);
+        // Check if playing one-shot animation (weapon swing, etc.)
+        // One-shot animations cannot be interrupted
+        if (!animation.isPlayingOneShot) {
+            // Determine which animation should be playing
+            auto targetState = determineAnimationState(movement, stats, sprite);
 
-        // Switch to new animation (if state changed)
-        if (animation.currentState != targetState) {
-            transitionToState(animation, targetState);
+            // Switch to new animation (if state changed)
+            if (animation.currentState != targetState) {
+                transitionToState(animation, targetState);
+            }
         }
 
         // Update animation time
@@ -341,10 +470,21 @@ void PlayerAnimationSystem::update(entt::registry& registry, float dt) {
             // Calculate which frame should be displayed
             int targetFrame = static_cast<int>(animation.animationTime / animation.frameTime);
 
-            // Loop playback
+            // Loop playback or finish one-shot animation
             if (targetFrame >= animation.totalFrames) {
-                targetFrame = targetFrame % animation.totalFrames;
-                animation.animationTime = targetFrame * animation.frameTime;
+                if (animation.isPlayingOneShot) {
+                    // One-shot animation finished, return to IDLE
+                    animation.isPlayingOneShot = false;
+                    targetFrame = animation.totalFrames - 1;  // Keep at last frame
+                    CCLOG("PlayerAnimationSystem: One-shot animation finished, returning to IDLE");
+
+                    // Transition to IDLE state
+                    transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::IDLE);
+                } else {
+                    // Loop animation
+                    targetFrame = targetFrame % animation.totalFrames;
+                    animation.animationTime = targetFrame * animation.frameTime;
+                }
             }
 
             // Switch frame
@@ -414,6 +554,49 @@ ecs::PlayerAnimationComponent::AnimState PlayerAnimationSystem::determineAnimati
     }
 }
 
+void PlayerAnimationSystem::hideAllCachedFrames() {
+    // Iterate through all animation states and hide their frames
+    using AnimState = ecs::PlayerAnimationComponent::AnimState;
+
+    const AnimState allStates[] = {
+        AnimState::IDLE,
+        AnimState::WALK,
+        AnimState::JUMP,
+        AnimState::FALL,
+        AnimState::BREAK,
+        AnimState::PLACE,
+        AnimState::WEAPON_SWING
+    };
+
+    // DEBUG: Count visible sprites before hiding
+    int totalVisible = 0;
+    for (auto state : allStates) {
+        const auto* anim = PlayerAnimationLoader::getAnimation(state);
+        if (anim) {
+            for (auto* frame : anim->frames) {
+                if (frame && frame->isVisible()) {
+                    totalVisible++;
+                }
+            }
+        }
+    }
+
+    if (totalVisible > 1) {
+        CCLOG("⚠️ WARNING: Found %d visible animation sprites before hiding (should be 0-1)", totalVisible);
+    }
+
+    for (auto state : allStates) {
+        const auto* anim = PlayerAnimationLoader::getAnimation(state);
+        if (anim) {
+            for (auto* frame : anim->frames) {
+                if (frame) {
+                    frame->setVisible(false);
+                }
+            }
+        }
+    }
+}
+
 void PlayerAnimationSystem::transitionToState(
     ecs::PlayerAnimationComponent& animation,
     ecs::PlayerAnimationComponent::AnimState newState)
@@ -424,6 +607,10 @@ void PlayerAnimationSystem::transitionToState(
             frame->setVisible(false);
         }
     }
+
+    // CRITICAL FIX: Hide ALL cached animation frames to prevent ghosting
+    // This ensures no leftover sprites from previous animations remain visible
+    hideAllCachedFrames();
 
     animation.previousState = animation.currentState;
     animation.currentState = newState;
@@ -449,7 +636,7 @@ void PlayerAnimationSystem::transitionToState(
 
     // Output debug info
     static const char* stateNames[] = {
-        "IDLE", "WALK", "RUN", "JUMP", "FALL", "USE_ITEM", "HURT", "DEATH", "SWIM"
+        "IDLE", "WALK", "RUN", "JUMP", "FALL", "USE_ITEM", "HURT", "DEATH", "SWIM", "BREAK", "PLACE", "WEAPON_SWING"
     };
     CCLOG("Animation state changed: %s -> %s (%d frames)",
           stateNames[static_cast<int>(animation.previousState)],
@@ -543,12 +730,57 @@ void PlayerHealthSystem::updateUI(
     if (sprite.healthBarFill) {
         float healthPercent = stats.currentHealth / stats.maxHealth;
         sprite.healthBarFill->setScaleX(healthPercent);
+
+        // Update health text label
+        if (sprite.healthBarBg) {
+            cocos2d::Label* healthLabel = nullptr;
+            // Find label by iterating children
+            auto& children = sprite.healthBarBg->getChildren();
+            for (auto child : children) {
+                healthLabel = dynamic_cast<cocos2d::Label*>(child);
+                if (healthLabel) {
+                    break;
+                }
+            }
+            if (healthLabel) {
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "HP: %.0f/%.0f",
+                        stats.currentHealth, stats.maxHealth);
+                healthLabel->setString(buffer);
+            }
+        }
     }
 
     // Update mana bar
     if (sprite.manaBarFill) {
         float manaPercent = stats.currentMana / stats.maxMana;
         sprite.manaBarFill->setScaleX(manaPercent);
+
+        // Update mana text label
+        if (sprite.manaBarBg) {
+            cocos2d::Label* manaLabel = nullptr;
+            // Find label by iterating children
+            auto& children = sprite.manaBarBg->getChildren();
+            for (auto child : children) {
+                manaLabel = dynamic_cast<cocos2d::Label*>(child);
+                if (manaLabel) {
+                    break;
+                }
+            }
+            if (manaLabel) {
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "MP: %.0f/%.0f",
+                        stats.currentMana, stats.maxMana);
+                manaLabel->setString(buffer);
+            }
+        }
+    }
+
+    // Update defense label
+    if (sprite.defenseLabel) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "Defense: %d", stats.defense);
+        sprite.defenseLabel->setString(buffer);
     }
 
     // Flicker effect during invincibility frames

@@ -157,6 +157,14 @@ public:
      */
     static void update(entt::registry& registry, float dt);
 
+    /**
+     * @brief 切换到新的动画状态（公有方法，供其他系统调用）
+     */
+    static void transitionToState(
+        ecs::PlayerAnimationComponent& animation,
+        ecs::PlayerAnimationComponent::AnimState newState
+    );
+
 private:
     PlayerAnimationSystem() = delete;
 
@@ -170,12 +178,9 @@ private:
     );
 
     /**
-     * @brief 切换到新的动画状态
+     * @brief 隐藏所有缓存的动画帧，防止重影
      */
-    static void transitionToState(
-        ecs::PlayerAnimationComponent& animation,
-        ecs::PlayerAnimationComponent::AnimState newState
-    );
+    static void hideAllCachedFrames();
 };
 
 // ==================== PlayerHealthSystem ====================

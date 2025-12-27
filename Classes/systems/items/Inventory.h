@@ -65,6 +65,11 @@ public:
     // Move equipment from one slot to another (or swap if different)
     bool moveEquipment(int fromEquipSlot, int toEquipSlot);
 
+    // Drop item from inventory slot (returns dropped item info)
+    // If count is 0 or >= item count, drop entire stack
+    // Otherwise, drop specified count
+    InventorySlot dropItem(int slotIndex, int count = 0);
+
 private:
     Inventory() = default;
     ~Inventory() = default;

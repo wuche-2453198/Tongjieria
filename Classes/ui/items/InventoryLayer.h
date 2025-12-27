@@ -47,6 +47,7 @@ protected:
     void updateDragSprite(const cocos2d::Vec2& worldPos);
 
     void onInventoryChanged(cocos2d::EventCustom* event);
+    void onHotbarChanged(cocos2d::EventCustom* event);
     void updateHighlights();
 
 private:

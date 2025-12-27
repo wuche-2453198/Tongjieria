@@ -27,11 +27,23 @@ bool PlayerAnimationLoader::initialize(Node* parentNode) {
     s_animationCache[ecs::PlayerAnimationComponent::AnimState::FALL] =
         loadFallAnimation(parentNode);
 
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::BREAK] =
+        loadBreakAnimation(parentNode);
+
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::PLACE] =
+        loadPlaceAnimation(parentNode);
+
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING] =
+        loadWeaponSwingAnimation(parentNode);
+
     CCLOG("PlayerAnimationLoader: All animations loaded successfully!");
     CCLOG("  - IDLE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::IDLE].getFrameCount());
     CCLOG("  - WALK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::WALK].getFrameCount());
     CCLOG("  - JUMP: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::JUMP].getFrameCount());
     CCLOG("  - FALL: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::FALL].getFrameCount());
+    CCLOG("  - BREAK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::BREAK].getFrameCount());
+    CCLOG("  - PLACE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::PLACE].getFrameCount());
+    CCLOG("  - WEAPON_SWING: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING].getFrameCount());
 
     return true;
 }
@@ -49,6 +61,12 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadAnimation(
             return loadJumpAnimation(parentNode);
         case ecs::PlayerAnimationComponent::AnimState::FALL:
             return loadFallAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::BREAK:
+            return loadBreakAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::PLACE:
+            return loadPlaceAnimation(parentNode);
+        case ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING:
+            return loadWeaponSwingAnimation(parentNode);
         default:
             CCLOG("PlayerAnimationLoader: Animation state %d not implemented, using IDLE",
                   static_cast<int>(state));
@@ -69,7 +87,17 @@ const PlayerAnimationLoader::AnimationFrames* PlayerAnimationLoader::getAnimatio
 void PlayerAnimationLoader::cleanup() {
     CCLOG("PlayerAnimationLoader: Cleaning up animations...");
 
-    // Clear cache (sprites are managed by Cocos2d and will be auto-released)
+    // Release all retained sprites to prevent memory leaks
+    for (auto& pair : s_animationCache) {
+        for (auto* sprite : pair.second.frames) {
+            if (sprite) {
+                sprite->removeFromParent();  // Remove from scene
+                sprite->release();           // Release the retain() call from createFrameSprite
+            }
+        }
+    }
+
+    // Clear cache
     s_animationCache.clear();
 
     CCLOG("PlayerAnimationLoader: Cleanup complete");
@@ -162,6 +190,78 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadSitAnimation(N
         anim.frames.push_back(sprite);
     }
 
+    return anim;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadBreakAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.1f;  // 100ms per frame
+    anim.loop = false;      // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading BREAK animation (2 frames)...");
+
+    // Load break animation frames (01, 02)
+    int successCount = 0;
+    for (int i = 1; i <= 2; i++) {
+        std::string path = StringUtils::format("player/break/Style_1_male_break_%02d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            CCLOG("PlayerAnimationLoader: [FAILED] break frame %d at path: %s", i, path.c_str());
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded BREAK animation: %d/2 frames successful", successCount);
+    return anim;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadPlaceAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.1f;  // 100ms per frame
+    anim.loop = false;      // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading PLACE animation (2 frames)...");
+
+    // Load place animation frames (01, 02)
+    int successCount = 0;
+    for (int i = 1; i <= 2; i++) {
+        std::string path = StringUtils::format("player/place/Style_1_male_place_%02d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            CCLOG("PlayerAnimationLoader: [FAILED] place frame %d at path: %s", i, path.c_str());
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded PLACE animation: %d/2 frames successful", successCount);
+    return anim;
+}
+
+PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadWeaponSwingAnimation(Node* parentNode) {
+    AnimationFrames anim;
+    anim.frameTime = 0.05f;  // 50ms per frame (fast swing)
+    anim.loop = false;       // Don't loop, play once
+
+    CCLOG("PlayerAnimationLoader: Loading WEAPON_SWING animation (16 frames)...");
+
+    // Load frames 000-015
+    int successCount = 0;
+    for (int i = 0; i <= 15; i++) {
+        std::string path = StringUtils::format("player/Swing_example/Swing_example_frame_%03d.png", i);
+        auto sprite = createFrameSprite(path, parentNode);
+        if (sprite) {
+            anim.frames.push_back(sprite);
+            successCount++;
+        } else {
+            CCLOG("PlayerAnimationLoader: [FAILED] weapon swing frame %d at path: %s", i, path.c_str());
+        }
+    }
+
+    CCLOG("PlayerAnimationLoader: Loaded WEAPON_SWING animation: %d/16 frames successful", successCount);
     return anim;
 }
 

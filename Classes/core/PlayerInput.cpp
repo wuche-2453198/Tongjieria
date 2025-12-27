@@ -13,6 +13,7 @@ PlayerInput::PlayerInput() {
     setKeyMapping("QuickMana", EventKeyboard::KeyCode::KEY_M);
     setKeyMapping("Mount", EventKeyboard::KeyCode::KEY_R);
     setKeyMapping("Inventory", EventKeyboard::KeyCode::KEY_ESCAPE);
+    setKeyMapping("DropItem", EventKeyboard::KeyCode::KEY_Q);
 }
 
 PlayerInput::~PlayerInput() {

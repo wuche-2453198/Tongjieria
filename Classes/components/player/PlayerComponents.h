@@ -136,7 +136,7 @@ struct PlayerEquipmentComponent {
 // ==================== Player Hotbar Component ====================
 struct PlayerHotbarComponent {
     static const int HOTBAR_SIZE = 10; // 快捷栏10格
-    int slots[HOTBAR_SIZE] = {0};      // 指向背包索引（0-49）
+    int slots[HOTBAR_SIZE] = {40, 41, 42, 43, 44, 45, 46, 47, 48, 49};  // 指向武器槽背包索引（40-49）
     int selectedIndex = 0;             // 当前选中索引（0-9）
 
     // 获取当前选中槽位的背包索引
@@ -171,7 +171,10 @@ struct PlayerAnimationComponent {
         USE_ITEM,
         HURT,
         DEATH,
-        SWIM
+        SWIM,
+        BREAK,          // 左键破坏方块动画（2帧）
+        PLACE,          // 右键放置方块动画（2帧）
+        WEAPON_SWING    // 手持武器时的挥剑动作（16帧）
     };
 
     AnimState currentState = AnimState::IDLE;
@@ -190,6 +193,9 @@ struct PlayerAnimationComponent {
     float itemUseProgress = 0.0f;      // 0.0 - 1.0
     float itemUseSpeed = 1.0f;         // 使用速度倍率
     float itemUseTime = 0.3f;          // 物品使用时间
+
+    // 一次性播放动画标志（用于武器挥动等不能被打断的动画）
+    bool isPlayingOneShot = false;     // 是否正在播放一次性动画
 
     // 翻转精灵
     bool needsFlip = false;
@@ -357,6 +363,10 @@ struct PlayerSpriteComponent {
     // 魔法条UI
     cocos2d::Sprite* manaBarBg = nullptr;
     cocos2d::Sprite* manaBarFill = nullptr;
+
+    // 防御条UI
+    cocos2d::Sprite* defenseBarBg = nullptr;
+    cocos2d::Label* defenseLabel = nullptr;
 
     ~PlayerSpriteComponent() {
         // 注意：不在这里释放，由Cocos2d管理

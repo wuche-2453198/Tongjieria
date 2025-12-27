@@ -93,6 +93,22 @@ private:
     static AnimationFrames loadSitAnimation(cocos2d::Node* parentNode);
 
     /**
+     * @brief Load break animation (left click - break block, 2 frames)
+     */
+    static AnimationFrames loadBreakAnimation(cocos2d::Node* parentNode);
+
+    /**
+     * @brief Load place animation (right click - place block, 2 frames)
+     */
+    static AnimationFrames loadPlaceAnimation(cocos2d::Node* parentNode);
+
+    /**
+     * @brief Load weapon swing animation (16 frames)
+     * Used when player holds a weapon and clicks
+     */
+    static AnimationFrames loadWeaponSwingAnimation(cocos2d::Node* parentNode);
+
+    /**
      * @brief Create sprite frame (common method)
      */
     static cocos2d::Sprite* createFrameSprite(

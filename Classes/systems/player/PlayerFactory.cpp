@@ -34,9 +34,9 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
 
     // 7. Add hotbar component
     auto& hotbar = registry.emplace<ecs::PlayerHotbarComponent>(player);
-    // Initialize hotbar: first 10 inventory slots
+    // Initialize hotbar: weapon slots (inventory indices 40-49)
     for (int i = 0; i < ecs::PlayerHotbarComponent::HOTBAR_SIZE; i++) {
-        hotbar.slots[i] = i;
+        hotbar.slots[i] = 40 + i;  // Map to weapon slots (40-49)
     }
 
     // 8. Add animation component and load animation resources
@@ -206,62 +206,95 @@ void PlayerFactory::createPlayerUI(entt::entity entity,
     auto origin = Director::getInstance()->getVisibleOrigin();
 
     auto& spriteComp = registry.get<ecs::PlayerSpriteComponent>(entity);
+    auto& stats = registry.get<ecs::PlayerStatsComponent>(entity);
 
-    // Create health bar (top-left corner of screen)
+    // UI layout configuration - Right-top corner
+    float rightMargin = 20.0f;
+    float topMargin = 20.0f;
+    float barWidth = 200.0f;
+    float barHeight = 20.0f;
+    float barSpacing = 8.0f;
 
+    // Calculate starting position (right side)
+    float startX = origin.x + visibleSize.width - rightMargin - barWidth;
+    // Starting Y position (top)
+    float startY = origin.y + visibleSize.height - topMargin;
+
+    // ==================== Health Bar (1st row) ====================
     // Health bar background
     auto healthBarBg = Sprite::create();
-    healthBarBg->setTextureRect(Rect(0, 0, 200, 20));
+    healthBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
     healthBarBg->setColor(Color3B(50, 50, 50));
     healthBarBg->setAnchorPoint(Vec2(0, 1));
-    healthBarBg->setPosition(Vec2(origin.x + 20, origin.y + visibleSize.height - 20));
+    healthBarBg->setPosition(Vec2(startX, startY));
     parentNode->addChild(healthBarBg, 100);
 
     // Health bar fill
     auto healthBarFill = Sprite::create();
-    healthBarFill->setTextureRect(Rect(0, 0, 200, 20));
+    healthBarFill->setTextureRect(Rect(0, 0, barWidth, barHeight));
     healthBarFill->setColor(Color3B(220, 20, 60)); // Crimson red
     healthBarFill->setAnchorPoint(Vec2(0, 0));
     healthBarFill->setPosition(Vec2(0, 0));
     healthBarBg->addChild(healthBarFill, 1);
 
-    // Health bar label
-    auto healthLabel = Label::createWithSystemFont("HP", "Arial", 14);
-    healthLabel->setAnchorPoint(Vec2(0, 0.5f));
-    healthLabel->setPosition(Vec2(5, 10));
+    // Health bar label (centered)
+    auto healthLabel = Label::createWithSystemFont("HP: 100/100", "Arial", 14);
+    healthLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
+    healthLabel->setPosition(Vec2(barWidth / 2, barHeight / 2));
     healthLabel->setColor(Color3B::WHITE);
     healthBarBg->addChild(healthLabel, 2);
 
     spriteComp.healthBarBg = healthBarBg;
     spriteComp.healthBarFill = healthBarFill;
 
-    // Create mana bar (below health bar)
-
+    // ==================== Mana Bar (2nd row) ====================
     // Mana bar background
     auto manaBarBg = Sprite::create();
-    manaBarBg->setTextureRect(Rect(0, 0, 200, 20));
+    manaBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
     manaBarBg->setColor(Color3B(50, 50, 50));
     manaBarBg->setAnchorPoint(Vec2(0, 1));
-    manaBarBg->setPosition(Vec2(origin.x + 20, origin.y + visibleSize.height - 50));
+    manaBarBg->setPosition(Vec2(startX, startY - barHeight - barSpacing));
     parentNode->addChild(manaBarBg, 100);
 
     // Mana bar fill
     auto manaBarFill = Sprite::create();
-    manaBarFill->setTextureRect(Rect(0, 0, 200, 20));
+    manaBarFill->setTextureRect(Rect(0, 0, barWidth, barHeight));
     manaBarFill->setColor(Color3B(30, 144, 255)); // Blue
     manaBarFill->setAnchorPoint(Vec2(0, 0));
     manaBarFill->setPosition(Vec2(0, 0));
     manaBarBg->addChild(manaBarFill, 1);
 
-    // Mana bar label
-    auto manaLabel = Label::createWithSystemFont("MP", "Arial", 14);
-    manaLabel->setAnchorPoint(Vec2(0, 0.5f));
-    manaLabel->setPosition(Vec2(5, 10));
+    // Mana bar label (centered)
+    auto manaLabel = Label::createWithSystemFont("MP: 20/20", "Arial", 14);
+    manaLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
+    manaLabel->setPosition(Vec2(barWidth / 2, barHeight / 2));
     manaLabel->setColor(Color3B::WHITE);
     manaBarBg->addChild(manaLabel, 2);
 
     spriteComp.manaBarBg = manaBarBg;
     spriteComp.manaBarFill = manaBarFill;
 
-    CCLOG("PlayerFactory: Player UI created (Health bar and Mana bar)");
+    // ==================== Defense Bar (3rd row) ====================
+    // Defense bar background
+    auto defenseBarBg = Sprite::create();
+    defenseBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
+    defenseBarBg->setColor(Color3B(60, 60, 60));
+    defenseBarBg->setAnchorPoint(Vec2(0, 1));
+    defenseBarBg->setPosition(Vec2(startX, startY - 2 * (barHeight + barSpacing)));
+    parentNode->addChild(defenseBarBg, 100);
+
+    // Defense label (centered)
+    auto defenseLabel = Label::createWithSystemFont("Defense: 0", "Arial", 14);
+    defenseLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
+    defenseLabel->setPosition(Vec2(barWidth / 2, barHeight / 2));
+    defenseLabel->setColor(Color3B(192, 192, 192)); // Silver
+    defenseBarBg->addChild(defenseLabel, 2);
+
+    spriteComp.defenseBarBg = defenseBarBg;
+    spriteComp.defenseLabel = defenseLabel;
+
+    CCLOG("PlayerFactory: Player UI created at top-right corner");
+    CCLOG("  - Health: %.0f/%.0f", stats.currentHealth, stats.maxHealth);
+    CCLOG("  - Mana: %.0f/%.0f", stats.currentMana, stats.maxMana);
+    CCLOG("  - Defense: %d", stats.defense);
 }

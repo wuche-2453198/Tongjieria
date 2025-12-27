@@ -304,3 +304,41 @@ bool Inventory::moveEquipment(int fromEquipSlot, int toEquipSlot) {
     dispatchEquipmentChanged();
     return true;
 }
+
+InventorySlot Inventory::dropItem(int slotIndex, int count) {
+    InventorySlot droppedItem{};
+
+    // Validate slot index
+    if (slotIndex < 0 || slotIndex >= static_cast<int>(_slots.size())) {
+        CCLOG("Inventory::dropItem: Invalid slot index %d", slotIndex);
+        return droppedItem;
+    }
+
+    auto& slot = _slots[slotIndex];
+
+    // Check if slot is empty
+    if (slot.itemId == 0 || slot.count <= 0) {
+        CCLOG("Inventory::dropItem: Slot %d is empty", slotIndex);
+        return droppedItem;
+    }
+
+    // If count is 0 or >= slot count, drop entire stack
+    if (count <= 0 || count >= slot.count) {
+        droppedItem = slot;
+        slot = InventorySlot{};  // Clear slot
+        CCLOG("Inventory::dropItem: Dropped entire stack (ID: %d, Count: %d) from slot %d",
+              droppedItem.itemId, droppedItem.count, slotIndex);
+    }
+    // Otherwise, drop specified count
+    else {
+        droppedItem.itemId = slot.itemId;
+        droppedItem.count = count;
+        droppedItem.prefixId = slot.prefixId;
+        slot.count -= count;
+        CCLOG("Inventory::dropItem: Dropped %d of item %d from slot %d (remaining: %d)",
+              count, droppedItem.itemId, slotIndex, slot.count);
+    }
+
+    dispatchInventoryChanged();
+    return droppedItem;
+}

@@ -98,8 +98,12 @@ bool InventoryLayer::init() {
     attachMouseHandlers();
 
     // Listen to inventory change events
-    auto listener = EventListenerCustom::create("Event_InventoryChanged", CC_CALLBACK_1(InventoryLayer::onInventoryChanged, this));
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+    auto inventoryListener = EventListenerCustom::create("Event_InventoryChanged", CC_CALLBACK_1(InventoryLayer::onInventoryChanged, this));
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(inventoryListener, this);
+
+    // Listen to hotbar change events
+    auto hotbarListener = EventListenerCustom::create("Event_HotbarChanged", CC_CALLBACK_1(InventoryLayer::onHotbarChanged, this));
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(hotbarListener, this);
 
     // Name label shown near top inside the panel (commented out)
     // _nameLabel = Label::createWithSystemFont("", "Arial", 16);
@@ -458,10 +462,10 @@ int InventoryLayer::hitTestSlot(const Vec2& worldPos) const {
     Vec2 localPos = this->convertToNodeSpace(worldPos);
 
     // Debug: log every click with coordinate conversion and layer info
-    CCLOG("InventoryLayer hitTest: world=(%.1f, %.1f) -> local=(%.1f, %.1f), LayerPos=(%.1f, %.1f), ContentSize=(%.1f, %.1f)",
-          worldPos.x, worldPos.y, localPos.x, localPos.y,
-          this->getPosition().x, this->getPosition().y,
-          this->getContentSize().width, this->getContentSize().height);
+    // CCLOG("InventoryLayer hitTest: world=(%.1f, %.1f) -> local=(%.1f, %.1f), LayerPos=(%.1f, %.1f), ContentSize=(%.1f, %.1f)",
+    //       worldPos.x, worldPos.y, localPos.x, localPos.y,
+    //       this->getPosition().x, this->getPosition().y,
+    //       this->getContentSize().width, this->getContentSize().height);
 
     // Debug: log coordinate conversion (only once)
     static bool debugLogged = false;
@@ -753,6 +757,28 @@ void InventoryLayer::updateDragSprite(const Vec2& worldPos) {
 void InventoryLayer::onInventoryChanged(EventCustom* event) {
     refresh();
     updateHighlights();
+}
+
+void InventoryLayer::onHotbarChanged(EventCustom* event) {
+    // Get the hotbar slot index from event data
+    int* slotIndexPtr = static_cast<int*>(event->getUserData());
+    if (!slotIndexPtr) {
+        CCLOG("InventoryLayer::onHotbarChanged - Invalid event data");
+        return;
+    }
+
+    int hotbarSlot = *slotIndexPtr;
+
+    // Hotbar slots correspond to weapon slots in inventory
+    // Weapon slots start at index 40 (kNormalSlots)
+    constexpr int kNormalSlots = 40;
+    int inventorySlotIndex = kNormalSlots + hotbarSlot;
+
+    // Update selected index to highlight the correct slot
+    _selectedIndex = inventorySlotIndex;
+    updateHighlights();
+
+    CCLOG("InventoryLayer: Hotbar changed to slot %d -> inventory index %d", hotbarSlot, inventorySlotIndex);
 }
 
 void InventoryLayer::setEquipmentPanel(EquipmentPanel* panel) {

@@ -151,7 +151,52 @@ void IntegrationTestScene::createPhysicsEnvironment() {
     platform2Body->setContactTestBitmask(0xFFFFFFFF);
     platform2->setPhysicsBody(platform2Body);
 
+    // Create platform 3
+    auto platform3 = Sprite::create();
+    platform3->setTextureRect(Rect(0, 0, 200, 20));
+    platform3->setColor(Color3B(139, 90, 43)); // Brown
+    platform3->setPosition(Vec2(origin.x + visibleSize.width / 2 + 180,
+                               origin.y + visibleSize.height / 2-100));
+    this->addChild(platform3, 0);
+
+    auto platform3Body = PhysicsBody::createBox(platform3->getContentSize(), material);
+    platform3Body->setDynamic(false);
+    platform3Body->setContactTestBitmask(0xFFFFFFFF);
+    platform3->setPhysicsBody(platform3Body);
+
     CCLOG("IntegrationTestScene: Physics environment created");
+
+    // Create platform 4
+    auto platform4 = Sprite::create();
+    platform4->setTextureRect(Rect(0, 0, 200, 20));
+    platform4->setColor(Color3B(139, 90, 43)); // Brown
+    platform4->setPosition(Vec2(origin.x + visibleSize.width / 2 ,
+                               origin.y + visibleSize.height / 2-150));
+    this->addChild(platform4, 0);
+
+    auto platform4Body = PhysicsBody::createBox(platform4->getContentSize(), material);
+    platform4Body->setDynamic(false);
+    platform4Body->setContactTestBitmask(0xFFFFFFFF);
+    platform4->setPhysicsBody(platform4Body);
+
+    CCLOG("IntegrationTestScene: Physics environment created");
+
+    // Create platform 3
+    auto platform5 = Sprite::create();
+    platform5->setTextureRect(Rect(0, 0, 200, 20));
+    platform5->setColor(Color3B(139, 90, 43)); // Brown
+    platform5->setPosition(Vec2(origin.x + visibleSize.width / 2 ,
+                               origin.y + visibleSize.height / 2-150));
+    this->addChild(platform5, 0);
+
+    auto platform5Body = PhysicsBody::createBox(platform5->getContentSize(), material);
+    platform5Body->setDynamic(false);
+    platform5Body->setContactTestBitmask(0xFFFFFFFF);
+    platform5->setPhysicsBody(platform5Body);
+
+    CCLOG("IntegrationTestScene: Physics environment created");
+
+
 }
 
 void IntegrationTestScene::createPlayer() {
@@ -186,13 +231,13 @@ void IntegrationTestScene::setupTestItems() {
     inventory->addItem(2001, 99);
     CCLOG("IntegrationTestScene: Added Dirt blocks (2001)");
 
-    // Link first 10 inventory slots to hotbar
+    // Link weapon slots (40-49) to hotbar
     auto& hotbar = _registry.get<ecs::PlayerHotbarComponent>(_playerEntity);
     for (int i = 0; i < 10 && i < ecs::PlayerHotbarComponent::HOTBAR_SIZE; ++i) {
-        hotbar.slots[i] = i;  // slots array stores inventory indices directly
+        hotbar.slots[i] = 40 + i;  // Map to weapon slots (40-49)
     }
 
-    CCLOG("IntegrationTestScene: Hotbar linked to first 10 inventory slots");
+    CCLOG("IntegrationTestScene: Hotbar linked to weapon slots (40-49)");
 }
 
 void IntegrationTestScene::setupUI() {
