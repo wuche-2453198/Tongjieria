@@ -24,6 +24,8 @@ ChunkHead::ChunkHead(LayerType layerType,int priority)
     : _priority(priority), _layerType(layerType) {}
 ChunkHead::~ChunkHead() = default;
 
+LayerType ChunkHead::getLayerType() const { return _layerType; }
+
 int ChunkHead::getPriority() const { return _priority; }
 
 void ChunkHead::setPriority(int priority) { _priority = priority; }
@@ -100,8 +102,8 @@ const BlockArray& const ChunkBlocks::getBlockView() const
 }
 
 
-BlockEntityHead::BlockEntityHead(entt::id_type id, const Vec2i& blockPos)
- : id(id), blockPos(blockPos) {}
+BlockEntityHead::BlockEntityHead(LayerType layer, entt::id_type id, const Vec2i& blockPos)
+ : layer(layer), id(id), blockPos(blockPos) {}
 
 MiningProgress::MiningProgress() = default;
 

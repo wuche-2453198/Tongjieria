@@ -81,13 +81,14 @@ public:
     ChunkHead(LayerType layerType, int priority);
     ~ChunkHead();
 
+    LayerType getLayerType() const;
     int getPriority() const;
     void setPriority(int priority);
 
     static inline int UNLOADING_PRIORITY = 0; ///< 卸载优先级阈值
 private:
-    int _priority = 0;      ///< 区块优先级
     LayerType _layerType;   ///< 区块所在层类型
+    int _priority = 0;      ///< 区块优先级
 };
 
 struct BlockState
@@ -209,7 +210,7 @@ struct PhysicsTicket
 */
 struct BlockEntityHead
 {
-    BlockEntityHead(entt::id_type id, const Vec2i& blockPos);
+    BlockEntityHead(LayerType layer, entt::id_type id, const Vec2i& blockPos);
 
     /**
     * @brief 
@@ -228,7 +229,7 @@ struct BlockEntityHead
         registry.remove<T>(entity);
         componentCount--;
     }
-
+    LayerType layer;
     entt::id_type id;
     Vec2i blockPos;
     int componentCount = 0;
@@ -305,6 +306,9 @@ struct DirtyBlock
     bool renderDirty = true;
 };
 
+struct NeedGen {};
+struct NeedLoad {};
+
 /**
 * @brief 脏区块标记。
 * 
@@ -320,8 +324,8 @@ struct DirtyChunkTag
 
 struct MiningTag
 {
-    MiningTag(float factor, entt::entity miner) : factor(factor), minier(minier) {}
-    entt::entity minier =  entt::null;
+    MiningTag(float factor, entt::entity miner) : factor(factor), miner(miner) {}
+    entt::entity miner =  entt::null;
     float factor;
 };
 
