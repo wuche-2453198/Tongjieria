@@ -19,22 +19,21 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     world->setPhysics3DDebugCamera(cocos2d::Camera::getDefaultCamera());
     _dispatcher.sink<MouseEvent>().connect<&DebugSystem::onMouseEvent>(this);
     
-    testEntites.push_back(_registry.create());
-    _registry.emplace<Position>(testEntites[0], cocos2d::Vec2::ZERO);
-    _registry.emplace<LoadingTicket>(testEntites[0], testEntites[0], 1, false);
+    entt::entity entity = getEntity(_registry, "mouse");
+    _registry.emplace<Position>(entity, cocos2d::Vec2::ZERO);
+    _registry.emplace<LoadingTicket>(entity, entity, 1, false);
 
-    addADrawNode();
-    drawNodes[0]->drawDot({0,0}, 10, cocos2d::Color4F::RED);
+    auto mouseDrawNode = getDrawNode(_registry, "mouse");
+    mouseDrawNode->drawDot({0,0}, 3, cocos2d::Color4F::RED);
+    mouseDrawNode->setGlobalZOrder(10);
 
-    addADrawNode();
     for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 10; j++)
         {
-            drawNodes[1]->drawDot(cocos2d::Vec2(i, j) * CHUNK_SIZE * BLOCK_SIZE, 1, cocos2d::Color4F::GREEN);
+            getDrawNode(_registry, "edge")->drawDot(cocos2d::Vec2(i, j) * CHUNK_SIZE * BLOCK_SIZE, 1, cocos2d::Color4F::GREEN);
         }
     }
-    addADrawNode();
 
     for (int i = 0; i < 2; i++)
     {
@@ -48,10 +47,8 @@ DebugSystem::~DebugSystem() = default;
 
 void DebugSystem::onMouseEvent(const MouseEvent& event)
 {
-    auto& blockLayer = _registry.ctx().get<BlockLayer>();
     auto& blockWorld = _registry.ctx().get<BlockWorld>();
-    auto blockPos = blockLayer.worldPosToBlockPos(event.worldPos);
-    auto blockState = blockLayer.getBlockAtBlockPos(blockPos);
+    auto blockPos = BlockLayer::worldPosToBlockPos(event.worldPos);
 
     cocos2d::Color4F color;
     
@@ -59,19 +56,19 @@ void DebugSystem::onMouseEvent(const MouseEvent& event)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.TryPlace(blockPos, entt::hashed_string("dirt"), 0, testEntites[0]);
+        blockWorld.tryPlace(blockPos, entt::hashed_string("dirt"), 0, testEntites.at("mouse"));
     }
     else if(event.button == cocos2d::EventMouse::MouseButton::BUTTON_LEFT)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.tryMine(blockPos, testEntites[0]);
-
+        blockWorld.tryMine(LayerType::BLOCK, blockPos, 10, testEntites.at("mouse"));
     }
 }
 
 void DebugSystem::update(float delta)
 {
+
     for (int i = 0; i < physicsEntity.size(); i++)
     {
         entt::entity entity = physicsEntity[i];
@@ -84,19 +81,41 @@ void DebugSystem::update(float delta)
     auto camera = cocos2d::Camera::getDefaultCamera();
     if (camera)
     {
-        _registry.get<Position>(testEntites[0]) = camera->getPosition();
+        _registry.get<Position>(testEntites.at("mouse")) = camera->getPosition();
     }
 
-    drawNodes[0]->setPosition(tools::MouseDebugTool::getWorldPosition());
+    drawNodes.at("mouse")->setPosition(tools::MouseDebugTool::getWorldPosition());
 }
 
-void DebugSystem::addADrawNode()
+entt::entity DebugSystem::getEntity(entt::registry& registry, const std::string& name)
 {
-    auto& world = _registry.ctx().get<WorldScene>();
-    auto drawNode = cocos2d::DrawNode::create();
-    drawNode->setPosition(cocos2d::Vec2::ZERO);
-    world->addChild(drawNode);
-    drawNodes.push_back(drawNode);
+    if (testEntites.find(name) == testEntites.end())
+    {
+        entt::entity entity = registry.create();
+        testEntites[name] = entity;
+        return entity;
+    }
+    else
+    {
+        return testEntites.at(name);
+    }
+}
+
+cocos2d::DrawNode* DebugSystem::getDrawNode(entt::registry& registry, const std::string& name)
+{
+    if (drawNodes.find(name) == drawNodes.end())
+    {
+        auto& world = registry.ctx().get<WorldScene>();
+        auto drawNode = cocos2d::DrawNode::create();
+        drawNode->setPosition(cocos2d::Vec2::ZERO);
+        world->addChild(drawNode);
+        drawNodes[name] = drawNode;
+        return drawNode;
+    }
+    else
+    {
+        return drawNodes.at(name);
+    }
 }
 
 void DebugSystem::addAPhysicsSprites()
