@@ -18,6 +18,7 @@ public:
 private:
     void mining(float delta);
     void render();
-    cocos2d::Texture2D* getProgressTexture(float progress);
+    int getProgressLevel(float progress);
+    cocos2d::Texture2D* getProgressTexture(int level);
     AssetManager& _assetManager;
 };
