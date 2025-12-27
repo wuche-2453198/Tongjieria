@@ -63,7 +63,15 @@ public:
     template <typename T>
     std::optional<T> getStateVal(const std::string& firstTag, const std::string& secondTag, state stateCode) const
     {
-        return getVal<T>(*getStateConfig(stateCode), firstTag, secondTag);
+        auto stateConfig = getStateConfig(stateCode);
+        if (stateConfig)
+        {
+            return getVal<T>(*stateConfig, firstTag, secondTag);
+        }
+        else
+        {
+            return std::nullopt;
+        }
     }
 
     template <typename T>
