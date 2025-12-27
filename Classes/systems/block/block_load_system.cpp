@@ -7,46 +7,10 @@ BlockLoadSystem::~BlockLoadSystem() = default;
 
 void BlockLoadSystem::update(float delta)
 {
-    // 获取未生成方块的区块
     auto view = _registry.view<Position, ChunkHead>(entt::exclude<ChunkBlocks>);
-    view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
+    view.each([this](auto entity, Position& pos, ChunkHead& head)
         {
-            auto& blocks = _registry.emplace<ChunkBlocks>(entity);
-
-            // 为区块中的每个方块生成方块ID
-            for (int y = 0; y < CHUNK_SIZE; y++)
-            {
-                for (int x = 0; x < CHUNK_SIZE; x++)
-                {
-                    blocks.setBlockAt({ x,y }, WorldGenAt(pos.getPostion() + Vec2i(x, y)));
-                }
-            }
+            // todo 需要写一个判定，判定是否有保存的数据。
+            _registry.emplace<NeedGen>(entity);
         });
-}
-
-ChunkBlocks BlockLoadSystem::loadChunk()
-{
-    return ChunkBlocks();
-}
-
-ChunkBlocks BlockLoadSystem::generateChunk()
-{
-    return ChunkBlocks();
-}
-
-BlockState BlockLoadSystem::WorldGenAt(const Vec2i& pos)
-{
-    // 一个非常简单的世界生成函数
-    if (pos.y > 4)
-    {
-        return BlockState((entt::id_type)entt::hashed_string("air"), 0);
-    }
-    else if (pos.y > 0)
-    {
-        return BlockState((entt::id_type)entt::hashed_string("dirt"), 0);
-    }
-    else
-    {
-        return BlockState((entt::id_type)entt::hashed_string("stone"), 0);
-    }
 }
