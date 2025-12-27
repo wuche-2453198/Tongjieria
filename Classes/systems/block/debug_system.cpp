@@ -108,6 +108,7 @@ cocos2d::DrawNode* DebugSystem::getDrawNode(entt::registry& registry, const std:
         auto& world = registry.ctx().get<WorldScene>();
         auto drawNode = cocos2d::DrawNode::create();
         drawNode->setPosition(cocos2d::Vec2::ZERO);
+        drawNode->setGlobalZOrder(1000);
         world->addChild(drawNode);
         drawNodes[name] = drawNode;
         return drawNode;
@@ -130,7 +131,7 @@ void DebugSystem::addAPhysicsSprites()
 
     entt::entity entity = _registry.create();
     _registry.emplace<Position>(entity, cocos2d::Vec2::ZERO);
-    _registry.emplace<PhysicsTicket>(entity, cocos2d::Vec2(30, 30), cocos2d::Vec2::ZERO);
+    _registry.emplace<PhysicsTicket>(entity, cocos2d::Vec2(100, 100), cocos2d::Vec2::ZERO);
 
     physicsEntity.push_back(entity);
     physicsSprites.push_back(sprites);

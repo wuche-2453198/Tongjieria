@@ -9,7 +9,7 @@
 #include "block_physics_system.h"
 #include "debug_system.h"
 
-#define PHYSICS_TICKET_DEBUG 0
+#define PHYSICS_TICKET_DEBUG 1
 #define PHYSICS_LOG  0
 
 BlockPhysicsSystem::BlockPhysicsSystem(entt::registry& registry, entt::dispatcher& dispatcher)
@@ -75,7 +75,10 @@ std::vector<Vec2i> BlockPhysicsSystem::getAllAddIn()
             }
             
 #if PHYSICS_TICKET_DEBUG
-            drawNode->drawRect(blockUpperLeft * BLOCK_SIZE, blockLowerRight * BLOCK_SIZE, cocos2d::Color4F::YELLOW);
+            drawNode->drawRect(
+                (blockUpperLeft + Vec2i(0, 1)) * BLOCK_SIZE,
+                (blockLowerRight + Vec2i(1, 0)) * BLOCK_SIZE,
+                cocos2d::Color4F::YELLOW);
 #endif // PHYSICS_TICKET_DEBUG
         });
 
