@@ -34,7 +34,10 @@ BlockBatchCommand::BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& 
     init(globalOrder, texture, cocos2d::BlendFunc::ALPHA_PREMULTIPLIED, *triangles, cocos2d::Mat4(), 0);
 }
 
-BlockBatchCommand::~BlockBatchCommand() {}
+BlockBatchCommand::~BlockBatchCommand() 
+{
+    CC_SAFE_RELEASE(_pipelineDescriptor.programState);
+}
 
 void BlockBatchCommand::setTexture(cocos2d::Texture2D* texture)
 {   
@@ -56,6 +59,7 @@ void BlockBatchCommand::setNewTexture(cocos2d::Texture2D* texture)
 
 void BlockBatchCommand::updateShaders()
 {
+    CC_SAFE_RELEASE(_pipelineDescriptor.programState);
     auto* program = Program::getBuiltinProgram(ProgramType::POSITION_TEXTURE_COLOR);
     auto programState = new (std::nothrow) ProgramState(program);
     getPipelineDescriptor().programState = programState;
