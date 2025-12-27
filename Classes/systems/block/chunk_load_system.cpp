@@ -1,14 +1,14 @@
+#include "core/block_world.h"
 #include "components/block/block_component.h"
 #include "systems/block_layer/block_layer.h"
 #include "chunk_load_system.h"
 
 #include "debug_system.h"
 
-#define CHUNK_VIEW_ENABEL 0
+#define CHUNK_VIEW_ENABEL 1;
 
 ChunkLoadSystem::ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher)
-    : ISystem(registry, dispatcher),
-    _blockLayer(_registry.ctx().get<BlockLayer>())
+    : ISystem(registry, dispatcher), _blockWorld(_registry.ctx().get<BlockWorld>())
 {
 
 }
@@ -19,20 +19,22 @@ void ChunkLoadSystem::update(float delta)
     AddNewChunk();
     updatePriority();
 
-    auto& mappings = _blockLayer.getChunkMappings();
-
-    DebugSystem::drawNodes[2]->clear();
-    auto view = _registry.view<Position, ChunkHead>();
     
-#if CHUNK_VIEW_ENABEL == 1
+#if CHUNK_VIEW_ENABEL
+    auto& mappings = _blockWorld.getLayer(LayerType::BLOCK).getChunkMappings();
+
+    auto drawNode = DebugSystem::getDrawNode(_registry, "chunk");
+    drawNode->clear();
+    auto view = _registry.view<Position, ChunkHead>();
+
     view.each([&](const Position& pos, const ChunkHead& head)
         {
             Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
             cocos2d::Vec2 lowLeft = chunkPos * BLOCK_SIZE * CHUNK_SIZE;
             cocos2d::Vec2 highRight = (chunkPos + Vec2i(1, 1)) * BLOCK_SIZE * CHUNK_SIZE;
-            DebugSystem::drawNodes[2]->drawRect(lowLeft, highRight, cocos2d::Color4F::GREEN);
+            drawNode->drawRect(lowLeft, highRight, cocos2d::Color4F::GREEN);
         });
-#endif // 
+#endif 
 }
 
 void ChunkLoadSystem::AddNewChunk()
@@ -48,30 +50,25 @@ void ChunkLoadSystem::AddNewChunk()
             {
                 for (int x = upperLeft.x; x <= lowerRight.x; x++)
                 {
-                    Vec2i chunkPos = { x,y };
-                    if (!_blockLayer.hasChunkExist(chunkPos))
-                    {
-                        addChunk(chunkPos);
-                    }
+                    AddChunk(LayerType::BLOCK, Vec2i(x, y));
+                    AddChunk(LayerType::WALL, Vec2i(x, y));
                 }
             }
         });
 }
 
-void ChunkLoadSystem::addChunk(const Vec2i& chunkPos)
+void ChunkLoadSystem::AddChunk(LayerType layerType, const Vec2i& chunkPos)
 {
-    // 如果添加的位置过高或过低，或区块已经存在，直接返回
-    if (!isValiedChunkPos(chunkPos) || _blockLayer.hasChunkExist(chunkPos)) return;
-
-    // 创建实体
-    entt::entity entity = _registry.create();
-
-    // 添加位置和区块头
-    _registry.emplace<Position>(entity, chunkPos * BLOCK_SIZE * CHUNK_SIZE);
-    _registry.emplace<ChunkHead>(entity);
-
-    // 更新区块索引
-    _blockLayer.addChunk(chunkPos, entity);
+    auto& layer = _blockWorld.getLayer(layerType);
+    if (!layer.hasChunkExist(chunkPos))
+    {
+        // 如果添加的位置过高或过低，或区块已经存在，直接返回
+        if (!isValiedChunkPos(chunkPos) || layer.hasChunkExist(chunkPos))
+        {
+            return;
+        }
+        layer.addChunk(chunkPos);
+    }
 }
 
 void ChunkLoadSystem::updatePriority()

@@ -30,10 +30,7 @@ private:
 
     void AddNewChunk();
 
-    /**
-    * @brief 在对应的区块坐标上生成一个区块头。
-    */
-    void addChunk(const Vec2i& chunkPos);
+    void AddChunk(LayerType layer, const Vec2i& chunkPos);
 
     /**
     * @brief 计算目前所有区块的优先级。
@@ -50,5 +47,5 @@ private:
     */
     int inLayer(const Vec2i& center, const Vec2i& chunkPos);
 
-    BlockLayer& _blockLayer;
+    BlockWorld& _blockWorld;
 };
