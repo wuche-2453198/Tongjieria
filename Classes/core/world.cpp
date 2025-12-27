@@ -53,7 +53,6 @@ bool World::initServers()
 
     // 2. 创建各类服务
     _registry->ctx().emplace<WorldScene>(this);
-    _registry->ctx().emplace<BlockLayer>(*_registry);
     _registry->ctx().emplace<BlockPhysicsLayer>();
     _registry->ctx().emplace<AssetManager>();
     _registry->ctx().emplace<BlockWorld>(*_registry, *_dispatcher);
