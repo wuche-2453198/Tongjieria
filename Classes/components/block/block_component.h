@@ -329,3 +329,5 @@ struct MiningTag
     float factor;
 };
 
+struct MiningProgressRenderChangeTag {};
+
