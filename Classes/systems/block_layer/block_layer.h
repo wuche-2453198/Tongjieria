@@ -10,6 +10,7 @@ namespace cocos2d {
 
 class AssetManager;
 class ChunkHead;
+class BlockEntityHead;
 
 /*
 * @brief 方块世界的高级访问中心，提供一套区块索引和基础方法，以供快速查询和使用。
@@ -20,7 +21,7 @@ class ChunkHead;
 class BlockLayer
 {
 public:
-    BlockLayer(entt::registry& registry);
+    BlockLayer(LayerType type, entt::registry& registry);
     ~BlockLayer();
 
     /**
@@ -36,6 +37,32 @@ public:
     * @param pos 区块坐标
     */
     void destroyChunk(const Vec2i& chunkPos);
+
+    /**
+    * @brief 添加方块实体
+    * 
+    * @param blockPos 方块坐标
+    * @return 方块实体id 和 方块实体头
+    */
+    std::pair<entt::entity, BlockEntityHead&> addBlockEntity(const Vec2i& blockPos);
+
+    /**
+    * @brief 移除方块实体
+    * 
+    * @param blockPos 方块坐标
+    * 
+    * @note 移除方块实体并不会摧毁这个方块。
+    *       只是将其组件清除，实体id回收，意味着这个位置的复杂的功能已经完成
+    */
+    void destroyBlockEntity(const Vec2i& blockPos);
+
+    /**
+    * @brief 获取方块实体
+    * 
+    * @param chunkPos 方块坐标
+    * @return 方块实体id
+    */
+    std::optional<entt::entity> getBlockEntityAt(const Vec2i& blockPos) const;
 
     /**
     * @brief 将世界坐标转换到区块坐标
@@ -131,7 +158,7 @@ public:
     * @param worldPos 世界坐标
     * @return 区块实体id
     */
-    entt::entity const getChunkAtWorldPos(const cocos2d::Vec2& worldPos) const;
+    entt::entity const getChunkEntityAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
     /**
     * @brief 获取区块坐标下的区块
@@ -139,14 +166,19 @@ public:
     * @param chunkPos 区块坐标
     * @return 区块实体id
     */
-    entt::entity const getChunk(const Vec2i& chunkPos) const;
+    entt::entity const getChunkEntity(const Vec2i& chunkPos) const;
+    
+    /**
+    * @brief 获取区块类型。
+    */
+    LayerType getLayerType() const;
 
     /**
     * @brief 获取区块映射表
     */
     const std::unordered_map<Vec2i, entt::entity>& getChunkMappings();
 private:
-
+    LayerType _layerType;
     entt::registry& _registry;                              ///< 组件总线
     std::unordered_map<Vec2i, entt::entity> _chunkMappings; ///< 区块映射
 };
