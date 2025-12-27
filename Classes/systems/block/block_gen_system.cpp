@@ -1,8 +1,14 @@
 #include "block_gen_system.h"
 #include "components/block/block_component.h"
+#include "noise/noise.h"
+
+#define BLOCK_GEN_LOG 0
 
 BlockGenSystem::BlockGenSystem(entt::registry& registry, entt::dispatcher& dispatcher)
-    : ISystem(registry, dispatcher) {}
+    : ISystem(registry, dispatcher) 
+{
+    initModule();
+}
 
 BlockGenSystem::~BlockGenSystem() {}
 
@@ -12,10 +18,10 @@ void BlockGenSystem::update(float delta)
     auto view = _registry.view<Position, ChunkHead, NeedGen>();
     view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
         {
-            CCLOG("Gen blocks at %d %d", pos.getPostion().x, pos.getPostion().y);
+#if BLOCK_GEN_LOG
+            CCLOG("Gen chunk at %d %d", pos.getPostion().x/BLOCK_SIZE, pos.getPostion().y/BLOCK_SIZE);
+#endif
             auto& blocks = _registry.emplace<ChunkBlocks>(entity);
-            
-
             // 生成方块
             for (int y = 0; y < CHUNK_SIZE; y++)
             {
@@ -37,7 +43,20 @@ void BlockGenSystem::update(float delta)
         });
 }
 
-BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos)
+void BlockGenSystem::initModule()
+{
+    perlin.SetFrequency(0.05f);
+    perlin.SetOctaveCount(3);
+    perlin.SetPersistence(0.5f);
+    perlin.SetLacunarity(2.0f);
+    perlin.SetSeed(114514);
+
+    scaleBias.SetSourceModule(0, perlin);
+    scaleBias.SetScale(10.0f);
+    scaleBias.SetBias(60.0f);
+}
+
+BlockState BlockGenSystem::testGenBlockAt(const Vec2i& blockPos)
 {
     // 一个非常简单的世界生成函数
     if (blockPos.y > 4)
@@ -54,7 +73,7 @@ BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos)
     }
 }
 
-BlockState BlockGenSystem::genWallAt(const Vec2i& blockPos)
+BlockState BlockGenSystem::testGenWallAt(const Vec2i& blockPos)
 {
     // 一个非常简单的世界生成函数
     if (blockPos.y > 10)
@@ -65,4 +84,22 @@ BlockState BlockGenSystem::genWallAt(const Vec2i& blockPos)
     {
         return BlockState((entt::id_type)entt::hashed_string("dirt_wall"), 0);
     }
+}
+
+BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos)
+{
+    if (blockPos.y < scaleBias.GetValue(blockPos.x, 0, fixedZ))
+    {
+        return BlockState(entt::hashed_string("dirt"),0);
+    }
+    else
+    {
+        return BlockState(entt::hashed_string("air"), 0);
+    }
+}
+
+BlockState BlockGenSystem::genWallAt(const Vec2i& blockPos)
+{
+
+    return BlockState::AIR;
 }

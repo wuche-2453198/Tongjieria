@@ -21,7 +21,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     
     entt::entity entity = getEntity(_registry, "mouse");
     _registry.emplace<Position>(entity, cocos2d::Vec2::ZERO);
-    _registry.emplace<LoadingTicket>(entity, entity, 1, false);
+    _registry.emplace<LoadingTicket>(entity, entity, 8, false);
 
     auto mouseDrawNode = getDrawNode(_registry, "mouse");
     mouseDrawNode->drawDot({0,0}, 3, cocos2d::Color4F::RED);
@@ -35,7 +35,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
         }
     }
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 0; i++)
     {
         addAPhysicsSprites();
         physicsSprites[i]->setPosition(700 + i * 100, 100);
