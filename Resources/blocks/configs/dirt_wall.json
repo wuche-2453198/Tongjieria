@@ -1,0 +1,15 @@
+{
+  "id": "dirt_wall",
+  "name": "Dirt Wall",
+  "origin": {
+    "base": {
+      "wall": true,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\dirt_wall.png"
+    },
+    "collision": {
+      "enable": false
+    }
+  }
+}

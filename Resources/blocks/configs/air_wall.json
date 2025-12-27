@@ -1,9 +1,9 @@
 {
-  "id": "air",
-  "name": "Air",
+  "id": "air_wall",
+  "name": "Air Wall",
   "origin": {
     "base": {
-      "wall": false,
+      "wall" : true,
       "replaceable": true,
       "behavior": "air_behavior",
       "texture": "blocks\\textures\\air.png"

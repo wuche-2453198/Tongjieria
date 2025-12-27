@@ -3,6 +3,7 @@
   "name": "Dirt",
   "origin": {
     "base": {
+      "wall": false,
       "replaceable": false,
       "behavior": "dirt_behavior",
       "texture": "blocks\\textures\\dirt.png"

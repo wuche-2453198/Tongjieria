@@ -3,6 +3,7 @@
   "name": "Stone",
   "origin": {
     "base": {
+      "wall": false,
       "replaceable": false,
       "behavior": "dirt_behavior",
       "texture": "blocks\\textures\\stone.png"
