@@ -3,22 +3,18 @@
 #include "core/consts.h"
 #include "utils/vec2i.h"
 
+using state = uint32_t;
+
 /*
 * @brief 方块相关的事件基类。
-* 
+*
 * 事件由BlockWorld发送。由外部系统触发。
-* 对应的方块事件都发生在behavior类被处理之前。
-*/
-
-
-/**
-* @brief 表示方块相关的事件基类。
 * 对应的方块事件都发生在behavior类被处理之前。
 */
 struct BlockEvent
 {
     BlockEvent(LayerType layer, entt::id_type block_id, const Vec2i& pos)
-        : id(block_id), blockPos(pos) {}
+        : layer(layer), id(block_id), blockPos(pos) {}
     LayerType layer;
     entt::id_type id;  ///< 方块类型ID
     Vec2i blockPos;  ///< 方块在世界中的位置
