@@ -12,23 +12,46 @@ class BlockSystemManager;
 class InputManager;
 class CommandSystem;
 
+namespace ecs {
+    class SystemManagerEntt;
+    class ProjectileCollisionSystemEntt;
+}
+
 class World : public cocos2d::Scene
 {
 public:
     static cocos2d::Scene* createScene();
+    static World* create();
     World() = default;
+    ~World() override;
     bool init();
 
     /**
-    * @brief Ã¿Ö¡¸üĞÂº¯Êı¡£
+    * @brief æ¯å¸§æ›´æ–°å‡½æ•°ã€‚
     * 
-    * @param delta ¾àÀëÉÏÒ»Ö¡µÄÊ±¼ä¼ä¸ô£¬µ¥Î»ÎªÃë¡£
+    * @param delta è·ç¦»ä¸Šä¸€å¸§çš„æ—¶é—´é—´éš”ï¼Œå•ä½ä¸ºç§’ã€‚
     */
     void update(float delta) override;
 private:
+    enum class FrameRateLimitMode {
+        Fps60,
+        Fps240,
+        Unlimited,
+    };
+
+    void applyFrameRateLimitMode();
+    void cycleFrameRateLimitMode();
+
     bool initServers();
-    std::unique_ptr<entt::registry> _registry = nullptr;                ///< ÊÀ½ç×é¼ş×ÜÏß
-    std::unique_ptr<entt::dispatcher> _dispatcher = nullptr;            ///< ÊÀ½çÊÂ¼ş×ÜÏß
-    std::unique_ptr<BlockSystemManager> _blockSystemManager = nullptr;  ///< ·½¿éÏµÍ³¹ÜÀíÆ÷
-    CommandSystem* _renderingCommandsSystem = nullptr;                  ///< äÖÈ¾ÃüÁîÏµÍ³
+    std::unique_ptr<entt::registry> _registry = nullptr;                ///< ä¸–ç•Œç»„ä»¶æ€»çº¿
+    std::unique_ptr<entt::dispatcher> _dispatcher = nullptr;            ///< ä¸–ç•Œäº‹ä»¶æ€»çº¿
+    std::unique_ptr<BlockSystemManager> _blockSystemManager = nullptr;  ///< æ–¹å—ç³»ç»Ÿç®¡ç†å™¨
+    CommandSystem* _renderingCommandsSystem = nullptr;                  ///< æ¸²æŸ“å‘½ä»¤ç³»ç»Ÿ
+
+    std::unique_ptr<ecs::SystemManagerEntt> _npcSystemManager = nullptr;
+    ecs::ProjectileCollisionSystemEntt* _projectileCollisionSystem = nullptr;
+    cocos2d::EventListenerPhysicsContact* _sharedContactListener = nullptr;
+    entt::entity _playerEntity = entt::null;
+
+    FrameRateLimitMode _frameRateLimitMode = FrameRateLimitMode::Fps60;
 };

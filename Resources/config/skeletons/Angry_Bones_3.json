@@ -1,0 +1,52 @@
+{
+  "id": "Angry_Bones_3",
+  "type": "Skeleton",
+  "description": "Angry Bones 3 - warrior AI with pounce behavior",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Angry_Bones_3",
+    "spritePrefix": "Angry_Bones_3",
+    "frameCount": 14,
+    "frameSequence": [1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    "frameTime": 0.06,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1
+  },
+
+  "physics": {
+    "bodyWidth": 30.0,
+    "bodyHeight": 48.0,
+    "bodyHeightOffset": -3.0,
+    "mass": 1.2,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 90.0,
+    "jumpForce": 480.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.1,
+    "patrolDirectionChangeInterval": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 380.0,
+    "deaggroRange": 480.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 80.0,
+    "attackDamage": 16.0,
+    "attackRange": 30.0,
+    "attackCooldown": 1.0,
+    "defense": 3.0
+  }
+}

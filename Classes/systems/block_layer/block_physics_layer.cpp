@@ -1,29 +1,33 @@
 #include "block_physics_layer.h"
 
-void BlockPhysicsLayer::addPhysicsShapeTag(const Vec2i& pos, int tag)
+int BlockPhysicsLayer::addPhysicsShapeTag(const BlockPhysicsShapeKey& key)
 {
-    assert(!hasPhysicsShapeTag(pos), "²»ÄÜÖØ¸´Ìí¼Ó");
-    _physicsBodies[pos] = tag;
+    auto it = _physicsBodies.find(key);
+    if (it != _physicsBodies.end()) {
+        return it->second;
+    }
+    const int tag = _nextTag++;
+    _physicsBodies.emplace(key, tag);
+    return tag;
 }
 
-void BlockPhysicsLayer::removePhysicsShapeTag(const Vec2i& pos)
+void BlockPhysicsLayer::removePhysicsShapeTag(const BlockPhysicsShapeKey& key)
 {
-    assert(hasPhysicsShapeTag(pos), "²»´æÔÚ¸ÃÎ»ÖÃµÄÎïÀíĞÎ×´±ê¼Ç");
-    _physicsBodies.erase(pos);
+    CCASSERT(hasPhysicsShapeTag(key), "ä¸å­˜åœ¨è¯¥ä½ç½®çš„ç‰©ç†å½¢çŠ¶æ ‡è®°");
+    _physicsBodies.erase(key);
 }
 
-bool BlockPhysicsLayer::hasPhysicsShapeTag(const Vec2i& pos) const
+bool BlockPhysicsLayer::hasPhysicsShapeTag(const BlockPhysicsShapeKey& key) const
 {
-    return _physicsBodies.find(pos) != _physicsBodies.end();
+    return _physicsBodies.find(key) != _physicsBodies.end();
 }
 
-int BlockPhysicsLayer::getPhysicsBodyTag(const Vec2i& pos) const
+int BlockPhysicsLayer::getPhysicsBodyTag(const BlockPhysicsShapeKey& key) const
 {
-    return _physicsBodies.at(pos);
+    return _physicsBodies.at(key);
 }
 
-std::unordered_map<Vec2i, int>& BlockPhysicsLayer::getPhysicsBodyTags()
+std::unordered_map<BlockPhysicsShapeKey, int, BlockPhysicsShapeKeyHash>& BlockPhysicsLayer::getPhysicsBodyTags()
 {
     return _physicsBodies;
 }
-

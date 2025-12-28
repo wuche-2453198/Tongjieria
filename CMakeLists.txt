@@ -42,10 +42,14 @@ if(APPLE OR WINDOWS)
 endif()
 
 # add cross-platforms source files and header files 
- file(GLOB_RECURSE GAME_SOURCE_CLASSES "Classes/*.cpp")
- file(GLOB_RECURSE GAME_HEADER_CLASSES "Classes/*.h")
- list(APPEND GAME_SOURCE ${GAME_SOURCE_CLASSES})
- list(APPEND GAME_HEADER ${GAME_HEADER_CLASSES})
+file(GLOB_RECURSE GAME_SOURCE_CLASSES "Classes/*.cpp")
+file(GLOB_RECURSE GAME_HEADER_CLASSES "Classes/*.h")
+
+list(FILTER GAME_SOURCE_CLASSES EXCLUDE REGEX "/core/scenes/")
+list(FILTER GAME_HEADER_CLASSES EXCLUDE REGEX "/core/scenes/")
+
+list(APPEND GAME_SOURCE ${GAME_SOURCE_CLASSES})
+list(APPEND GAME_HEADER ${GAME_HEADER_CLASSES})
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
@@ -117,7 +121,7 @@ target_link_libraries(${APP_NAME} libnoise)
 target_include_directories(${APP_NAME}
         PRIVATE Classes
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt/src
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/entt/single_include
 )
 
 # mark app resources

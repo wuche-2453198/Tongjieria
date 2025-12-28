@@ -1,0 +1,52 @@
+{
+  "id": "PinkSlime",
+  "type": "Slime",
+  "description": "粉色史莱姆，特别小巧可爱",
+  
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/PinkSlime",
+    "spritePrefix": "Pink_Slime",
+    "frameCount": 2,
+    "frameTime": 0.12,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 15.0,
+    "bodyHeight": 11.0,
+    "bodyHeightOffset": -3,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 1.2,
+    "horizontalImpulse": 150.0,
+    "verticalImpulse": 280.0,
+    "patrolImpulseRatio": 0.6,
+    "directionChangeChance": 0.4
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 200.0,
+    "deaggroRange": 280.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 20.0,
+    "attackDamage": 4.0,
+    "attackRange": 25.0,
+    "attackCooldown": 0.8,
+    "defense": 0.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 1, "maxCount": 1, "dropChance": 0.7},
+    {"itemId": "coin", "minCount": 1, "maxCount": 5, "dropChance": 0.5}
+  ]
+}

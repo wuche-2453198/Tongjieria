@@ -1,0 +1,52 @@
+{
+  "id": "BabySlime",
+  "type": "Slime",
+  "description": "史莱姆宝宝，由史莱姆母体死亡时生成",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/BabySlime",
+    "spritePrefix": "Baby_Slime",
+    "frameCount": 2,
+    "frameTime": 0.1,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 30.0,
+    "bodyHeight": 21.0,
+    "bodyHeightOffset": -4,  
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 1.5,
+    "horizontalImpulse": 350.0,
+    "verticalImpulse": 550.0,
+    "patrolImpulseRatio": 0.6,
+    "directionChangeChance": 0.4
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 250.0,
+    "deaggroRange": 350.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 25.0,
+    "attackDamage": 5.0,
+    "attackRange": 35.0,
+    "attackCooldown": 0.8,
+    "defense": 0.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 1, "maxCount": 2, "dropChance": 0.7},
+    {"itemId": "coin", "minCount": 2, "maxCount": 8, "dropChance": 0.4}
+  ]
+}

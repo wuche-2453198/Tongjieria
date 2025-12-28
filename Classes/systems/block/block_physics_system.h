@@ -1,6 +1,9 @@
 #pragma once
 #include "entt/entt.hpp"
 #include "block_system_manager.h"
+#include "systems/block_layer/block_physics_layer.h"
+#include <unordered_set>
+#include <vector>
 
 namespace cocos2d
 {
@@ -9,21 +12,21 @@ namespace cocos2d
     class Node;
 }
 
-class BlockPhysicsLayer;
 class AssetManager;
+class BlockLayer; // Forward declaration
 class Position;
 class PhysicsTicket;
 
 /**
-* @brief ´¦ÀíÇø¿éµÄÎïÀíÊôĞÔ¡£
+* @brief å¤„ç†åŒºå—çš„ç‰©ç†å±æ€§ã€‚
 *
-* ¸ÃÀà»á×Ô¶¯´¦ÀíÔà±ê¼Ç£¬¶¯Ì¬´´½¨ÎïÀíĞÎ×´£¬Î¬»¤ÎïÀíĞÎ×´Ë÷Òı±í¡£
+* è¯¥ç±»ä¼šè‡ªåŠ¨å¤„ç†è„æ ‡è®°ï¼ŒåŠ¨æ€åˆ›å»ºç‰©ç†å½¢çŠ¶ï¼Œç»´æŠ¤ç‰©ç†å½¢çŠ¶ç´¢å¼•è¡¨ã€‚
 *
-* ÈÎºÎÓĞ**Î»ÖÃ**ºÍ**ÎïÀíÆ±**µÄÊµÌå²Å»á´¥·¢ÎïÀíĞÎÌå¸üĞÂ¡£
-* - ÔÚÎïÀíÆ±ÄÚ²¿µÄ·½¿é£¬»áÉú³ÉÎïÀíĞÎÌå¡£
-* - ·½¿éÔÚÀë¿ªÎïÀíÆ±µÄÊ±ºò£¬»áÒÆ³ıÎïÀíĞÎÌå¡£
-* - ÎïÀíĞÎÌå»á¸ù¾İ·½¿éµÄÅäÖÃÉú³É¡£
-* Ê¹ÓÃÕß¿ÉÒÔºÏÀíÉèÖÃÎïÀíÆ±µÄÆ«ÒÆÀ´ÓÅ»¯ĞÔÄÜ£¬Èç¸ù¾İËÙ¶ÈÉèÖÃÆ«ÒÆ£¬Ê¡ÂÔµôÒ»Ğ©²»±ØÒªµÄÎïÀíĞÎÌå¡£
+* ä»»ä½•æœ‰**ä½ç½®**å’Œ**ç‰©ç†ç¥¨**çš„å®ä½“æ‰ä¼šè§¦å‘ç‰©ç†å½¢ä½“æ›´æ–°ã€‚
+* - åœ¨ç‰©ç†ç¥¨å†…éƒ¨çš„æ–¹å—ï¼Œä¼šç”Ÿæˆç‰©ç†å½¢ä½“ã€‚
+* - æ–¹å—åœ¨ç¦»å¼€ç‰©ç†ç¥¨çš„æ—¶å€™ï¼Œä¼šç§»é™¤ç‰©ç†å½¢ä½“ã€‚
+* - ç‰©ç†å½¢ä½“ä¼šæ ¹æ®æ–¹å—çš„é…ç½®ç”Ÿæˆã€‚
+* ä½¿ç”¨è€…å¯ä»¥åˆç†è®¾ç½®ç‰©ç†ç¥¨çš„åç§»æ¥ä¼˜åŒ–æ€§èƒ½ï¼Œå¦‚æ ¹æ®é€Ÿåº¦è®¾ç½®åç§»ï¼Œçœç•¥æ‰ä¸€äº›ä¸å¿…è¦çš„ç‰©ç†å½¢ä½“ã€‚
 */
 class BlockPhysicsSystem : public ISystem
 {
@@ -32,41 +35,40 @@ public:
     ~BlockPhysicsSystem();
     void update(float delta);
 private:
-    std::vector<Vec2i> getAllAddIn();
-    std::vector<Vec2i> getAllRemoveOut();
-    void addAll(std::vector<Vec2i> allAdded);
-    void removeAll(std::vector<Vec2i> allRemoved);
-    void updateDirtyBlock();
+    std::unordered_set<BlockPhysicsShapeKey, BlockPhysicsShapeKeyHash> collectDesiredShapes();
+    void addAll(const std::vector<BlockPhysicsShapeKey>& allAdded);
+    void removeAll(const std::vector<BlockPhysicsShapeKey>& allRemoved);
     bool isInside(const Vec2i& blockPos, const Vec2i& blockUpperLeft, const Vec2i& blockLowerRight);
     bool hasCollision(const Vec2i& blockPos);
 
     /**
-    * @brief »ñÈ¡Çø¿é×óÉÏ½ÇµÄ×ø±ê¡£
+    * @brief è·å–åŒºå—å·¦ä¸Šè§’çš„åæ ‡ã€‚
     *
-    * @param worldPos ÊÀ½ç×ø±ê
-    * @param ticket ÎïÀíÆ±
+    * @param worldPos ä¸–ç•Œåæ ‡
+    * @param ticket ç‰©ç†ç¥¨
     */
     Vec2i getUpperLeft(const Position& worldPos, const PhysicsTicket& ticket);
 
     /**
-    * @brief »ñÈ¡Çø¿éÓÒÏÂ½ÇµÄ×ø±ê¡£
+    * @brief è·å–åŒºå—å³ä¸‹è§’çš„åæ ‡ã€‚
     *
-    * @param worldPos ÊÀ½ç×ø±ê
-    * @param ticket ÎïÀíÆ±
+    * @param worldPos ä¸–ç•Œåæ ‡
+    * @param ticket ç‰©ç†ç¥¨
     */
     Vec2i getLowerRight(const Position& worldPos, const PhysicsTicket& ticket);
 
     /**
-    * @brief ÔÚÇø¿éµÄ×ø±êÉÏ´´½¨Ò»¸öÎïÀíĞÎ×´¡£
+    * @brief åœ¨åŒºå—çš„åæ ‡ä¸Šåˆ›å»ºä¸€ä¸ªç‰©ç†å½¢çŠ¶ã€‚
     *
-    * @param blockPos ·½¿é×ø±ê
-    * @return ÎïÀíĞÎ×´£¬Èç¹û´´½¨Ê§°Ü»ò·½¿éÃ»ÓĞÅö×²£¬·µ»Ønullptr
+    * @param blockPos æ–¹å—åæ ‡
+    * @return ç‰©ç†å½¢çŠ¶ï¼Œå¦‚æœåˆ›å»ºå¤±è´¥æˆ–æ–¹å—æ²¡æœ‰ç¢°æ’ï¼Œè¿”å›nullptr
     */
     cocos2d::PhysicsShapeBox* createBoxAtBlockPos(const Vec2i& blockPos);
+    cocos2d::PhysicsShapeBox* createVerticalRunBox(int x, int y0, int y1, bool projectilePass);
     cocos2d::Node* _physicsNode = nullptr;
     cocos2d::PhysicsBody* _body = nullptr;
 
-    AssetManager& _assetManager;        ///< ×ÊÔ´¹ÜÀíÆ÷
-    BlockLayer& _blockLayer;            ///< ·½¿é²ã
-    BlockPhysicsLayer& _physicsLayer;   ///< ÎïÀí²ã
+    AssetManager& _assetManager;        ///< èµ„æºç®¡ç†å™¨
+    BlockLayer& _blockLayer;            ///< æ–¹å—å±‚
+    BlockPhysicsLayer& _physicsLayer;   ///< ç‰©ç†å±‚
 };

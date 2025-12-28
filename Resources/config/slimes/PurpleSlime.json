@@ -1,0 +1,53 @@
+{
+  "id": "PurpleSlime",
+  "type": "Slime",
+  "description": "紫色史莱姆，体型比蓝史莱姆大1.1倍",
+  
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/PurpleSlime",
+    "spritePrefix": "Purple_Slime",
+    "frameCount": 2,
+    "frameTime": 0.14,
+    "scale": 1
+  },
+
+  "physics": {
+    "bodyWidth": 32.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.2,
+    "horizontalImpulse": 320.0,
+    "verticalImpulse": 520.0,
+    "patrolImpulseRatio": 0.45,
+    "directionChangeChance": 0.25
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 320.0,
+    "deaggroRange": 420.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 90.0,
+    "attackDamage": 14.0,
+    "attackRange": 55.0,
+    "attackCooldown": 1.1,
+    "defense": 3.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 2, "maxCount": 5, "dropChance": 0.9},
+    {"itemId": "coin", "minCount": 12, "maxCount": 28, "dropChance": 0.7},
+    {"itemId": "shadow_essence", "minCount": 1, "maxCount": 2, "dropChance": 0.15}
+  ]
+}

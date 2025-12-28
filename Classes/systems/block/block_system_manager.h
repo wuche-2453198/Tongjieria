@@ -8,7 +8,7 @@ class ISystem
 public:
     ISystem(entt::registry& registry, entt::dispatcher& dispatcher);
     virtual ~ISystem();
-    void update(float delta);
+    virtual void update(float delta);
 protected:
     entt::registry& _registry;
     entt::dispatcher& _dispatcher;
@@ -27,6 +27,7 @@ class BlockPhysicsSystem;
 class ChunkRenderSystem;
 class BlockInteractSystem;
 class DebugSystem;
+class NpcBlockTicketSyncSystem;
 
 class BlockSystemManager {
 public:
@@ -37,6 +38,7 @@ private:
     entt::registry& _registry;
     entt::dispatcher& _dispatcher;
 
+    std::unique_ptr<NpcBlockTicketSyncSystem> _npcBlockTicketSyncSystem = nullptr;
     std::unique_ptr<ChunkLoadSystem> _chunkLoadSystem = nullptr;
     std::unique_ptr<BlockLoadSystem> _blockLoadSystem = nullptr;
     std::unique_ptr<BlockGenSystem> _blockGenSystem = nullptr;

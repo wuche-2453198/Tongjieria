@@ -16,16 +16,16 @@ namespace cocos2d
 class Vec2i;
 
 /**
-* @brief ×é¼ş»ùÀà½Ó¿Ú¡£
+* @brief ç»„ä»¶åŸºç±»æ¥å£ã€‚
 * 
-* @tease ÕæµÄÓĞÓÃÂğ£¿
+* @tease çœŸçš„æœ‰ç”¨å—ï¼Ÿ
 */
 class IComponent {};
 
 /**
-* @brief ¸¡µãÊıÎ»ÖÃ×é¼ş¡£ËùÓĞÓĞÎ»ÖÃµÄ¶ÔÏó¶¼Ó¦¸Ã´øÓĞÕâ¸ö×é¼ş¡£
+* @brief æµ®ç‚¹æ•°ä½ç½®ç»„ä»¶ã€‚æ‰€æœ‰æœ‰ä½ç½®çš„å¯¹è±¡éƒ½åº”è¯¥å¸¦æœ‰è¿™ä¸ªç»„ä»¶ã€‚
 * 
-* @note ²»¼æÈİUI£¬UIÓ¦¸ÃÓĞ×¨ÓÃµÄÎ»ÖÃ×é¼ş¡£
+* @note ä¸å…¼å®¹UIï¼ŒUIåº”è¯¥æœ‰ä¸“ç”¨çš„ä½ç½®ç»„ä»¶ã€‚
 */
 class Position : public IComponent 
 {
@@ -40,16 +40,16 @@ public:
     const cocos2d::Vec2& getPostion() const;
     void setPosition(const cocos2d::Vec2& pos);
 private:
-    cocos2d::Vec2 pos; ///< Î»ÖÃ
+    cocos2d::Vec2 pos; ///< ä½ç½®
 };
 
 /**
-* @brief ¼ÓÔØÆ±¡£ÈÎºÎ³ÖÓĞÆ±ÇÒÓĞÎ»ÖÃµÄÊµÌå»á±»Çø¿é¼ÓÔØÏµÍ³¶ÁÈ¡£¬¼ÓÔØÒ»¶¨°ë¾¶µÄÇø¿é¡£
-* ÈÃÍæ¼ÒÒÔÍâµÄÊµÌå³ÖÓĞÓÀ¾Ã¼ÓÔØÆ±ÊÇÎ£ÏÕµÄ£¬ĞèÒª½÷É÷Ê¹ÓÃ¡£
+* @brief åŠ è½½ç¥¨ã€‚ä»»ä½•æŒæœ‰ç¥¨ä¸”æœ‰ä½ç½®çš„å®ä½“ä¼šè¢«åŒºå—åŠ è½½ç³»ç»Ÿè¯»å–ï¼ŒåŠ è½½ä¸€å®šåŠå¾„çš„åŒºå—ã€‚
+* è®©ç©å®¶ä»¥å¤–çš„å®ä½“æŒæœ‰æ°¸ä¹…åŠ è½½ç¥¨æ˜¯å±é™©çš„ï¼Œéœ€è¦è°¨æ…ä½¿ç”¨ã€‚
 *
 * @see ChunkLoadingSystem
 * 
-* @tease °ë¾¶ÉèÎª1000¿ÉÒÔ»ñµÃºËµ¯¡£
+* @tease åŠå¾„è®¾ä¸º1000å¯ä»¥è·å¾—æ ¸å¼¹ã€‚
 */
 struct LoadingTicket 
 {
@@ -66,13 +66,13 @@ struct LoadingTicket
 };
 
 /**
-* @brief Çø¿éÍ·£¬°üº¬Õâ¸öÇø¿éµÄ»ù±¾ĞÅÏ¢¡£
+* @brief åŒºå—å¤´ï¼ŒåŒ…å«è¿™ä¸ªåŒºå—çš„åŸºæœ¬ä¿¡æ¯ã€‚
 * 
 * @see ChunkLoadSystem
 * 
-* @tease Ô­À´Çø¿éÊÇÒ»¸öÕûÌåÀ´×Å£¨±¾À´Çø¿éÀà°üº¬ÁËÇø¿éµÄËùÓĞĞÅÏ¢£¬°üÀ¨·½¿éºÍäÖÈ¾£©£¬
-* »¹ÓĞÒ»¸öÎÂÅ¯µÄ¼Ò£¨blockLayer£©£¬ºóÀ´±»Íò¶ñµÄ¿ª·¢Õß·ÖÊ¬ºóÈÓµ½´óÂ·ÉÏÁË£¨registry£©£¬
-* Õâ¸öÊÇËûµÄÍ·¡£
+* @tease åŸæ¥åŒºå—æ˜¯ä¸€ä¸ªæ•´ä½“æ¥ç€ï¼ˆæœ¬æ¥åŒºå—ç±»åŒ…å«äº†åŒºå—çš„æ‰€æœ‰ä¿¡æ¯ï¼ŒåŒ…æ‹¬æ–¹å—å’Œæ¸²æŸ“ï¼‰ï¼Œ
+* è¿˜æœ‰ä¸€ä¸ªæ¸©æš–çš„å®¶ï¼ˆblockLayerï¼‰ï¼Œåæ¥è¢«ä¸‡æ¶çš„å¼€å‘è€…åˆ†å°¸åæ‰”åˆ°å¤§è·¯ä¸Šäº†ï¼ˆregistryï¼‰ï¼Œ
+* è¿™ä¸ªæ˜¯ä»–çš„å¤´ã€‚
 */
 class ChunkHead : public IComponent 
 {
@@ -85,10 +85,10 @@ public:
     int getPriority() const;
     void setPriority(int priority);
 
-    static inline int UNLOADING_PRIORITY = 0; ///< Ğ¶ÔØÓÅÏÈ¼¶ãĞÖµ
+    static inline int UNLOADING_PRIORITY = 0; ///< å¸è½½ä¼˜å…ˆçº§é˜ˆå€¼
 private:
-    LayerType _layerType;   ///< Çø¿éËùÔÚ²ãÀàĞÍ
-    int _priority = 0;      ///< Çø¿éÓÅÏÈ¼¶
+    LayerType _layerType;   ///< åŒºå—æ‰€åœ¨å±‚ç±»å‹
+    int _priority = 0;      ///< åŒºå—ä¼˜å…ˆçº§
 };
 
 struct BlockState
@@ -96,23 +96,23 @@ struct BlockState
     BlockState() : id(entt::null), stateCode(0) {}
     BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
     
-    static const BlockState AIR; /// ¿ÕÆø·½¿é Ö÷ÒªÓÃÓÚµ÷ÊÔ
+    static const BlockState AIR; /// ç©ºæ°”æ–¹å— ä¸»è¦ç”¨äºè°ƒè¯•
 
-    entt::id_type id;   ///< ·½¿éID
-    state stateCode;    ///< ·½¿é×´Ì¬
+    entt::id_type id;   ///< æ–¹å—ID
+    state stateCode;    ///< æ–¹å—çŠ¶æ€
 };
 
 using BlockArray = std::array<std::array<BlockState, CHUNK_SIZE>, CHUNK_SIZE>;
 
 /**
-* @brief Çø¿éÍø¸ñ£¬´æ´¢Õâ¸öÇø¿éÏÂµÄËùÓĞ·½¿é¡£
+* @brief åŒºå—ç½‘æ ¼ï¼Œå­˜å‚¨è¿™ä¸ªåŒºå—ä¸‹çš„æ‰€æœ‰æ–¹å—ã€‚
 * 
-* @note ×¢Òâ£¡ËùÓĞ¶ÔÇø¿éµÄ²Ù×÷º¯Êı¶¼²»¼ì²éÊäÈëµÄÎ»ÖÃ¡£
-* Èç¹ûÏë°²È«µØ²Ù×÷·½¿é£¬Ê¹ÓÃ£ºBlockLayer
+* @note æ³¨æ„ï¼æ‰€æœ‰å¯¹åŒºå—çš„æ“ä½œå‡½æ•°éƒ½ä¸æ£€æŸ¥è¾“å…¥çš„ä½ç½®ã€‚
+* å¦‚æœæƒ³å®‰å…¨åœ°æ“ä½œæ–¹å—ï¼Œä½¿ç”¨ï¼šBlockLayer
 * 
 * @see BlockLoadSystem
 * 
-* @tease Õâ¸öÊÇËûµÄÉíÌå¡£
+* @tease è¿™ä¸ªæ˜¯ä»–çš„èº«ä½“ã€‚
 */
 class ChunkBlocks : public IComponent {
 public:
@@ -120,9 +120,9 @@ public:
     ~ChunkBlocks();
 
     /**
-    * @brief »ñÈ¡Ö¸¶¨Î»ÖÃµÄ·½¿é¡£
+    * @brief è·å–æŒ‡å®šä½ç½®çš„æ–¹å—ã€‚
     * 
-    * @return ·½¿éIDºÍ×´Ì¬Âë
+    * @return æ–¹å—IDå’ŒçŠ¶æ€ç 
     */
     BlockState getBlockAt(const Vec2i& localPos) const;
 
@@ -132,62 +132,62 @@ public:
     void setBlockAt(const Vec2i& pos, BlockState blockState);
 
     /**
-    * @brief ÉèÖÃÖ¸¶¨Î»ÖÃµÄ·½¿é×´Ì¬¡£
+    * @brief è®¾ç½®æŒ‡å®šä½ç½®çš„æ–¹å—çŠ¶æ€ã€‚
     */
     void setBlockState(const Vec2i& localPos, state stateCode);
 
     /**
-    * @brief Õâ¸öÇø¿éÊÇ·ñ´æÔÚ·½¿éÊµÌå¡£
+    * @brief è¿™ä¸ªåŒºå—æ˜¯å¦å­˜åœ¨æ–¹å—å®ä½“ã€‚
     */
     bool hasChunkEntity();
 
     /**
-    * @brief Ö¸¶¨Î»ÖÃÊÇ·ñÓĞ·½¿éÊµÌå¡£
+    * @brief æŒ‡å®šä½ç½®æ˜¯å¦æœ‰æ–¹å—å®ä½“ã€‚
     */
     bool hasChunkEntityAt(const Vec2i& localPos);
 
     /**
-    * @brief »ñÈ¡Ö¸¶¨Î»ÖÃµÄ·½¿éÊµÌå¡£
+    * @brief è·å–æŒ‡å®šä½ç½®çš„æ–¹å—å®ä½“ã€‚
     */
     entt::entity getEntityAt(const Vec2i& localPos);
 
     /**
-    * @brief ÉèÖÃÖ¸¶¨Î»ÖÃµÄ·½¿éÊµÌå¡£
+    * @brief è®¾ç½®æŒ‡å®šä½ç½®çš„æ–¹å—å®ä½“ã€‚
     */
     void addEntity(const Vec2i& localPos, entt::entity entity);
 
     /**
-    * @brief ÒÆ³ıÖ¸¶¨Î»ÖÃµÄ·½¿éÊµÌå¡£
+    * @brief ç§»é™¤æŒ‡å®šä½ç½®çš„æ–¹å—å®ä½“ã€‚
     */
     void removeEntity(const Vec2i localPos);
 
     /**
-    * @brief »ñÈ¡·½¿éÊµÌåÓ³Éä
+    * @brief è·å–æ–¹å—å®ä½“æ˜ å°„
     */
     const std::unordered_map<Vec2i, entt::entity>& getEntityMapping();
 
     /**
-    * @brief »ñÈ¡ËùÓĞ·½¿éÊµÌå
+    * @brief è·å–æ‰€æœ‰æ–¹å—å®ä½“
     */
     std::vector<entt::entity> getEntites();
     /**
-    * @brief ¾Ö²¿Î»ÖÃÊÇ·ñºÏ·¨¡£
+    * @brief å±€éƒ¨ä½ç½®æ˜¯å¦åˆæ³•ã€‚
     */
     bool isPosValied(const Vec2i& pos) const;
     const BlockArray& const getBlockView() const;
 private:
-    BlockArray _blocks;                                     ///< Çø¿éÄÚµÄ·½¿éÊı×é
-    std::unordered_map<Vec2i, entt::entity> _blockEntities; ///< Õâ¸öÇø¿é¼ÓÔØµÄ·½¿éÊµÌåÁĞ±í
+    BlockArray _blocks;                                     ///< åŒºå—å†…çš„æ–¹å—æ•°ç»„
+    std::unordered_map<Vec2i, entt::entity> _blockEntities; ///< è¿™ä¸ªåŒºå—åŠ è½½çš„æ–¹å—å®ä½“åˆ—è¡¨
 };
 
 /**
-* @brief ÎïÀíÆ±£¬ÈÎºÎÏ£Íû¿ÉÒÔÓëÎïÀíÊÀ½ç»¥¶¯µÄÊµÌå¶¼Ó¦¸Ã³ÖÓĞÕâ¸ö×é¼ş¡£
+* @brief ç‰©ç†ç¥¨ï¼Œä»»ä½•å¸Œæœ›å¯ä»¥ä¸ç‰©ç†ä¸–ç•Œäº’åŠ¨çš„å®ä½“éƒ½åº”è¯¥æŒæœ‰è¿™ä¸ªç»„ä»¶ã€‚
 * 
-* Õâ¸ö×é¼ş±¾ÖÊÊÇÒ»¸ö´ÖÎïÀíÌå£¬ÓÃÓÚÎïÀíÅö×²¼ì²â¡£Ê¹ÓÃÕß¿ÉÒÔÍ¨¹ıĞŞ¸ÄÕâ¸ö×é¼ş´ïµ½ÓÅ»¯Åö×²¼ì²âµÄÄ¿µÄ¡£
+* è¿™ä¸ªç»„ä»¶æœ¬è´¨æ˜¯ä¸€ä¸ªç²—ç‰©ç†ä½“ï¼Œç”¨äºç‰©ç†ç¢°æ’æ£€æµ‹ã€‚ä½¿ç”¨è€…å¯ä»¥é€šè¿‡ä¿®æ”¹è¿™ä¸ªç»„ä»¶è¾¾åˆ°ä¼˜åŒ–ç¢°æ’æ£€æµ‹çš„ç›®çš„ã€‚
 * 
 * @see BlockPhysicsSystem
 * 
-* @tease Í¬Àí£¬·¶Î§ÉèÖÃÎª10000»ñµÃÇâµ¯¡£
+* @tease åŒç†ï¼ŒèŒƒå›´è®¾ç½®ä¸º10000è·å¾—æ°¢å¼¹ã€‚
 */
 struct PhysicsTicket
 {
@@ -195,19 +195,25 @@ struct PhysicsTicket
     PhysicsTicket(const cocos2d::Vec2& size, const cocos2d::Vec2& offset)
         : size(size), offset(offset) {}
 
-    cocos2d::Vec2 size;        ///< ´ÖÎïÀíÌå´óĞ¡
-    cocos2d::Vec2 offset;      ///< ´ÖÎïÀíÌåÆ«ÒÆ
+    cocos2d::Vec2 size;        ///< ç²—ç‰©ç†ä½“å¤§å°
+    cocos2d::Vec2 offset;      ///< ç²—ç‰©ç†ä½“åç§»
+};
+
+struct BlockPhysicsWorldRef
+{
+    cocos2d::Node* node = nullptr;
+    cocos2d::PhysicsBody* body = nullptr;
 };
 
 /**
 * @class BlockEntityHead
 * 
-* @brief ·½¿éÊµÌåÍ·¡£
+* @brief æ–¹å—å®ä½“å¤´ã€‚
 * 
-* ´æ´¢×Å·½¿éÊµÌåµÄ»ù±¾ĞÅÏ¢¡£
-* - ÔÚ·½¿éÊµÌåÖĞ£¬Õâ¸ö×é¼şÓ¦¸ÃÊÇµÚÒ»¸ö±»Ìí¼ÓµÄ×é¼ş¡£
-* - Ó¦µ±Ê¹ÓÃsaveEmplaceºÍsaveRemoveÀ´Ìí¼ÓºÍÒÆ³ı×é¼ş¡£
-*   ·ñÔò·½¿éÊµÌå¿ÉÄÜ²»»á±»ÕıÈ·µØÇå³ı¡£
+* å­˜å‚¨ç€æ–¹å—å®ä½“çš„åŸºæœ¬ä¿¡æ¯ã€‚
+* - åœ¨æ–¹å—å®ä½“ä¸­ï¼Œè¿™ä¸ªç»„ä»¶åº”è¯¥æ˜¯ç¬¬ä¸€ä¸ªè¢«æ·»åŠ çš„ç»„ä»¶ã€‚
+* - åº”å½“ä½¿ç”¨saveEmplaceå’ŒsaveRemoveæ¥æ·»åŠ å’Œç§»é™¤ç»„ä»¶ã€‚
+*   å¦åˆ™æ–¹å—å®ä½“å¯èƒ½ä¸ä¼šè¢«æ­£ç¡®åœ°æ¸…é™¤ã€‚
 * 
 * @see BlockEntityCleanSystem
 */
@@ -248,16 +254,16 @@ struct MiningProgress
 class World;
 
 /**
-* @brief ÊÀ½ç³¡¾°¡£
+* @brief ä¸–ç•Œåœºæ™¯ã€‚
 * 
-* Õâ¸öÀàÓÃÓÚÔÚregistryÖĞ»ñÈ¡world¶ÔÏó¡£
-* Êµ¼ÊÉÏÊÇWorldµÄÒıÓÃ¡£
+* è¿™ä¸ªç±»ç”¨äºåœ¨registryä¸­è·å–worldå¯¹è±¡ã€‚
+* å®é™…ä¸Šæ˜¯Worldçš„å¼•ç”¨ã€‚
 * 
-* @note Õâ¸öÀàÔÚregistryÖĞÊÇµ¥ÀıµÄ£¬ËùÒÔ²»ÄÜÊ¹ÓÃentt::registry::viewÀ´»ñÈ¡¡£
+* @note è¿™ä¸ªç±»åœ¨registryä¸­æ˜¯å•ä¾‹çš„ï¼Œæ‰€ä»¥ä¸èƒ½ä½¿ç”¨entt::registry::viewæ¥è·å–ã€‚
 * 
 * @see World
 * 
-* @tease Íß£¬»¹ÓĞÖ¸Õë×é¼ş¡£
+* @tease ç“¦ï¼Œè¿˜æœ‰æŒ‡é’ˆç»„ä»¶ã€‚
 */
 class WorldScene
 {
@@ -274,12 +280,12 @@ private:
 class RenderComponent;
 
 /**
-* @brief äÖÈ¾°ü¡£Ò»¸ö×Ô¶¨ÒåäÖÈ¾¶ÔÏó»áÔÚÆäÖĞÌá½»×Ô¼ºËùÓĞµÄÃüÁî¡£
-* Õâ¸ö°üÔÚÌá½»µ½registry»á±»äÖÈ¾ÏµÍ³¶ÁÈ¡²¢×ª·¢¸øcocosäÖÈ¾¹ÜÏß¡£
+* @brief æ¸²æŸ“åŒ…ã€‚ä¸€ä¸ªè‡ªå®šä¹‰æ¸²æŸ“å¯¹è±¡ä¼šåœ¨å…¶ä¸­æäº¤è‡ªå·±æ‰€æœ‰çš„å‘½ä»¤ã€‚
+* è¿™ä¸ªåŒ…åœ¨æäº¤åˆ°registryä¼šè¢«æ¸²æŸ“ç³»ç»Ÿè¯»å–å¹¶è½¬å‘ç»™cocosæ¸²æŸ“ç®¡çº¿ã€‚
 * 
 * @see CommandSystem
 * 
-* @tease ÄãÔõÃ´ÔÚregistryÖĞ±»É¾³ıÁ½´ÎÁËÑ½£¬º¦µÃÎÒ19ºÅÍíÉÏÁ½¸öĞ¡Ê±ÏûÊ§ÁË¡£
+* @tease ä½ æ€ä¹ˆåœ¨registryä¸­è¢«åˆ é™¤ä¸¤æ¬¡äº†å‘€ï¼Œå®³å¾—æˆ‘19å·æ™šä¸Šä¸¤ä¸ªå°æ—¶æ¶ˆå¤±äº†ã€‚
 */
 class CustomcommandPack : public IComponent {
 public:
@@ -289,13 +295,13 @@ public:
 
     void releaseAllCommand();
 
-    std::vector<RenderComponent*> commands; ///< äÖÈ¾ÃüÁîÁĞ±í
+    std::vector<RenderComponent*> commands; ///< æ¸²æŸ“å‘½ä»¤åˆ—è¡¨
 };
 
 /**
-* @brief Ôà·½¿é±ê¼Ç¡£
+* @brief è„æ–¹å—æ ‡è®°ã€‚
 * 
-* Õâ¸ö¸ø±ê¼Ç²»»áÔÚ×é¼ş¹ÜÏßÖĞÖ±½ÓÊ¹ÓÃ¡£Ëü»á¼¯³Éµ½DirtyChunkTagÖĞ¡£
+* è¿™ä¸ªç»™æ ‡è®°ä¸ä¼šåœ¨ç»„ä»¶ç®¡çº¿ä¸­ç›´æ¥ä½¿ç”¨ã€‚å®ƒä¼šé›†æˆåˆ°DirtyChunkTagä¸­ã€‚
 * 
 * @see DirtyChunkTag
 */
@@ -313,9 +319,9 @@ struct NeedGen {};
 struct NeedLoad {};
 
 /**
-* @brief ÔàÇø¿é±ê¼Ç¡£
+* @brief è„åŒºå—æ ‡è®°ã€‚
 * 
-* Õâ¸ö×é¼şÓÃÓÚ±ê¼ÇÒ»¸öÇø¿éÄÚµÄ·½¿éÊÇ·ñĞèÒªÖØĞÂ¼ÆËãÅö×²ºÍäÖÈ¾¡£
+* è¿™ä¸ªç»„ä»¶ç”¨äºæ ‡è®°ä¸€ä¸ªåŒºå—å†…çš„æ–¹å—æ˜¯å¦éœ€è¦é‡æ–°è®¡ç®—ç¢°æ’å’Œæ¸²æŸ“ã€‚
 */
 struct DirtyChunkTag
 {

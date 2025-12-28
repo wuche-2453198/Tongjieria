@@ -1,0 +1,52 @@
+{
+  "id": "27px-Angry_Bones_1",
+  "type": "Skeleton",
+  "description": "27px Angry Bones 1 - small variant with pounce behavior",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/27px-Angry_Bones_1",
+    "spritePrefix": "27px-Angry_Bones_1",
+    "frameCount": 14,
+    "frameSequence": [1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    "frameTime": 0.06,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1
+  },
+
+  "physics": {
+    "bodyWidth": 27.0,
+    "bodyHeight": 43.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 95.0,
+    "jumpForce": 490.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.1,
+    "patrolDirectionChangeInterval": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 380.0,
+    "deaggroRange": 480.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 65.0,
+    "attackDamage": 15.0,
+    "attackRange": 28.0,
+    "attackCooldown": 1.0,
+    "defense": 2.0
+  }
+}
