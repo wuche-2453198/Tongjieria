@@ -89,3 +89,11 @@ DocumentLayout.backup.json
 DocumentLayout.json
 DocumentLayout.backup.json
 /Classes/systems/block/block_physics_system.cpp
+
+# 强制包含 third_party 文件夹的所有内容
+!third_party/
+!third_party/**
+
+# 强制包含 cocos2d/external 文件夹的所有内容
+!cocos2d/external/
+!cocos2d/external/**
