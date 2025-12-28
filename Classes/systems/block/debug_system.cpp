@@ -7,7 +7,11 @@
 #include "systems/block_layer/block_layer.h"
 #include "systems/block_layer/block_physics_layer.h"
 #include "utils/tools.h"
+#include "utils/flyingcamera.h"
 #include "debug_system.h"
+
+#define MOUSE_ENTITY 1
+#define FLYINGCAMERA 1
 
 DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher) 
     : ISystem(registry, dispatcher)
@@ -17,8 +21,17 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     auto physicsWorld = world->getPhysicsWorld();
     physicsWorld->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
     world->setPhysics3DDebugCamera(cocos2d::Camera::getDefaultCamera());
+
+#if FLYINGCAMERA
+    flyingCamera = FlyCamera2D::createWithTarget(cocos2d::Camera::getDefaultCamera());
+    flyingCamera->setSpeed(800.0f);
+    world->addChild(flyingCamera);
+    flyingCamera->setActive(true);
+
     _dispatcher.sink<MouseEvent>().connect<&DebugSystem::onMouseEvent>(this);
-    
+#endif
+
+#if MOUSE_ENTITY
     entt::entity entity = getEntity(_registry, "mouse");
     _registry.emplace<Position>(entity, cocos2d::Vec2::ZERO);
     _registry.emplace<LoadingTicket>(entity, entity, 8, false);
@@ -26,7 +39,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     auto mouseDrawNode = getDrawNode(_registry, "mouse");
     mouseDrawNode->drawDot({0,0}, 3, cocos2d::Color4F::RED);
     mouseDrawNode->setGlobalZOrder(10);
-
+#endif 
     for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 10; j++)
@@ -82,6 +95,7 @@ void DebugSystem::update(float delta)
     if (camera)
     {
         _registry.get<Position>(testEntites.at("mouse")) = camera->getPosition();
+        flyingCamera->_target = camera;
     }
 
     drawNodes.at("mouse")->setPosition(tools::MouseDebugTool::getWorldPosition());

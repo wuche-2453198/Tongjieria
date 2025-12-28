@@ -5,6 +5,8 @@
 #pragma once
 
 class MouseEvent;
+class FlyCamera2D;
+
 class DebugSystem : public ISystem
 {
 public:
@@ -23,4 +25,6 @@ public:
     static inline std::unordered_map<std::string, cocos2d::Label*> labels;
     static inline std::vector<entt::entity> physicsEntity;
     static inline std::vector<cocos2d::Sprite*> physicsSprites;
+
+    FlyCamera2D* flyingCamera;
 };
