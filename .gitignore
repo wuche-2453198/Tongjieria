@@ -93,6 +93,19 @@ DocumentLayout.backup.json
 # 强制包含 third_party 文件夹的所有内容
 !third_party/
 !third_party/**
+third_party/libnoise/.git/
+third_party/libnoise/CMakeFiles/
+third_party/libnoise/**/CMakeFiles/
+third_party/libnoise/ALL_BUILD.dir/
+third_party/libnoise/ALL_BUILD.vcxproj*
+third_party/libnoise/INSTALL.dir/
+third_party/libnoise/INSTALL.vcxproj*
+third_party/libnoise/libnoise.dir/
+third_party/libnoise/libnoise.sln
+third_party/libnoise/libnoise.vcxproj*
+third_party/libnoise/Debug/
+third_party/libnoise/Release/
+third_party/libnoise/cmake_install.cmake
 
 # 强制包含 cocos2d/external 文件夹的所有内容
 !cocos2d/external/
