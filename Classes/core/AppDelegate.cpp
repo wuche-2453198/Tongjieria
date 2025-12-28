@@ -1,6 +1,9 @@
 #include "AppDelegate.h"
 #include "world.h"
 
+#include <cstdio>
+#include <string>
+
 #define USE_AUDIO_ENGINE 1
 
 #if USE_AUDIO_ENGINE
@@ -8,6 +11,17 @@
 #endif
 
 USING_NS_CC;
+
+static void appendStartupLog(const char* msg)
+{
+    std::FILE* f = std::fopen("startup.log", "ab");
+    if (!f) {
+        return;
+    }
+    std::fwrite(msg, 1, std::strlen(msg), f);
+    std::fwrite("\r\n", 1, 2, f);
+    std::fclose(f);
+}
 
 static cocos2d::Size designResolutionSize = cocos2d::Size(1280, 720);
 static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
@@ -43,6 +57,7 @@ static int register_all_packages()
 }
 
 bool AppDelegate::applicationDidFinishLaunching() {
+    appendStartupLog("applicationDidFinishLaunching: begin");
     // initialize director
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
@@ -53,6 +68,15 @@ bool AppDelegate::applicationDidFinishLaunching() {
         glview = GLViewImpl::create("Mygame");
 #endif
         director->setOpenGLView(glview);
+    }
+
+    appendStartupLog("applicationDidFinishLaunching: glview ok");
+
+    {
+        auto* fu = FileUtils::getInstance();
+        fu->setDefaultResourceRootPath("Resources");
+        fu->addSearchPath("Resources", true);
+        appendStartupLog("applicationDidFinishLaunching: set resource root to Resources/");
     }
 
     // turn on display FPS
@@ -85,8 +109,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // create a scene. it's an autorelease object
     auto scene = World::createScene();
 
+    if (!scene) {
+        appendStartupLog("applicationDidFinishLaunching: World::createScene returned null");
+        return false;
+    }
+
+    appendStartupLog("applicationDidFinishLaunching: World scene created");
+
     // run
     director->runWithScene(scene);
+
+    appendStartupLog("applicationDidFinishLaunching: runWithScene done");
 
     return true;
 }

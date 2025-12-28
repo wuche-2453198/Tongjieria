@@ -11,7 +11,7 @@ InputManager::~InputManager() {
 }
 
 void InputManager::init(cocos2d::Node* listenNode) {
-    if (_mouseListener) return; // ±ÜÃâÖØ¸´×¢²á
+    if (_mouseListener) return; // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½×¢ï¿½ï¿½
 
     _mouseListener = cocos2d::EventListenerMouse::create();
     _mouseListener->onMouseDown =   CC_CALLBACK_1(InputManager::onMouseEvent, this);
@@ -34,7 +34,7 @@ void InputManager::onMouseEvent(cocos2d::Event* event) {
     MouseEvent mevent;
     mevent.button = mouseEvent->getMouseButton();
     mevent.screenPos = cocos2d::Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
-    // ¼ÆËãÊÀ½ç×ø±ê
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     auto camera = cocos2d::Camera::getVisitingCamera();
     if (!camera) camera = cocos2d::Camera::getDefaultCamera();
     auto& size = cocos2d::Director::getInstance()->getWinSize();

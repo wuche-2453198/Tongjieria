@@ -1,6 +1,11 @@
 #include <memory>
 #include <new>
 #include <cmath>
+#include <algorithm>
+#include <string>
+#include <vector>
+#include <cstdio>
+#include <limits>
 #include "components/block/chunk_render.h"
 #include "components/block/block_component.h"
 #include "components/block/block_behavior.h"
@@ -49,6 +54,18 @@ bool World::init()
 	scheduleUpdate();
 
 	initServers();
+
+	{
+		_monsterCountLabel = cocos2d::Label::createWithSystemFont("Mobs: 0", "Arial", 18);
+		if (_monsterCountLabel) {
+			_monsterCountLabel->setAnchorPoint(cocos2d::Vec2(0.0f, 1.0f));
+			const auto vs = cocos2d::Director::getInstance()->getVisibleSize();
+			const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+			_monsterCountLabel->setPosition(origin.x + 6.0f, origin.y + vs.height - 6.0f);
+			addChild(_monsterCountLabel, std::numeric_limits<int>::max());
+		}
+		_monsterCountLabelTimer = 0.0f;
+	}
 
 	{
 		const float interval = cocos2d::Director::getInstance()->getAnimationInterval();
@@ -111,6 +128,40 @@ void World::update(float delta)
 		_npcSystemManager->update(delta);
 	}
 	_blockSystemManager->update(delta);
+
+	if (_monsterCountLabel && _registry) {
+		_monsterCountLabelTimer += std::max(0.0f, delta);
+		if (_monsterCountLabelTimer >= _monsterCountLabelInterval) {
+			_monsterCountLabelTimer = 0.0f;
+
+			int count = 0;
+			auto view = _registry->view<ecs::PhysicsBodyComponent>();
+			for (auto entity : view) {
+				if (auto* pooled = _registry->try_get<ecs::PooledEntity>(entity)) {
+					if (!pooled->inUse) {
+						continue;
+					}
+				}
+				if (_registry->any_of<ecs::PlayerTag>(entity)) {
+					continue;
+				}
+				if (_registry->any_of<ecs::ProjectileComponent>(entity)) {
+					continue;
+				}
+
+				constexpr int NPC_CATEGORY = 0x0002;
+				const auto& physics = view.get<ecs::PhysicsBodyComponent>(entity);
+				if ((physics.categoryBitmask & NPC_CATEGORY) == 0) {
+					continue;
+				}
+				count++;
+			}
+
+			char buf[64];
+			std::snprintf(buf, sizeof(buf), "Mobs: %d", count);
+			_monsterCountLabel->setString(buf);
+		}
+	}
 }
 
 void World::applyFrameRateLimitMode()
@@ -164,8 +215,26 @@ bool World::initServers()
 	_npcSystemManager = std::make_unique<ecs::SystemManagerEntt>();
 	_npcSystemManager->setRegistry(_registry.get());
 	ecs::SpriteDestructionObserver::registerToRegistry(*_registry);
+	{
+		auto* spawnSystem = _npcSystemManager->addSystem<ecs::MonsterSpawnSystemEntt>();
+		if (spawnSystem) {
+			spawnSystem->setRelaxedSpawnSearchEnabled(true);
+			spawnSystem->setRelaxedSpawnSearchRangeTiles(10, 6);
+			spawnSystem->setRelaxedSpawnMarginTiles(0.0f);
+			spawnSystem->setRelaxedTreatMissingChunksAsClear(false);
+		}
+	}
 
 	_npcSystemManager->addSystem<ecs::AggroSystemEntt>();
+	_npcSystemManager->addSystem<ecs::WarriorAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::BatAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::DemonEyeAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::DemonAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::EaterOfSoulsAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::VultureAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::AntlionAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::AngryBonesAISystemEntt>();
+	_npcSystemManager->addSystem<ecs::KingSlimeAISystemEntt>();
 	_npcSystemManager->addSystem<ecs::GroundDetectorSystemEntt>();
 	_npcSystemManager->addSystem<ecs::SlowFallSystemEntt>();
 	_npcSystemManager->addSystem<ecs::JumpMovementSystemEntt>();
@@ -227,15 +296,26 @@ bool World::initServers()
 			return true;
 		},
 		nullptr);
-
 	if (_sharedContactListener) {
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(_sharedContactListener, this);
 	}
 
-	// 预加载所有怪物配置目录，确保 getAllSupportedMonsterIds 能覆盖全部ID
 	{
 		auto& mmf = MonsterMasterFactory::getInstance();
-		mmf.preloadConfigDirectory("config/slimes");
+		const char* dirs[] = {
+			"config/slimes",
+			"config/zombies",
+			"config/bats",
+			"config/eyes",
+			"config/demons",
+			"config/eaters",
+			"config/skeletons",
+			"config/desert",
+			"config/bosses",
+		};
+		for (const char* dir : dirs) {
+			mmf.preloadConfigDirectory(dir);
+		}
 	}
 
 	{

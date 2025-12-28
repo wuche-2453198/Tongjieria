@@ -53,5 +53,9 @@ private:
     cocos2d::EventListenerPhysicsContact* _sharedContactListener = nullptr;
     entt::entity _playerEntity = entt::null;
 
+    cocos2d::Label* _monsterCountLabel = nullptr;
+    float _monsterCountLabelTimer = 0.0f;
+    float _monsterCountLabelInterval = 0.25f;
+
     FrameRateLimitMode _frameRateLimitMode = FrameRateLimitMode::Fps60;
 };

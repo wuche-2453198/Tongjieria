@@ -5,6 +5,7 @@
 #include "systems/core/SystemPriority.h"
 #include "components/AllComponents.h"
 #include "systems/core/AnimationStateHelper.h"
+#include "systems/render/SpriteManager.h"
 #include "cocos2d.h"
 #include <cmath>
 #include <map>
@@ -451,9 +452,19 @@ private:
         auto& projectileTransform = _registry->emplace<TransformComponent>(projectileEntity);
         projectileTransform.position = startPos + cocos2d::Vec2(0, 13); // 从嘴部发射（降低位置）
         
+        const std::string projectilePath = "picture/Projectile/Sand_Ball.png";
+        const std::string projResourceId = "projectile_" + projectilePath;
+
+        if (!SpriteManager::getInstance().hasResource(projResourceId)) {
+            SpriteResourceDescriptor projDescriptor;
+            projDescriptor.resourceId = projResourceId;
+            projDescriptor.spritePath = projectilePath;
+            SpriteManager::getInstance().registerResource(projDescriptor);
+        }
+
         // 渲染组件
         auto& projectileRender = _registry->emplace<RenderComponent>(projectileEntity);
-        projectileRender.spriteResourceId = "Sand_Ball";
+        projectileRender.spriteResourceId = projResourceId;
         projectileRender.scale = 1.0f;
         projectileRender.zOrder = 2;  // 在怪物上层
         projectileRender.visible = true;

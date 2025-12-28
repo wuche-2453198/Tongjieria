@@ -15,16 +15,19 @@ public:
     void setSpeed(float speed) { _speed = speed; }
     float getSpeed() const { return _speed; }
 
+    void setTarget(cocos2d::Node* target) { _target = target; }
+    cocos2d::Node* getTarget() const { return _target; }
+
     void setActive(bool active);
     bool isActive() const { return _active; }
 
+private:
+    cocos2d::Node* _target = nullptr;    // è¦æ§åˆ¶çš„æ‘„åƒæœºèŠ‚ç‚¹
+    float _speed = 10.0f;              // ç§»åŠ¨é€Ÿåº¦ï¼ˆåƒç´ /ç§’ï¼‰
+    cocos2d::Vec2 _velocity;             // å½“å‰é€Ÿåº¦å‘é‡
+    bool _active = true;                 // æ˜¯å¦æ¿€æ´»æ§åˆ¶
 
-    cocos2d::Node* _target = nullptr;    // Òª¿ØÖÆµÄÉãÏñ»ú½Úµã
-    float _speed = 10.0f;              // ÒÆ¶¯ËÙ¶È£¨ÏñËØ/Ãë£©
-    cocos2d::Vec2 _velocity;             // µ±Ç°ËÙ¶ÈÏòÁ¿
-    bool _active = true;                 // ÊÇ·ñ¼¤»î¿ØÖÆ
-
-    // °´¼ü×´Ì¬
+    // é¸å¤æ•­é˜èˆµâ‚¬ï¿½
     bool _keyW = false;
     bool _keyA = false;
     bool _keyS = false;
@@ -33,7 +36,7 @@ public:
 
 USING_NS_CC;
 
-FlyCamera2D* FlyCamera2D::createWithTarget(cocos2d::Node* target)
+inline FlyCamera2D* FlyCamera2D::createWithTarget(cocos2d::Node* target)
 {
     FlyCamera2D* camera = new (std::nothrow) FlyCamera2D();
     if (camera && camera->initWithTarget(target))
@@ -45,17 +48,17 @@ FlyCamera2D* FlyCamera2D::createWithTarget(cocos2d::Node* target)
     return nullptr;
 }
 
-bool FlyCamera2D::initWithTarget(cocos2d::Node* target)
+inline bool FlyCamera2D::initWithTarget(cocos2d::Node* target)
 {
     if (!Node::init())
         return false;
 
     _target = target;
 
-    // ÉèÖÃ¸üĞÂµ÷¶È
+    // ç’å‰§ç–†é‡å­˜æŸŠç’‹å†¨å®³
     this->scheduleUpdate();
 
-    // ×¢²á¼üÅÌÊÂ¼ş¼àÌıÆ÷
+    // å¨‰ã„¥å”½é–¿ï¿½æ´æµœå¬©æ¬¢é©æˆæƒ‰é£ï¿½
     auto listener = EventListenerKeyboard::create();
     listener->onKeyPressed = CC_CALLBACK_2(FlyCamera2D::onKeyPressed, this);
     listener->onKeyReleased = CC_CALLBACK_2(FlyCamera2D::onKeyReleased, this);
@@ -64,11 +67,11 @@ bool FlyCamera2D::initWithTarget(cocos2d::Node* target)
     return true;
 }
 
-void FlyCamera2D::update(float dt)
+inline void FlyCamera2D::update(float dt)
 {
     if (!_active || !_target) return;
 
-    // ¸ù¾İ°´¼ü×´Ì¬¼ÆËãËÙ¶ÈÏòÁ¿
+    // éè§„åµé¸å¤æ•­é˜èˆµâ‚¬ä½½ï¿½ç» æ¥…â‚¬ç†·å®³éšæˆ¦å™º
     _velocity = Vec2::ZERO;
 
     if (_keyW) _velocity.y += 1.0f;
@@ -76,19 +79,19 @@ void FlyCamera2D::update(float dt)
     if (_keyA) _velocity.x -= 1.0f;
     if (_keyD) _velocity.x += 1.0f;
 
-    // ±ê×¼»¯ËÙ¶ÈÏòÁ¿£¨±£³Ö¶Ô½ÇÏßÒÆ¶¯ËÙ¶ÈÒ»ÖÂ£©
+    // éå›§å™¯é–æ ­â‚¬ç†·å®³éšæˆ¦å™ºé”›å œç¹šé¸ä½¸ï¿½ç‘™æ”åšç»‰è¯²å§©é–«ç†·å®³æ¶“â‚¬é‘·è¾¾ç´š
     if (_velocity.lengthSquared() > 0)
     {
         _velocity.normalize();
         _velocity *= _speed * dt;
 
-        // ÒÆ¶¯ÉãÏñ»ú
+        // ç»‰è¯²å§©é½å‹«å„šéˆï¿½
         Vec2 newPosition = _target->getPosition() + _velocity;
         _target->setPosition(newPosition);
     }
 }
 
-void FlyCamera2D::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
+inline void FlyCamera2D::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
 {
     if (!_active) return;
 
@@ -111,7 +114,7 @@ void FlyCamera2D::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d:
     }
 }
 
-void FlyCamera2D::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
+inline void FlyCamera2D::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
 {
     switch (keyCode)
     {
@@ -132,11 +135,11 @@ void FlyCamera2D::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d
     }
 }
 
-void FlyCamera2D::setActive(bool active)
+inline void FlyCamera2D::setActive(bool active)
 {
     _active = active;
 
-    // ¼¤»îÊ±ÖØÖÃ°´¼ü×´Ì¬
+    // å©µâ‚¬å¨²ç»˜æ¤‚é–²å¶‡ç–†é¸å¤æ•­é˜èˆµâ‚¬ï¿½
     if (active)
     {
         _keyW = _keyA = _keyS = _keyD = false;

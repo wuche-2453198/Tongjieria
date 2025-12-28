@@ -281,7 +281,7 @@ private:
     auto *projAnim = _registry->try_get<AnimationComponent>(projectile);
     if (projAnim) {
       projAnim->animationSetId = resourceId;
-      projAnim->frameTime = 0.08f;
+      projAnim->frameTime = 0.04f;
       projAnim->frameSequence = {1, 2, 3, 4, 5, 6, 7, 8};
       projAnim->isPlaying = true;
       projAnim->loop = true;
@@ -289,7 +289,7 @@ private:
     } else {
       auto &a = _registry->emplace<AnimationComponent>(projectile);
       a.animationSetId = resourceId;
-      a.frameTime = 0.08f;
+      a.frameTime = 0.04f;
       a.frameSequence = {1, 2, 3, 4, 5, 6, 7, 8};
       a.isPlaying = true;
       a.loop = true;

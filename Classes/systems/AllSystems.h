@@ -46,6 +46,7 @@
 // NPC系统
 #include "systems/npc/AggroSystemEntt.h"
 #include "systems/npc/OptimizedAISystemBase.h"     // 优化的AI系统基类
+#include "systems/npc/MonsterSpawnSystemEntt.h"
 
 // NPC AI系统
 #include "systems/npc/WarriorAISystemEntt.h"

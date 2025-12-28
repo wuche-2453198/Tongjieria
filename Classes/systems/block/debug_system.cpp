@@ -95,7 +95,10 @@ void DebugSystem::update(float delta)
     if (camera)
     {
         _registry.get<Position>(testEntites.at("mouse")) = camera->getPosition();
-        flyingCamera->_target = camera;
+        if (flyingCamera)
+        {
+            flyingCamera->setTarget(camera);
+        }
     }
 
     drawNodes.at("mouse")->setPosition(tools::MouseDebugTool::getWorldPosition());

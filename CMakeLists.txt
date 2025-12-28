@@ -116,6 +116,10 @@ else()
     target_link_libraries(${APP_NAME} -Wl,--whole-archive cpp_android_spec -Wl,--no-whole-archive)
 endif()
 
+if(MSVC)
+    set_property(TARGET ${APP_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${APP_NAME}>")
+endif()
+
 target_link_libraries(${APP_NAME} cocos2d)
 target_link_libraries(${APP_NAME} libnoise)
 target_include_directories(${APP_NAME}
