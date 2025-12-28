@@ -94,6 +94,8 @@ private:
 struct BlockState
 {
     BlockState() : id(entt::null), stateCode(0) {}
+    BlockState(const std::string& id, state stateCode) 
+        : id(entt::hashed_string(id.c_str())), stateCode(stateCode) {}
     BlockState(entt::id_type id, state stateCode) : id(id), stateCode(stateCode) {}
     
     static const BlockState AIR; /// 空气方块 主要用于调试
@@ -268,13 +270,13 @@ class World;
 class WorldScene
 {
 public:
-    WorldScene(World* world);
+    WorldScene(cocos2d::Scene* world);
     ~WorldScene();
-    World& operator*() const;
-    World* operator->() const;
+    cocos2d::Scene& operator*() const;
+    cocos2d::Scene* operator->() const;
     operator bool() const;
 private:
-    World* _world = nullptr;
+    cocos2d::Scene* _world = nullptr;
 };
 
 class RenderComponent;
