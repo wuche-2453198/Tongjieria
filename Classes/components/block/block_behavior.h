@@ -10,12 +10,14 @@ class DirtBehavior;
 class BlockBehaviorRegistry
 {
 public:
-    BlockBehaviorRegistry();
+    BlockBehaviorRegistry(entt::registry& registry, entt::dispatcher& dispatcher);
     ~BlockBehaviorRegistry();
     const std::shared_ptr<BlockBehavior> const getBehavior(entt::id_type id) const;
 private:
     std::unordered_map<entt::id_type, std::shared_ptr<BlockBehavior>> _behaviors;
 };
+
+class BlockHandle;
 
 /**
 * @brief 方块行为接口。
@@ -30,32 +32,54 @@ private:
 class BlockBehavior
 {
 public:
-    BlockBehavior(entt::registry& registry);
+    BlockBehavior(entt::registry& registry, entt::dispatcher& dispatcher);
+
+    virtual ~BlockBehavior() = default;
+
+    /**
+    * @brief 方块此时是否可以被放置。
+    */
+    virtual bool canBePlaced(const BlockPlacedEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块被放置时调用。
     */
-    virtual void onBlockPlaced(const BlockPlacedEvent& event) = 0;
+    virtual void onBlockPlaced(const BlockPlacedEvent& event, const BlockHandle& blockHandle) = 0;
+
+    /**
+    * @brief 方块此时是否可以被破坏。
+    */
+    virtual bool canBeDestroyed(const BlockDestroyEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块被破坏时调用。
     */
-    virtual void onBlockDestroyed(const BlockDestroyEvent& event) = 0;
+    virtual void onBlockDestroyed(const BlockDestroyEvent& event, const BlockHandle& blockHandle) = 0;
+
+    /**
+    * @brief 方块此时是否可以被挖掘。
+    */
+    virtual bool canBeMined(const BlockMinedEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块被挖掘时调用。
     */
-    virtual void onBlockMined(const BlockMinedEvent& event) = 0;
+    virtual void onBlockMined(const BlockMinedEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块的邻居方块发生变化时调用。
     */
-    virtual void onBlockNeighborChanged() = 0;
+    virtual void onBlockNeighborChanged(const BlockChangedEvent& event, const BlockHandle& blockHandle) = 0;
+
+    /**
+    * @brief 方块此时是否可以交互。
+    */
+    virtual bool canBeInteracted(const BlockInteractEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块被交互时调用。
     */
-    virtual void onBlockInteracted(const BlockInteractEvent& event) = 0;
+    virtual void onBlockInteracted(const BlockInteractEvent& event, const BlockHandle& blockHandle) = 0;
 
     /**
     * @brief 当方块收到随机刻时调用。
@@ -63,16 +87,29 @@ public:
     virtual void onRamdomTick() = 0;
 protected:
     entt::registry& _registry;
+    entt::dispatcher& _dispatcher;
 };
 
 class DirtBehavior : public BlockBehavior
 {
 public:
-    DirtBehavior(entt::registry& registry);
-    virtual void onBlockPlaced(const BlockPlacedEvent& event) override;
-    virtual void onBlockDestroyed(const BlockDestroyEvent& event) override;
-    virtual void onBlockMined(const BlockMinedEvent& event) override;
-    virtual void onBlockNeighborChanged() override;
-    virtual void onBlockInteracted(const BlockInteractEvent& event) override;
+    DirtBehavior(entt::registry& registry, entt::dispatcher& dispatcher);
+    virtual bool canBePlaced(const BlockPlacedEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockPlaced(const BlockPlacedEvent& event, const BlockHandle& blockHandle) override;
+    virtual bool canBeDestroyed(const BlockDestroyEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockDestroyed(const BlockDestroyEvent& event, const BlockHandle& blockHandle) override;
+    virtual bool canBeMined(const BlockMinedEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockMined(const BlockMinedEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockNeighborChanged(const BlockChangedEvent& event, const BlockHandle& blockHandle) override;
+    virtual bool canBeInteracted(const BlockInteractEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockInteracted(const BlockInteractEvent& event, const BlockHandle& blockHandle) override;
     virtual void onRamdomTick() override;
+};
+
+class FlowerBehavior : public DirtBehavior
+{
+public:
+    FlowerBehavior(entt::registry& registry, entt::dispatcher& dispatcher);
+    virtual bool canBePlaced(const BlockPlacedEvent& event, const BlockHandle& blockHandle) override;
+    virtual void onBlockNeighborChanged(const BlockChangedEvent& event, const BlockHandle& blockHandle) override;
 };

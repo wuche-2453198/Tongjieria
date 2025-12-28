@@ -13,7 +13,7 @@ int BlockPhysicsLayer::addPhysicsShapeTag(const BlockPhysicsShapeKey& key)
 
 void BlockPhysicsLayer::removePhysicsShapeTag(const BlockPhysicsShapeKey& key)
 {
-    CCASSERT(hasPhysicsShapeTag(key), "不存在该位置的物理形状标记");
+    CCASSERT(hasPhysicsShapeTag(key), "Physics shape tag not found");
     _physicsBodies.erase(key);
 }
 

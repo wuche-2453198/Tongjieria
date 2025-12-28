@@ -1,0 +1,21 @@
+{
+  "id": "platinum_ore",
+  "name": "Platinum Ore",
+  "origin": {
+    "base": {
+      "wall": false,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\platinum_ore.png"
+    },
+    "mining": {
+      "hardness": 6.0,
+      "tool": "pickaxe"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
+}

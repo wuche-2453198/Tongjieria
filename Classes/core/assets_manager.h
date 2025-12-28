@@ -88,10 +88,14 @@ public:
     template <typename T>
     std::optional<T> tryGetStateVal(const std::string& firstTag, const std::string& secondTag, state stateCode) const
     {
-        auto stateVal = getVal<T>(*getStateConfig(stateCode), firstTag, secondTag);
-        if (stateVal)
+        auto stateConfig = getStateConfig(stateCode);
+        if (stateConfig)
         {
-            return stateVal;
+            auto stateVal = getVal<T>(*getStateConfig(stateCode), firstTag, secondTag);
+            if (stateVal)
+            {
+                return stateVal;
+            }
         }
         return getOriginVal<T>(firstTag, secondTag);
     }
@@ -107,6 +111,8 @@ public:
         return defaultValue;
     }
 
+    const 
+
     const rapidjson::Document& getConfig() const;
     operator bool() const;
 private:
@@ -118,32 +124,32 @@ private:
 };
 
 /**
-* @brief èµ„æºç¼“å­˜ä¸­å¿ƒã€‚
+* @brief ×ÊÔ´»º´æÖĞĞÄ¡£
 */
 class AssetManager {
 public:
     AssetManager();
 
     /**
-    * @brief æ ¹æ®è·¯å¾„è·å–è´´å›¾ã€‚
+    * @brief ¸ù¾İÂ·¾¶»ñÈ¡ÌùÍ¼¡£
     */
     cocos2d::Texture2D* const getTexture(const std::string& path) const;
 
     /**
-    * @brief æ ¹æ®idè·å–æ–¹å—é…ç½®ã€‚
+    * @brief ¸ù¾İid»ñÈ¡·½¿éÅäÖÃ¡£
     */
     const BlockConfig& getBlockConfig(entt::id_type id) const;
 
     /**
-    * @brief åˆå§‹åŒ–ï¼Œæ­¤æ—¶è¯»å–æ‰€æœ‰çš„jsonæ–‡ä»¶ã€‚
+    * @brief ³õÊ¼»¯£¬´ËÊ±¶ÁÈ¡ËùÓĞµÄjsonÎÄ¼ş¡£
     */
     bool init();
 private:
     
     /**
-    * @brief è¯»å–æ‰€æœ‰æ–¹å—ã€‚
+    * @brief ¶ÁÈ¡ËùÓĞ·½¿é¡£
     */
     void loadAllBlockJson();
 
-    std::unordered_map<entt::id_type, BlockConfig*> _block_config; ///< æ–¹å—é…ç½®
+    std::unordered_map<entt::id_type, BlockConfig*> _block_config; ///< ·½¿éÅäÖÃ
 };

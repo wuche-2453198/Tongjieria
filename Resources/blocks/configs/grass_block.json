@@ -1,0 +1,21 @@
+{
+  "id": "grass_block",
+  "name": "Grass Block",
+  "origin": {
+    "base": {
+      "wall": false,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\grass_block.png"
+    },
+    "mining": {
+      "hardness": 1.0,
+      "tool": "shovel"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
+}

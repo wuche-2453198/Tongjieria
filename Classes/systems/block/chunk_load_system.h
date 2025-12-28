@@ -21,8 +21,8 @@
 class ChunkLoadSystem : public ISystem
 {
 public:
-    static inline int UPPER_LIMIT = 20;
-    static inline int LOWWER_LIMIT = -10;
+    static inline int UPPER_LIMIT = 40;
+    static inline int LOWWER_LIMIT = 0;
     ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher);
     ~ChunkLoadSystem();
     void update(float delta);

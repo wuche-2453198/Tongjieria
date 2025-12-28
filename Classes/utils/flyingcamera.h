@@ -18,7 +18,7 @@ public:
     void setActive(bool active);
     bool isActive() const { return _active; }
 
-private:
+
     cocos2d::Node* _target = nullptr;    // 要控制的摄像机节点
     float _speed = 10.0f;              // 移动速度（像素/秒）
     cocos2d::Vec2 _velocity;             // 当前速度向量

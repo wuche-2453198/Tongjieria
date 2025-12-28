@@ -1,0 +1,31 @@
+{
+  "id": "weed",
+  "name": "Weed",
+  "origin": {
+    "base": {
+      "replaceable": true,
+      "behavior": "flower_behavior",
+      "texture": "blocks\\textures\\weed1.png"
+    },
+    "collision": {
+      "enable": false
+    }
+  },
+  "states": {
+    "weed1": {
+      "base": {
+        "texture": "blocks\\textures\\weed1.png"
+      }
+    },
+    "weed2": {
+      "base": {
+        "texture": "blocks\\textures\\weed2.png"
+      }
+    },
+    "weed3": {
+      "base": {
+        "texture": "blocks\\textures\\weed3.png"
+      }
+    }
+  }
+}

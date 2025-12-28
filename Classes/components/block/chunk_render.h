@@ -22,13 +22,13 @@ using V3F_C4B_T2F = cocos2d::V3F_C4B_T2F;
 /**
 * @class RenderComponent
 * 
-* @brief äÖÈ¾ÃüÁî·â×°£¬ÒÔ¹©äÖÈ¾ÏµÍ³·½±ãµØÌá½»¸øcocos
+* @brief æ¸²æŸ“å‘½ä»¤å°è£…ï¼Œä»¥ä¾›æ¸²æŸ“ç³»ç»Ÿæ–¹ä¾¿åœ°æäº¤ç»™cocos
 * 
-* ±¾Éí²¢²»ÊÇ×é¼ş£¬ËüÖ»ÊÇÌá¹©Ò»¸öäÖÈ¾½Ó¿Ú¡£äÖÈ¾×é¼ş¼ûCustomCommandPack
+* æœ¬èº«å¹¶ä¸æ˜¯ç»„ä»¶ï¼Œå®ƒåªæ˜¯æä¾›ä¸€ä¸ªæ¸²æŸ“æ¥å£ã€‚æ¸²æŸ“ç»„ä»¶è§CustomCommandPack
 * 
 * @see CustomCommandPack
 * 
-* @tease ÕıÈçOpengl²»Open£¬ äÖÈ¾×é¼şÒ²²»×é¼ş UwU¡£
+* @tease æ­£å¦‚Openglä¸Openï¼Œ æ¸²æŸ“ç»„ä»¶ä¹Ÿä¸ç»„ä»¶ UwUã€‚
 */
 class RenderComponent
 {
@@ -41,17 +41,17 @@ public:
         const cocos2d::Mat4& parentTransform, uint32_t parentFlags) = 0;
 
     /**
-    * @brief ÊÇ·ñ¼¤»î
+    * @brief æ˜¯å¦æ¿€æ´»
     * 
-    * Î´¼¤»îµÄäÖÈ¾×é¼ş²»»á±»Ìá½»¡£
+    * æœªæ¿€æ´»çš„æ¸²æŸ“ç»„ä»¶ä¸ä¼šè¢«æäº¤ã€‚
     */
     bool isActive() const { return _isActive; }
     void setActive(bool active) { _isActive = active; }
 
     /**
-    * @brief ÊÇ·ñÊ¹ÓÃ±ä»»
+    * @brief æ˜¯å¦ä½¿ç”¨å˜æ¢
     * 
-    * ÊÇ·ñÊ¹ÓÃ¶ÔÓ¦ÊµÌåµÄÎ»ÖÃ±ä»»¡£Èç¹û²»Ê¹ÓÃ£¬Ä¬ÈÏ´«ÈëµÄ¾ØÕóÊÇÊÀ½ç¾ØÕó£¬¶¥µã»áäÖÈ¾ÔÚ¶ÔÓ¦µÄÊÀ½çÎ»ÖÃÉÏ¡£
+    * æ˜¯å¦ä½¿ç”¨å¯¹åº”å®ä½“çš„ä½ç½®å˜æ¢ã€‚å¦‚æœä¸ä½¿ç”¨ï¼Œé»˜è®¤ä¼ å…¥çš„çŸ©é˜µæ˜¯ä¸–ç•ŒçŸ©é˜µï¼Œé¡¶ç‚¹ä¼šæ¸²æŸ“åœ¨å¯¹åº”çš„ä¸–ç•Œä½ç½®ä¸Šã€‚
     */
     bool isUseTransform() const { return _isUseTransform; }
     void setUseTransform(bool useTransform) { _isUseTransform = useTransform; }
@@ -63,62 +63,62 @@ protected:
 
 /**
  * @class BlockBatchCommand
- * @brief ÅúÁ¿´¦Àí¿éµÄÃüÁîÀà
+ * @brief æ‰¹é‡å¤„ç†å—çš„å‘½ä»¤ç±»
  *
- * BlockBatchCommand ÀàÌá¹©ÁËÅúÁ¿´¦Àí¶à¸ö¿éµÄ¹¦ÄÜ¡£Í¨¹ıÕâ¸öÀà£¬ÓÃ»§¿ÉÒÔ¶ÔÒ»ÏµÁĞµÄ¿éÖ´ĞĞÌØ¶¨µÄ²Ù×÷¡£
+ * BlockBatchCommand ç±»æä¾›äº†æ‰¹é‡å¤„ç†å¤šä¸ªå—çš„åŠŸèƒ½ã€‚é€šè¿‡è¿™ä¸ªç±»ï¼Œç”¨æˆ·å¯ä»¥å¯¹ä¸€ç³»åˆ—çš„å—æ‰§è¡Œç‰¹å®šçš„æ“ä½œã€‚
  */
 class BlockBatchCommand : public cocos2d::TrianglesCommand, public RenderComponent
 {
 public:
     /**
-    * @brief ¹¹Ôìº¯Êı
+    * @brief æ„é€ å‡½æ•°
     *
-    * ³õÊ¼»¯ BlockBatchCommand ¶ÔÏó¡£
+    * åˆå§‹åŒ– BlockBatchCommand å¯¹è±¡ã€‚
     * 
-    * @param blockPos ·½¿éÎ»ÖÃ
-    * @param texture ÌùÍ¼
+    * @param blockPos æ–¹å—ä½ç½®
+    * @param texture è´´å›¾
     */
     BlockBatchCommand(int globalOrder, const Vec2i& blockPos, cocos2d::Texture2D* texture);
 
     /**
-    * @brief ¹¹Ôìº¯Êı
+    * @brief æ„é€ å‡½æ•°
     * 
-    * ¸ù¾İ·½¿éÎ»ÖÃÅúÁ¿Éú³É¶¥µãÊı¾İ
+    * æ ¹æ®æ–¹å—ä½ç½®æ‰¹é‡ç”Ÿæˆé¡¶ç‚¹æ•°æ®
     * 
-    * @param blockPos ·½¿éÎ»ÖÃÁĞ±í
-    * @param texture ÌùÍ¼
+    * @param blockPos æ–¹å—ä½ç½®åˆ—è¡¨
+    * @param texture è´´å›¾
     */
     BlockBatchCommand(int globalOrder, const std::vector<Vec2i>& blockPosArray, cocos2d::Texture2D* texture);
 
     /**
-    * @ToDO ¼ì²éÊÇ·ñÎö¹¹ÍêÈ«
+    * @ToDO æ£€æŸ¥æ˜¯å¦ææ„å®Œå…¨
     */
     ~BlockBatchCommand();
 
     /**
-    * @brief »æÖÆÃüÁî
+    * @brief ç»˜åˆ¶å‘½ä»¤
     * 
-    * »æÖÆÃüÁî£¬½«·½¿éäÖÈ¾µ½ÆÁÄ»ÉÏ¡£
+    * ç»˜åˆ¶å‘½ä»¤ï¼Œå°†æ–¹å—æ¸²æŸ“åˆ°å±å¹•ä¸Šã€‚
     */
     virtual void draw(cocos2d::Renderer* renderer, const cocos2d::Mat4& transform, uint32_t flags) override;
     virtual void visit(cocos2d::Renderer* renderer, const cocos2d::Mat4& parentTransform, uint32_t parentFlags) override;
 
     /**
-    * @brief ¸üĞÂ¶¥µãÊı¾İ
+    * @brief æ›´æ–°é¡¶ç‚¹æ•°æ®
     * 
-    * ¸üĞÂuniforms£¬Ö÷ÒªÊÇ¾ØÕó
+    * æ›´æ–°uniformsï¼Œä¸»è¦æ˜¯çŸ©é˜µ
     */
     void updateUniforms(const cocos2d::Mat4& transform);
 
     /**
-    * @brief ¸üĞÂÌùÍ¼
+    * @brief æ›´æ–°è´´å›¾
     */
     void setNewTexture(cocos2d::Texture2D* texture);
 private:
     void updateShaders();
 
     /**
-    * @brief ÉèÖÃÌùÍ¼
+    * @brief è®¾ç½®è´´å›¾
     */
     void setTexture(cocos2d::Texture2D* texture);
 
@@ -130,29 +130,29 @@ private:
     void setVertexLayout();
 
     /**
-    * @brief Éú³É¶¥µã
+    * @brief ç”Ÿæˆé¡¶ç‚¹
     * 
-    * @param blockPos ·½¿éÎ»ÖÃÁĞ±í
+    * @param blockPos æ–¹å—ä½ç½®åˆ—è¡¨
     */
     std::vector<V3F_C4B_T2F> genVert(const std::vector<Vec2i>& blockPos);
 
     /**
-    * @brief Éú³ÉË÷Òı
+    * @brief ç”Ÿæˆç´¢å¼•
     * 
-    * @param blockNum ·½¿éÊıÁ¿
+    * @param blockNum æ–¹å—æ•°é‡
     */
     std::vector<unsigned short> genIndex(int blockNum);
 
-    std::vector<V3F_C4B_T2F> _vertices;     ///< ¶¥µãÊı¾İ
-    std::vector<unsigned short> _indices;   ///< Ë÷ÒıÊı¾İ
+    std::vector<V3F_C4B_T2F> _vertices;     ///< é¡¶ç‚¹æ•°æ®
+    std::vector<unsigned short> _indices;   ///< ç´¢å¼•æ•°æ®
 };
 
 /**
-* @brief Çø¿éäÖÈ¾Åú´ÎID->äÖÈ¾Åú´ÎË÷ÒıÓ³Éä±í
+* @brief åŒºå—æ¸²æŸ“æ‰¹æ¬¡ID->æ¸²æŸ“æ‰¹æ¬¡ç´¢å¼•æ˜ å°„è¡¨
 * 
-* ´æ´¢×ÅäÖÈ¾Åú´ÎidºÍËüÃÇÔÚ¶ÔÓ¦µÄäÖÈ¾°üÖĞµÄÎ»ÖÃ
-* Çø¿éäÖÈ¾Åú´ÎIDÖ»×÷ÎªÇø¿éäÖÈ¾ÏµÍ³µÄ×¨ÓÃ»º´æ¡£
-* Ëü²»»á¶ÔäÖÈ¾ÃüÁîµÄÉúÃüÖÜÆÚ¸ºÔğ¡£
+* å­˜å‚¨ç€æ¸²æŸ“æ‰¹æ¬¡idå’Œå®ƒä»¬åœ¨å¯¹åº”çš„æ¸²æŸ“åŒ…ä¸­çš„ä½ç½®
+* åŒºå—æ¸²æŸ“æ‰¹æ¬¡IDåªä½œä¸ºåŒºå—æ¸²æŸ“ç³»ç»Ÿçš„ä¸“ç”¨ç¼“å­˜ã€‚
+* å®ƒä¸ä¼šå¯¹æ¸²æŸ“å‘½ä»¤çš„ç”Ÿå‘½å‘¨æœŸè´Ÿè´£ã€‚
 */
 class ChunkRenderBatchID : public IComponent
 {

@@ -1,11 +1,12 @@
 #include "block_world.h"
 #include "systems/block_layer/block_layer.h"
+#include "components/block/block_behavior.h"
 #include "components/block/block_event.h"
 #include "assets_manager.h"
 #include "utils/tools.h"
 
-#define DESTROY_LOG 1
-#define PLACE_LOG 1
+#define DESTROY_LOG 0
+#define PLACE_LOG 0
 
 BlockWorld::BlockWorld(entt::registry& registry, entt::dispatcher& dispatcher)
     : _registry(registry), 

@@ -8,6 +8,7 @@
 class AssetManager;
 class BlockWorld;
 class BlockBehaviorRegistry;
+class BlockBehavior;
 
 /**
 * @brief 接受区块互动的事件，进行分发和调度。
@@ -26,12 +27,14 @@ private:
     void onBlockPlaced(const BlockPlacedEvent& event);
     void onBlockDestroyed(const BlockDestroyEvent& event);
     void onBlockMined(const BlockMinedEvent& event);
-    void onBlockNeighborChanged();
+    void onBlockNeighborChanged(const BlockChangedEvent& event, BlockLayer& layer, const Vec2i& neighborOffset);
     void onBlockInteracted(const BlockInteractEvent& event);
     void onRandomTick();
     void addDirtyTag(entt::entity chunk, const Vec2i& localPos);
 
-    std::unique_ptr<BlockBehaviorRegistry> _behaviorRegistry;
+    std::shared_ptr<BlockBehavior> getBehaviorByID(entt::id_type blockID);
+
+    BlockBehaviorRegistry& _behaviorRegistry;
 
     AssetManager& _assetManager;
 };

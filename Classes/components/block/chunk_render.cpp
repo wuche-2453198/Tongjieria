@@ -117,10 +117,10 @@ std::vector<V3F_C4B_T2F> BlockBatchCommand::genVert(const std::vector<Vec2i>& bl
     {
         Vec2i pos = blockPos[i];
         int vertIndex = i * 4;
-        verts[vertIndex]     = V3F_C4B_T2F(Vec3(pos.x,     pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 0));
-        verts[vertIndex + 1] = V3F_C4B_T2F(Vec3(pos.x,     pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 1));
-        verts[vertIndex + 2] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 1));
-        verts[vertIndex + 3] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 0));
+        verts[vertIndex]     = V3F_C4B_T2F(Vec3(pos.x,     pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 1));
+        verts[vertIndex + 1] = V3F_C4B_T2F(Vec3(pos.x,     pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(0, 0));
+        verts[vertIndex + 2] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y + 1, 0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 0));
+        verts[vertIndex + 3] = V3F_C4B_T2F(Vec3(pos.x + 1, pos.y,     0) * BLOCK_SIZE, C4B::WHITE, Tex2F(1, 1));
     }
     return verts;
 }

@@ -5,7 +5,7 @@
 
 #include "debug_system.h"
 
-#define CHUNK_VIEW_ENABEL 1;
+#define CHUNK_VIEW_ENABEL 0;
 
 ChunkLoadSystem::ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher), _blockWorld(_registry.ctx().get<BlockWorld>())

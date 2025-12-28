@@ -24,7 +24,7 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
 
 #if FLYINGCAMERA
     flyingCamera = FlyCamera2D::createWithTarget(cocos2d::Camera::getDefaultCamera());
-    flyingCamera->setSpeed(800.0f);
+    flyingCamera->setSpeed(1600.0f);
     world->addChild(flyingCamera);
     flyingCamera->setActive(true);
 
@@ -48,10 +48,10 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
         }
     }
 
-    for (int i = 0; i < 0; i++)
+    for (int i = 0; i < 10; i++)
     {
         addAPhysicsSprites();
-        physicsSprites[i]->setPosition(700 + i * 100, 100);
+        physicsSprites[i]->setPosition(400 + i * 100, 16 * 340);
         _registry.emplace<LoadingTicket>(physicsEntity[i], physicsEntity[i], 1, false);
     }
 }
@@ -145,7 +145,7 @@ void DebugSystem::addAPhysicsSprites()
 
     entt::entity entity = _registry.create();
     _registry.emplace<Position>(entity, cocos2d::Vec2::ZERO);
-    _registry.emplace<PhysicsTicket>(entity, cocos2d::Vec2(100, 100), cocos2d::Vec2::ZERO);
+    _registry.emplace<PhysicsTicket>(entity, cocos2d::Vec2(50, 50), cocos2d::Vec2::ZERO);
 
     physicsEntity.push_back(entity);
     physicsSprites.push_back(sprites);

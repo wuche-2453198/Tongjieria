@@ -26,6 +26,7 @@ void BlockMiningSystem::mining(float delta)
             
             // 方块硬度
             float hardness = _assetManager.getBlockConfig(blockEntity.id).getOriginValOr<float>("mining", "hardness", 0.00001f);
+            
 
             float progress = miningProgress->progress;              // 进度
             float deltaProgress = (tag.factor / hardness) * delta;  // 挖掘的进度增量
@@ -47,7 +48,15 @@ void BlockMiningSystem::mining(float delta)
                     blockEntity.saveRemove<MiningProgress>(_registry, entity);
                 }
             }
+
+            if (miningProgress->progress < 0)
+            {
+                blockEntity.saveRemove<MiningProgress>(_registry, entity);
+            }
+
             blockEntity.saveRemove<MiningTag>(_registry, entity);
+            
+            
         });
 }
 
