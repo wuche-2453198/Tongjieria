@@ -10,40 +10,48 @@ BiosProperties::BiosProperties(int seed) : _seed(seed)
     _heightPerlin.SetFrequency(0.003);
     _heightPerlin.SetLacunarity(0.5);
     _heightPerlin.SetOctaveCount(2);
-    _heightPerlin.SetPersistence(0.3);
-
-    /*
-    _heightCurve.SetSourceModule(0, _heightPerlin);
-    _heightCurve.AddControlPoint(-1, -1);
-    _heightCurve.AddControlPoint(-0.5, -0.8);
-    _heightCurve.AddControlPoint(0.0, -0.6);
-    _heightCurve.AddControlPoint(0.5, 0.1);
-    _heightCurve.AddControlPoint(1, 1);
-    */
+    _heightPerlin.SetPersistence(0.5);
 
     _heightScaleBias.SetSourceModule(0, _heightPerlin);
-    _heightScaleBias.SetBias(20 * CHUNK_SIZE);
+    _heightScaleBias.SetBias(22 * CHUNK_SIZE);
     _heightScaleBias.SetScale(10 * CHUNK_SIZE);
 
     _tempPerlin.SetSeed(seed + 1);
-    _tempPerlin.SetFrequency(0.0001);
+    _tempPerlin.SetFrequency(0.001);
     _tempPerlin.SetLacunarity(0.5);
     _tempPerlin.SetOctaveCount(1);
     _tempPerlin.SetPersistence(0.5);
 
-    _tempScaleBias.SetSourceModule(0, _heightPerlin);
-    _tempScaleBias.SetBias(-20);
+    _tempScaleBias.SetSourceModule(0, _tempPerlin);
     _tempScaleBias.SetScale(40);
 }
 
 int BiosProperties::getHeight(int x) const
 {
+    
     return _heightScaleBias.GetValue(x, 0, fixedZ);
 }
 
 double BiosProperties::getTemp(int x) const
 {
     return _tempScaleBias.GetValue(x, 0, fixedZ);
+}
+
+Bio BiosProperties::getBio(int x) const
+{
+    double temp = getTemp(x);
+    if (temp < -10)
+    {
+        return Bio::SNOW;
+    }
+    else if(temp < 10)
+    {
+        return Bio::PLAINS;
+    }
+    else
+    {
+        return Bio::DESERT;
+    }
 }
 
 StructureProperties::StructureProperties(int seed, const BiosProperties& biosProperties)
@@ -87,11 +95,18 @@ TerrainGenerator::TerrainGenerator(const GlobalProperties& globalProperties) : B
     _scaleBias.SetSourceModule(0, _perlin);
     _scaleBias.SetBias(10 * CHUNK_SIZE);
     _scaleBias.SetScale(10);
+
+    _dirtTypes.resize(3);
+    _dirtTypes[0] = entt::hashed_string("snow");
+    _dirtTypes[1] = entt::hashed_string("dirt");
+    _dirtTypes[2] = entt::hashed_string("sand");
 }
 
 std::pair<ReplaceType, BlockState> TerrainGenerator::genAt(const Vec2i& blockPos) const
 {
     auto& bio = _globalProperties.getBioGenerator();
+    
+    entt::id_type dirtID = _dirtTypes[_globalProperties.getBioGenerator().getBio(blockPos.x)];
 
     int height = bio.getHeight(blockPos.x);
 
@@ -99,9 +114,10 @@ std::pair<ReplaceType, BlockState> TerrainGenerator::genAt(const Vec2i& blockPos
     {
         return { FORCE, BlockState::AIR};
     }
-    else if (blockPos.y >= height - 8 + 3 * _perlin.GetValue(blockPos.x, 0, fixedZ))
+    else if (blockPos.y >= height - 8 + 3 * _perlin.GetValue(blockPos.x, 0, fixedZ) &&
+        height <= 420)
     {
-        return { OCCUPY, BlockState("dirt", 0) };
+        return { OCCUPY, BlockState(dirtID, 0) };
     }
     else
     {
@@ -139,26 +155,27 @@ std::pair<ReplaceType, BlockState> BedrockGenerator::genAt(const Vec2i& blockPos
 
 CaveGenerator::CaveGenerator(const GlobalProperties& globalProperties) : BlockGenerator(globalProperties)
 {
+    // 1. 生成一个Perlin噪声
     _perlinOrigin.SetSeed(_globalProperties.seed());
-    _perlinOrigin.SetFrequency(0.07);
+    _perlinOrigin.SetFrequency(0.01);
     _perlinOrigin.SetLacunarity(2);
     _perlinOrigin.SetOctaveCount(3);
     _perlinOrigin.SetPersistence(0.3);
 
+    // 2. 将Perlin噪声进行扭曲
     _turbulance.SetSourceModule(0, _perlinOrigin);
     _turbulance.SetSeed(_globalProperties.seed());
     _turbulance.SetFrequency(0.1);
-    _turbulance.SetPower(4);
+    _turbulance.SetPower(10);
     _turbulance.SetRoughness(2);
-
-    _scaleBias.SetSourceModule(0, _turbulance);
-    _scaleBias.SetBias(-5);
-    _scaleBias.SetScale(10);
 }
 
 std::pair<ReplaceType, BlockState> CaveGenerator::genAt(const Vec2i& blockPos) const
 {
-    if (_perlinOrigin.GetValue(blockPos.x, blockPos.y, 0) > 0.3)
+    double genVal = _turbulance.GetValue(blockPos.x, blockPos.y, 0);
+
+    // 在一个范围中判断，使得面条形状可以生成
+    if (0.4 < genVal && genVal < 0.6)
     {
         return { FORCE, BlockState::AIR };
     }
@@ -167,7 +184,6 @@ std::pair<ReplaceType, BlockState> CaveGenerator::genAt(const Vec2i& blockPos) c
         return { OCCUPY, BlockState("stone", 0) };
     }
 }
-
 
 OreGenerator::OreGenerator(const GlobalProperties& globalProperties, entt::id_type oreId,
     double freq, double density, double min, double max, double heighest)
@@ -261,17 +277,40 @@ void GrassDecorator::decorateAt(ChunkBlocks& blocks, const Vec2i& chunkPos) cons
     }
 }
 
+WallGenerator::WallGenerator(const GlobalProperties& globalProperties, entt::id_type wallID, int seedOffset = 0)
+    : BlockGenerator(globalProperties), wallID(wallID) 
+{
+    _perlin.SetSeed(_globalProperties.seed() + seedOffset);
+    _perlin.SetFrequency(0.005);
+    _perlin.SetLacunarity(2);
+    _perlin.SetOctaveCount(1);
+}
+
+std::pair<ReplaceType, BlockState> WallGenerator::genAt(const Vec2i& blockPos) const
+{
+    if (blockPos.y >= _globalProperties.getBioGenerator().getHeight(blockPos.x))
+    {
+        return { SKIP, BlockState::AIR};
+    }
+
+    // 利用大的范围创造大的墙面
+    double genVal = _perlin.GetValue(blockPos.x, blockPos.y, fixedZ);
+    if ( -0.6 < genVal && genVal < 0.4)
+    {
+        return { OCCUPY, BlockState(wallID, 0) };
+    }
+}
+
 BlockGenSystem::BlockGenSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher)
 {
     initGenerator();
 }
 
-BlockGenSystem::~BlockGenSystem() {}
+BlockGenSystem::~BlockGenSystem() = default;
 
 void BlockGenSystem::update(float delta)
 {
-    // ��ȡδ���ɷ��������
     auto view = _registry.view<Position, ChunkHead, NeedGen>();
     view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
         {
@@ -279,7 +318,6 @@ void BlockGenSystem::update(float delta)
             CCLOG("Gen chunk at %d %d", pos.getPostion().x/BLOCK_SIZE, pos.getPostion().y/BLOCK_SIZE);
 #endif
             auto& blocks = _registry.emplace<ChunkBlocks>(entity);
-            // ���ɷ���
             for (int y = 0; y < CHUNK_SIZE; y++)
             {
                 for (int x = 0; x < CHUNK_SIZE; x++)
@@ -287,19 +325,28 @@ void BlockGenSystem::update(float delta)
                     auto blockPos = BlockLayer::worldPosToBlockPos(pos) + Vec2i(x,y);
                     if (head.getLayerType() == LayerType::BLOCK)
                     {
-                        blocks.setBlockAt({ x,y }, genBlockAt(blockPos));
+                        blocks.setBlockAt({ x,y }, genBlockAt(blockPos, _blockGenerators));
                     }
                     else
                     {
-                        blocks.setBlockAt({ x,y }, genWallAt(blockPos));
+                        blocks.setBlockAt({ x,y }, genBlockAt(blockPos, _wallGenerators));
                     }
                 }
             }
 
-            for (auto& decorator: _blockDecorators)
+            if (head.getLayerType() == LayerType::BLOCK)
             {
-                decorator->decorateAt(blocks, BlockLayer::worldPosToChunkPos(pos));
+                for (auto& decorator : _blockDecorators)
+                {
+                    decorator->decorateAt(blocks, BlockLayer::worldPosToChunkPos(pos));
+                }
             }
+            else
+            {
+                // TODO: wall decorator
+            }
+
+            
 
             _registry.remove<NeedGen>(entity);
         });
@@ -310,32 +357,43 @@ void BlockGenSystem::initGenerator()
     _seed = rand();
     _globalProperties = std::make_unique<GlobalProperties>(_seed);
     
-    _blockGenLayers.push_back(std::make_unique<TerrainGenerator>(*_globalProperties));
-    _blockGenLayers.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+    _blockGenerators.push_back(std::make_unique<TerrainGenerator>(*_globalProperties));
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
         entt::hashed_string("copper_ore"),
         0.15, 0.5, 60, 350, 200));
-    _blockGenLayers.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
         entt::hashed_string("silver_ore"),
         0.2, 0.7, 20, 300, 120));
-    _blockGenLayers.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
         entt::hashed_string("lead_ore"),
         0.25, 0.7, 20, 250, 50));
-    _blockGenLayers.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+        entt::hashed_string("lead_ore"),
+        0.17, 0.6, 280, 400, 360));
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
         entt::hashed_string("platinum_ore"),
         0.35, 0.8, 0, 150, 30));
-    _blockGenLayers.push_back(std::make_unique<CaveGenerator>(*_globalProperties));
-    _blockGenLayers.push_back(std::make_unique<BedrockGenerator>(*_globalProperties));
+    _blockGenerators.push_back(std::make_unique<OreGenerator>(*_globalProperties,
+        entt::hashed_string("platinum_ore"),
+        0.22, 0.7, 400, 600, 500));
+    _blockGenerators.push_back(std::make_unique<CaveGenerator>(*_globalProperties));
+    _blockGenerators.push_back(std::make_unique<BedrockGenerator>(*_globalProperties));
 
     _blockDecorators.push_back(std::make_unique<GrassDecorator>(*_globalProperties, 0.3));
+
+    _wallGenerators.push_back(std::make_unique<WallGenerator>(*_globalProperties, 
+        entt::hashed_string("stone_wall")));
+    _wallGenerators.push_back(std::make_unique<WallGenerator>(*_globalProperties, 
+        entt::hashed_string("dirt_wall"), 1));
 }
 
-BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos)
+BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos, const std::vector<std::unique_ptr<BlockGenerator>>& generators)
 {
     BlockState result = BlockState::AIR;
     bool isOccupied = false;
-    for (int layerIndex  = 0; layerIndex < _blockGenLayers.size(); layerIndex++)
+    for (int layerIndex  = 0; layerIndex < generators.size(); layerIndex++)
     {
-        auto& layer = _blockGenLayers[layerIndex];
+        auto& layer = generators[layerIndex];
         auto genResult = layer->genAt(blockPos);
         
         if (genResult.first == FORCE)
@@ -354,10 +412,4 @@ BlockState BlockGenSystem::genBlockAt(const Vec2i& blockPos)
         }
     }
     return result;
-}
-
-BlockState BlockGenSystem::genWallAt(const Vec2i& blockPos)
-{
-
-    return BlockState::AIR;
 }

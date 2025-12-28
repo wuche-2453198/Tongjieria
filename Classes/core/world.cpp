@@ -256,7 +256,7 @@ bool World::initServers()
 		const float baseX = -260.0f;
 		const float baseY = 980.0f;
 		const float stepX = 80.0f;
-		const float stepY = 100.0f;
+		const float stepY = 16 * 16 * 21;
 		const int columns = 8;
 
 		for (int i = 0; i < static_cast<int>(ids.size()); ++i) {

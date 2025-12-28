@@ -27,6 +27,8 @@ BlockPhysicsSystem::BlockPhysicsSystem(entt::registry& registry, entt::dispatche
     CCLOG("[BlockPhyicsSystem] construct begin");
 #endif // PHYSICS_LOG
 
+    // 初始化物理世界
+    // 设置一个承载物理节点的节点
     _physicsNode = cocos2d::Node::create();
     _physicsNode->setPosition(cocos2d::Vec2(0.5f, 0.5f) * BLOCK_SIZE);
     _registry.ctx().get<WorldScene>()->addChild(_physicsNode);
@@ -96,7 +98,7 @@ std::unordered_set<BlockPhysicsShapeKey, BlockPhysicsShapeKeyHash> BlockPhysicsS
         if (!hasCollision(blockPos)) {
             return false;
         }
- 
+
         auto blockState = _blockLayer.getBlockAtBlockPos(blockPos);
         const auto& config = _assetManager.getBlockConfig(blockState.id.value());
  
@@ -107,7 +109,7 @@ std::unordered_set<BlockPhysicsShapeKey, BlockPhysicsShapeKeyHash> BlockPhysicsS
                 projectilePass = collisionObj["projectilePass"].GetBool();
             }
         }
- 
+        
         collisionShape = cocos2d::Vec2(BLOCK_SIZE, BLOCK_SIZE);
         collisionOffset = cocos2d::Vec2::ZERO;
         if (auto* origin = config.getOrigin(); origin && origin->HasMember("collision") && (*origin)["collision"].IsObject()) {

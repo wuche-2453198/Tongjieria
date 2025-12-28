@@ -1,0 +1,19 @@
+{
+  "id": "stone_wall",
+  "name": "Stone Wall",
+  "origin": {
+    "base": {
+      "wall": true,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\stone_wall.png"
+    },
+    "mining": {
+      "hardness": 1.0,
+      "tool": "hammer"
+    },
+    "collision": {
+      "enable": false
+    }
+  }
+}

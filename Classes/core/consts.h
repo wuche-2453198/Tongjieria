@@ -1,14 +1,14 @@
 #pragma once
 /**
-* @brief ¶¨ÒåµÄ·½¿éµÄÂß¼­´óĞ¡
+* @brief å®šä¹‰çš„æ–¹å—çš„é€»è¾‘å¤§å°
 *
-* @note Ó¦µ±¾¡Á¿ÊÇ¶şµÄÕûÊı±¶
+* @note åº”å½“å°½é‡æ˜¯äºŒçš„æ•´æ•°å€
 */
-constexpr static int BLOCK_SIZE = 16;
+constexpr static int BLOCK_SIZE = 4;
 constexpr static int CHUNK_SIZE = 16;
 
 /**
-* @brief ·½¿éÀàĞÍÃ¶¾Ù¡£
+* @brief æ–¹å—ç±»å‹æšä¸¾ã€‚
 */
 enum class LayerType
 {
@@ -20,14 +20,14 @@ constexpr int WALL_Z_ORDER = -1;
 static int getZOrder(LayerType type) {return type == LayerType::BLOCK? BLOCK_Z_ORDER : WALL_Z_ORDER;}
 
 /**
-* @brief äÖÈ¾¾àÀë
+* @brief æ¸²æŸ“è·ç¦»
 */
-static unsigned int CHUNK_RENDER_START_DISTANCE = 4; 
+static unsigned int CHUNK_RENDER_START_DISTANCE = 10; 
 
 /**
-* @brief äÖÈ¾¾àÀëµÄ½Ø¶Ï¾àÀë
+* @brief æ¸²æŸ“è·ç¦»çš„æˆªæ–­è·ç¦»
 */
-static unsigned int CHUNK_RENDER_CUT_DISTANCE = 5;
+static unsigned int CHUNK_RENDER_CUT_DISTANCE = 11;
 
 /**
 */
