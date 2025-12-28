@@ -8,15 +8,21 @@
 #include "core/PlayerInput.h"
 #include "core/GameManager.h"
 #include "core/assets_manager.h"
-#include "core/world.h"
+#include "core/block_world.h"
 #include "components/player/PlayerComponents.h"
 #include "components/block/block_component.h"
 #include "systems/block/block_system_manager.h"
+#include "systems/block_layer/block_physics_layer.h"
+#include "systems/block/render_command_system.h"
 
 USING_NS_CC;
 
-IntegrationTestScene::IntegrationTestScene()
-    : _registry(GameManager::getInstance()->getRegistry()) {
+IntegrationTestScene::IntegrationTestScene() {
+    // 构造函数在这里定义，此时 BlockSystemManager 的完整定义可见
+}
+
+IntegrationTestScene::~IntegrationTestScene() {
+    // unique_ptr 会自动清理资源
 }
 
 Scene* IntegrationTestScene::createScene() {
@@ -24,27 +30,27 @@ Scene* IntegrationTestScene::createScene() {
     CCLOG("= ENTERING INTEGRATION TEST SCENE");
     CCLOG("========================================");
 
-    // Create scene with physics engine
-    auto scene = Scene::createWithPhysics();
-
-    // Set gravity
-    auto physicsWorld = scene->getPhysicsWorld();
-    physicsWorld->setGravity(Vec2(0, -980));
-
-    // Enable physics debug drawing (optional)
-    // physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
-
-    auto layer = IntegrationTestScene::create();
-    scene->addChild(layer);
-
-    CCLOG("IntegrationTestScene: Scene created with physics");
-    return scene;
+    auto scene = new IntegrationTestScene();
+    if (scene && scene->init()) {
+        scene->autorelease();
+        return scene;
+    }
+    CC_SAFE_DELETE(scene);
+    return nullptr;
 }
 
 bool IntegrationTestScene::init() {
-    if (!Layer::init()) {
+    // Initialize as Scene with physics
+    if (!Scene::initWithPhysics()) {
         return false;
     }
+
+    // Set gravity
+    auto physicsWorld = this->getPhysicsWorld();
+    physicsWorld->setGravity(Vec2(0, -480));
+
+    // Enable physics debug drawing to see collision shapes
+    physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
@@ -53,14 +59,64 @@ bool IntegrationTestScene::init() {
     auto background = LayerColor::create(Color4B(135, 206, 235, 255)); // Sky blue
     this->addChild(background, 0);
 
+    // Create UI layer (fixed to screen, not affected by camera movement)
+    _uiLayer = Node::create();
+    _uiLayer->setPosition(Vec2::ZERO);
+    _uiLayer->setAnchorPoint(Vec2::ZERO);
+    _uiLayer->setGlobalZOrder(1000);  // Very high Z order to always be on top
+    this->addChild(_uiLayer, 1000);
+
+    // Create a separate camera for UI that follows the default camera
+    _uiCamera = Camera::createOrthographic(
+        visibleSize.width,
+        visibleSize.height,
+        -1024, 1024
+    );
+    _uiCamera->setCameraFlag(CameraFlag::USER1);
+    _uiCamera->setDepth(10);  // Higher depth so it renders on top
+
+    // Position UI camera at screen center (orthographic projection)
+    _uiCamera->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    this->addChild(_uiCamera);
+
+    // Set UI layer to only be visible to the UI camera
+    _uiLayer->setCameraMask((unsigned short)CameraFlag::USER1);
+
+    CCLOG("IntegrationTestScene: UI layer and UI camera created (will follow default camera)");
+
+    // 1. 初始化 ECS 系统（必须在创建玩家之前）
+    _registry = std::make_unique<entt::registry>();
+    _dispatcher = std::make_unique<entt::dispatcher>();
+    CCLOG("IntegrationTestScene: Registry and dispatcher created");
+
+    // 2. 注册上下文（参考 WorldTest）
+    // IntegrationTestScene 现在是 Scene，所以直接传入 this
+    _registry->ctx().emplace<WorldScene>(this);
+    _registry->ctx().emplace<BlockPhysicsLayer>();
+    _registry->ctx().emplace<AssetManager>();
+    CCLOG("IntegrationTestScene: Context registered (WorldScene, BlockPhysicsLayer, AssetManager)");
+
+    // 3. 创建 BlockWorld（在上下文中）
+    _registry->ctx().emplace<BlockWorld>(*_registry, *_dispatcher);
+    CCLOG("IntegrationTestScene: BlockWorld created");
+
+    // 4. 创建 BlockSystemManager
+    _blockSystemManager = std::make_unique<BlockSystemManager>(*_registry, *_dispatcher);
+    CCLOG("IntegrationTestScene: BlockSystemManager created");
+
+    // 5. 创建渲染命令系统（负责方块渲染）
+    _renderingCommandsSystem = new CommandSystem(*_registry, *_dispatcher);
+    addChild(_renderingCommandsSystem);
+    CCLOG("IntegrationTestScene: CommandSystem created and added");
+
     // Load item data
     auto* itemMgr = ItemManager::getInstance();
     itemMgr->loadItems("items/items_json/items_equipment.json", false);
     itemMgr->loadItems("items/items_json/items_placeables.json", true);
     itemMgr->loadItems("items/items_json/items_consumables.json", true);
 
-    // Create physics environment
-    createPhysicsEnvironment();
+    // 不使用这个物理环境而是使用blocks系统
+    //createPhysicsEnvironment();
 
     // Create player
     createPlayer();
@@ -74,32 +130,10 @@ bool IntegrationTestScene::init() {
     // Setup keyboard listener for ESC key
     setupKeyboardListener();
 
-    // Initialize BlockWorld (already initialized in GameManager)
-    auto& blockWorld = GameManager::getInstance()->getBlockWorld();
-    auto& dispatcher = GameManager::getInstance()->getDispatcher();
-    CCLOG("IntegrationTestScene: BlockWorld accessed successfully");
-
-    // Register WorldScene for DebugSystem
-    // Note: DebugSystem requires WorldScene in its constructor
-    // We pass nullptr since IntegrationTestScene is not a World scene
-    // AssetManager is already registered in GameManager
-    _registry.ctx().emplace<WorldScene>(nullptr);
-
-    // Create BlockSystemManager
-    _blockSystemManager = new BlockSystemManager(_registry, dispatcher);
-    CCLOG("IntegrationTestScene: BlockSystemManager created");
-
-    // Delayed initialization (ensure scene is fully setup)
-    this->scheduleOnce([this](float dt) {
-        auto scene = this->getScene();
-        if (scene) {
-            PlayerInput::getInstance().initialize(scene);
-            PlayerSystemsManager::setScene(scene);
-            CCLOG("IntegrationTestScene: Input system and scene reference initialized");
-        } else {
-            CCLOG("IntegrationTestScene: ERROR - Scene is null!");
-        }
-    }, 0.1f, "init_input");
+    // Initialize input system
+    PlayerInput::getInstance().initialize(this);
+    PlayerSystemsManager::setScene(this);
+    CCLOG("IntegrationTestScene: Input system initialized");
 
     // Start update
     this->scheduleUpdate();
@@ -228,21 +262,34 @@ void IntegrationTestScene::createPlayer() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     // Use PlayerFactory to create player
-    Vec2 spawnPos(visibleSize.width / 2, 300);
-    _playerEntity = PlayerFactory::createPlayer(_registry, spawnPos, this);
 
-    // Register player entity in GameManager
+    Vec2 spawnPos(visibleSize.width / 2, 1200);  // 在地形上方一点
+    _playerEntity = PlayerFactory::createPlayer(*_registry, spawnPos, this, _uiLayer);
+
+    // Register player entity in GameManager (for UI and other systems)
     GameManager::getInstance()->setPlayerEntity(_playerEntity);
 
+    // Add Position component for block system (方块系统需要Position组件来追踪实体位置)
+    _registry->emplace<Position>(_playerEntity, spawnPos);
+    CCLOG("IntegrationTestScene: Position component added to player");
+
+    // Add PhysicsTicket for block collision (方块碰撞检测需要PhysicsTicket)
+    // 碰撞箱大小应该与玩家物理体一致
+    Vec2 collisionSize(80.0f, 122.0f);  // 与PlayerFactory中的物理体大小一致
+    Vec2 collisionOffset(0.0f, 0.0f);   // 碰撞箱中心偏移
+    _registry->emplace<PhysicsTicket>(_playerEntity, collisionSize, collisionOffset);
+    CCLOG("IntegrationTestScene: PhysicsTicket component added to player (size: %.1fx%.1f)",
+          collisionSize.x, collisionSize.y);
+
     // Add loading ticket to player for chunk loading
-    _registry.emplace<LoadingTicket>(
+    _registry->emplace<LoadingTicket>(
         _playerEntity,
         _playerEntity,  // entity_id parameter for LoadingTicket constructor
         5,              // Load radius: 5 chunks
         true            // Permanent ticket
     );
 
-    CCLOG("IntegrationTestScene: Player created with LoadingTicket (radius: 5)");
+    CCLOG("IntegrationTestScene: Player created with all block system components");
 }
 
 void IntegrationTestScene::setupTestItems() {
@@ -255,6 +302,7 @@ void IntegrationTestScene::setupTestItems() {
 
     // Add Wooden Sword (ID 1201)
     inventory->addItem(1201, 1);
+    inventory->addItem(1211, 1); 
     CCLOG("IntegrationTestScene: Added Wooden Sword (1201)");
 
     // Add pickaxes
@@ -289,7 +337,7 @@ void IntegrationTestScene::setupTestItems() {
     CCLOG("IntegrationTestScene: Added 4 types of potions");
 
     // Link weapon slots (40-49) to hotbar
-    auto& hotbar = _registry.get<ecs::PlayerHotbarComponent>(_playerEntity);
+    auto& hotbar = _registry->get<ecs::PlayerHotbarComponent>(_playerEntity);
     for (int i = 0; i < 10 && i < ecs::PlayerHotbarComponent::HOTBAR_SIZE; ++i) {
         hotbar.slots[i] = 40 + i;  // Map to weapon slots (40-49)
     }
@@ -298,20 +346,20 @@ void IntegrationTestScene::setupTestItems() {
 }
 
 void IntegrationTestScene::setupUI() {
-    // Create InventoryLayer (initially hidden)
+    // Create InventoryLayer (initially hidden) - Add to UI layer
     _inventoryLayer = InventoryLayer::create();
     if (_inventoryLayer) {
         _inventoryLayer->setVisible(false);
-        this->addChild(_inventoryLayer, 100);
-        CCLOG("IntegrationTestScene: InventoryLayer created (hidden)");
+        _uiLayer->addChild(_inventoryLayer, 100);
+        CCLOG("IntegrationTestScene: InventoryLayer created (hidden) - added to UI layer");
     }
 
-    // Create EquipmentPanel (initially hidden)
+    // Create EquipmentPanel (initially hidden) - Add to UI layer
     _equipmentPanel = EquipmentPanel::create();
     if (_equipmentPanel) {
         _equipmentPanel->setVisible(false);
-        this->addChild(_equipmentPanel, 100);
-        CCLOG("IntegrationTestScene: EquipmentPanel created (hidden)");
+        _uiLayer->addChild(_equipmentPanel, 100);
+        CCLOG("IntegrationTestScene: EquipmentPanel created (hidden) - added to UI layer");
     }
 
     // Link InventoryLayer and EquipmentPanel
@@ -350,14 +398,54 @@ void IntegrationTestScene::toggleInventory() {
 }
 
 void IntegrationTestScene::update(float delta) {
+    // Update block systems (chunk loading, terrain generation, mining, etc.)
+    if (_blockSystemManager) {
+        _blockSystemManager->update(delta);
+    }
+
     // Update all player systems
-    PlayerSystemsManager::updateAllSystems(_registry, delta);
+    PlayerSystemsManager::updateAllSystems(*_registry, delta);
+
+    // CRITICAL: UI camera MUST follow default camera to keep UI fixed on screen
+    // When player moves, DefaultCamera follows player in world coordinates
+    // UICamera must sync with DefaultCamera so UI elements (in world coords) stay on screen
+    // This way: UI world position changes, but screen position stays constant
+    if (_uiCamera) {
+        auto defaultCamera = this->getDefaultCamera();
+        if (defaultCamera) {
+            Vec3 camPos = defaultCamera->getPosition3D();
+            _uiCamera->setPosition3D(camPos);
+        }
+    }
 
     // Update block systems
     if (_blockSystemManager) {
         _blockSystemManager->update(delta);
     }
 
+    // Debug: Check Position component update
+    // static int debugCounter = 0;
+    // if (debugCounter++ % 120 == 0) {  // Every 2 seconds
+    //     if (_registry->all_of<Position, ecs::PlayerStatsComponent>(_playerEntity)) {
+    //         auto& pos = _registry->get<Position>(_playerEntity);
+    //         auto& stats = _registry->get<ecs::PlayerStatsComponent>(_playerEntity);
+    //         auto& sprite = _registry->get<ecs::PlayerSpriteComponent>(_playerEntity);
+
+    //         Vec2 actualPos = sprite.sprite->getPosition();
+    //         CCLOG("=== PLAYER DEBUG ===");
+    //         CCLOG("Position component: (%.1f, %.1f)", pos.getPostion().x, pos.getPostion().y);
+    //         CCLOG("Sprite position: (%.1f, %.1f)", actualPos.x, actualPos.y);
+    //         CCLOG("isOnGround: %s", stats.isOnGround ? "YES" : "NO");
+    //         if (sprite.sprite->getPhysicsBody()) {
+    //             Vec2 vel = sprite.sprite->getPhysicsBody()->getVelocity();
+    //             CCLOG("Velocity: (%.1f, %.1f)", vel.x, vel.y);
+    //         }
+    //     }
+    //}
+
     // Update input state (reset justPressed state for next frame)
     PlayerInput::getInstance().update(delta);
 }
+
+// Mouse listener and block destruction removed - now handled by PlayerInputSystem
+// Mining is now controlled by pickaxe items through the player input system

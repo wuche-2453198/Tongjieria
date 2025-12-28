@@ -18,6 +18,7 @@ class InventoryLayer : public cocos2d::Layer {
 public:
     static InventoryLayer* create();
     virtual bool init() override;
+    virtual void update(float dt) override;
 
     // Refresh all slot visuals from Inventory data
     void refresh();

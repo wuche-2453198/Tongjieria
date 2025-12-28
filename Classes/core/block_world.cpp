@@ -32,7 +32,7 @@ BlockLayer& BlockWorld::getLayer(LayerType layer) const
 BlockHandle BlockWorld::getBlockAtBlockPos(LayerType layerType, const Vec2i& blockPos) const
 {
     auto& layer = getLayer(layerType);
-    // ¼ì²é·½¿éÎ»ÖÃÊÇ·ñºÏ·¨
+    // ï¿½ï¿½é·½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
     if (layer.hasChunkExist(BlockLayer::blockPosToChunkLocalPos(blockPos)))
     {
         return layer.getBlockAtBlockPos(blockPos);
@@ -51,15 +51,15 @@ BlockHandle BlockWorld::getBlockAtWorldPos(LayerType layerType, const cocos2d::V
 bool BlockWorld::tryInteract(LayerType layerType, const Vec2i& blockPos, entt::entity interactor)
 {
     auto& layer = getLayer(layerType); 
-    // ¼ì²é·½¿éÎ»ÖÃÊÇ·ñºÏ·¨
+    // ï¿½ï¿½é·½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
     if (!layer.hasChunkExistAtBlockPos(blockPos))
     {
         return false;
     }
-    // È¡µÃ·½¿éID
+    // È¡ï¿½Ã·ï¿½ï¿½ï¿½ID
     entt::id_type id = layer.getBlockAtBlockPos(blockPos).id.value();
 
-    // ´¥·¢½»»¥ÊÂ¼þ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
     BlockInteractEvent event(layerType, id, blockPos, interactor);
     _dispatcher.trigger(event);
 
@@ -73,17 +73,44 @@ bool BlockWorld::tryInteractAtWorldPos(LayerType layerType, const cocos2d::Vec2&
 
 bool BlockWorld::tryMine(LayerType layerType, const Vec2i& blockPos, float mineFactor, entt::entity interactor)
 {
-    // È·ÈÏÇø¿éÊÇ·ñ´æÔÚ
+    // DEBUG: Log first few mine attempts
+    static int mineAttempts = 0;
+    bool shouldLog = (mineAttempts < 5);
+
+    if (shouldLog) {
+        CCLOG("[BlockWorld::tryMine] Attempt #%d at block (%d, %d), mineFactor=%.1f",
+              mineAttempts + 1, blockPos.x, blockPos.y, mineFactor);
+    }
+
+    // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
     auto& layer = getLayer(layerType);
     if (!layer.hasChunkExistAtBlockPos(blockPos))
     {
+        if (shouldLog) {
+            Vec2i chunkPos = BlockLayer::blockPosToChunkPos(blockPos);
+            CCLOG("[BlockWorld::tryMine] FAILED: Block (%d,%d) -> Chunk (%d,%d) does not exist",
+                  blockPos.x, blockPos.y, chunkPos.x, chunkPos.y);
+        }
+        mineAttempts++;
         return false;
     }
+
     entt::id_type id = layer.getBlockAtBlockPos(blockPos).id.value();
     if (id == entt::hashed_string("air"))
     {
+        if (shouldLog) {
+            CCLOG("[BlockWorld::tryMine] FAILED: Block is AIR at (%d, %d)", blockPos.x, blockPos.y);
+        }
+        mineAttempts++;
         return false;
     }
+
+    if (shouldLog) {
+        CCLOG("[BlockWorld::tryMine] SUCCESS: Triggering BlockMinedEvent for block ID=%u at (%d, %d)",
+              id, blockPos.x, blockPos.y);
+        mineAttempts++;
+    }
+
     BlockMinedEvent event(layerType, id, blockPos, mineFactor, interactor);
     _dispatcher.trigger(event);
 
@@ -103,7 +130,7 @@ bool BlockWorld::tryDestroy(LayerType layerType, const Vec2i& blockPos, entt::en
 #endif
 
     auto& layer = getLayer(layerType);
-    // ¼ì²é·½¿éÊÇ·ñ´æÔÚ
+    // ï¿½ï¿½é·½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
     if (!layer.hasChunkExistAtBlockPos(blockPos))
     {
 #if DESTROY_LOG
@@ -111,7 +138,7 @@ bool BlockWorld::tryDestroy(LayerType layerType, const Vec2i& blockPos, entt::en
 #endif
         return false;
     }
-    // ´¥·¢ÆÆ»µÊÂ¼þ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½Â¼ï¿½
     entt::id_type id = layer.getBlockAtBlockPos(blockPos).id.value();
 
     BlockDestroyEvent event(layerType, id, blockPos, destroyer);
@@ -131,7 +158,7 @@ bool BlockWorld::tryDestroyAtWorldPos(LayerType layerType, const cocos2d::Vec2& 
 
 bool BlockWorld::tryPlace(const Vec2i& blockPos, entt::id_type blockID, state blockState, entt::entity placer)
 {
-    // È·ÈÏ·ÅÖÃµÄ·½¿éÊÇ·ñÊÇÇ½£¬Í¬Ê±»ñÈ¡¶ÔÓ¦µÄ·½¿é²ã
+    // È·ï¿½Ï·ï¿½ï¿½ÃµÄ·ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ç½ï¿½ï¿½Í¬Ê±ï¿½ï¿½È¡ï¿½ï¿½Ó¦ï¿½Ä·ï¿½ï¿½ï¿½ï¿½
     auto& placedConfig = _assetManager.getBlockConfig(blockID);
     auto& layer = 
         placedConfig.getStateValOr<bool>("base", "wall", blockState, false) ?
@@ -142,7 +169,7 @@ bool BlockWorld::tryPlace(const Vec2i& blockPos, entt::id_type blockID, state bl
     CCLOG("[BlockWorld]: Try Place at %s %d %d", layerstr.c_str(), blockPos.x, blockPos.y);
 #endif
 
-    // ¼ì²é·½¿éÎ»ÖÃÊÇ·ñºÏ·¨
+    // ï¿½ï¿½é·½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
     if (!layer.hasChunkExistAtBlockPos(blockPos))
     {
 #if PLACE_LOG 
@@ -153,7 +180,7 @@ bool BlockWorld::tryPlace(const Vec2i& blockPos, entt::id_type blockID, state bl
     auto blockAtPos = layer.getBlockAtBlockPos(blockPos).id.value();
     auto& config = _assetManager.getBlockConfig(blockAtPos);
 
-    // ¼ì²é·½¿éÅäÖÃÊÇ·ñ´æÔÚ
+    // ï¿½ï¿½é·½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
     if (!config)
     {
 #if PLACE_LOG 
@@ -162,7 +189,7 @@ bool BlockWorld::tryPlace(const Vec2i& blockPos, entt::id_type blockID, state bl
         return false;
     }
 
-    // ¼ì²é·½¿éÊÇ·ñ¿ÉÌæ»»
+    // ï¿½ï¿½é·½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½æ»»
     if (!config.getOriginValOr("base","replaceable",false))
     {
 #if PLACE_LOG 
@@ -171,10 +198,10 @@ bool BlockWorld::tryPlace(const Vec2i& blockPos, entt::id_type blockID, state bl
         return false;
     }
 
-    // »ñÈ¡·½¿éID
+    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ID
     entt::id_type id = layer.getBlockAtBlockPos(blockPos).id.value();
 
-    // ´¥·¢·ÅÖÃÊÂ¼þ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
     BlockPlacedEvent event(layer.getLayerType(), blockID, blockPos, placer);
     _dispatcher.trigger(event);
 

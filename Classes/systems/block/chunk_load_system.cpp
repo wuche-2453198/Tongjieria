@@ -5,7 +5,7 @@
 
 #include "debug_system.h"
 
-#define CHUNK_VIEW_ENABEL 1;
+#define CHUNK_VIEW_ENABEL 0;
 
 ChunkLoadSystem::ChunkLoadSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher), _blockWorld(_registry.ctx().get<BlockWorld>())
@@ -40,12 +40,14 @@ void ChunkLoadSystem::update(float delta)
 void ChunkLoadSystem::AddNewChunk()
 {
     auto view = _registry.view<Position, LoadingTicket>();
+
     view.each([&](const Position& worldPos, const LoadingTicket& ticket)
         {
             Vec2i upperLeft = BlockLayer::worldPosToChunkPos(worldPos) +
                 Vec2i(-1, 1) * (ticket.radius - 1);
             Vec2i lowerRight = BlockLayer::worldPosToChunkPos(worldPos) +
                 Vec2i(1, -1) * (ticket.radius - 1);
+
             for (int y = upperLeft.y; y >= lowerRight.y; y--)
             {
                 for (int x = upperLeft.x; x <= lowerRight.x; x++)
@@ -62,11 +64,20 @@ void ChunkLoadSystem::AddChunk(LayerType layerType, const Vec2i& chunkPos)
     auto& layer = _blockWorld.getLayer(layerType);
     if (!layer.hasChunkExist(chunkPos))
     {
-        // Èç¹ûÌí¼ÓµÄÎ»ÖÃ¹ý¸ß»ò¹ýµÍ£¬»òÇø¿éÒÑ¾­´æÔÚ£¬Ö±½Ó·µ»Ø
-        if (!isValiedChunkPos(chunkPos) || layer.hasChunkExist(chunkPos))
+        if (!isValiedChunkPos(chunkPos))
         {
             return;
         }
+
+        if (layer.hasChunkExist(chunkPos))
+        {
+            return;
+        }
+
+        if (layerType == LayerType::BLOCK) {
+            CCLOG("[ChunkLoadSystem] Adding BLOCK chunk at (%d,%d)", chunkPos.x, chunkPos.y);
+        }
+
         layer.addChunk(chunkPos);
     }
 }
@@ -99,6 +110,6 @@ bool ChunkLoadSystem::isValiedChunkPos(const Vec2i& chunkPos)
 
 int ChunkLoadSystem::inLayer(const Vec2i& center, const Vec2i& chunkPos)
 {
-    // ºá×Ý¾àÀëµÄ¾ø¶ÔÖµ
+    // ï¿½ï¿½ï¿½Ý¾ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½Öµ
     return std::max(labs(center.x - chunkPos.x), labs(center.y - chunkPos.y));
 }

@@ -33,6 +33,9 @@ private:
     // 玩家实体
     entt::entity _playerEntity;
 
+    // UI layer (fixed to screen)
+    cocos2d::Node* _uiLayer = nullptr;
+
     // 调试UI
     cocos2d::Label* _debugLabel = nullptr;
     cocos2d::Label* _controlsLabel = nullptr;

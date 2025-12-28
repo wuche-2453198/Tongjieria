@@ -14,15 +14,10 @@ BlockGenSystem::~BlockGenSystem() {}
 
 void BlockGenSystem::update(float delta)
 {
-    // »ñÈ¡Î´Éú³É·½¿éµÄÇø¿é
     auto view = _registry.view<Position, ChunkHead, NeedGen>();
     view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
         {
-#if BLOCK_GEN_LOG
-            CCLOG("Gen chunk at %d %d", pos.getPostion().x/BLOCK_SIZE, pos.getPostion().y/BLOCK_SIZE);
-#endif
             auto& blocks = _registry.emplace<ChunkBlocks>(entity);
-            // Éú³É·½¿é
             for (int y = 0; y < CHUNK_SIZE; y++)
             {
                 for (int x = 0; x < CHUNK_SIZE; x++)
@@ -38,7 +33,6 @@ void BlockGenSystem::update(float delta)
                     }
                 }
             }
-
             _registry.remove<NeedGen>(entity);
         });
 }
@@ -58,7 +52,7 @@ void BlockGenSystem::initModule()
 
 BlockState BlockGenSystem::testGenBlockAt(const Vec2i& blockPos)
 {
-    // Ò»¸ö·Ç³£¼òµ¥µÄÊÀ½çÉú³Éº¯Êý
+    // Ò»ï¿½ï¿½ï¿½Ç³ï¿½ï¿½òµ¥µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½
     if (blockPos.y > 4)
     {
         return BlockState((entt::id_type)entt::hashed_string("air"), 0);
@@ -75,7 +69,7 @@ BlockState BlockGenSystem::testGenBlockAt(const Vec2i& blockPos)
 
 BlockState BlockGenSystem::testGenWallAt(const Vec2i& blockPos)
 {
-    // Ò»¸ö·Ç³£¼òµ¥µÄÊÀ½çÉú³Éº¯Êý
+    // Ò»ï¿½ï¿½ï¿½Ç³ï¿½ï¿½òµ¥µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½
     if (blockPos.y > 10)
     {
         return BlockState((entt::id_type)entt::hashed_string("air_wall"), 0);

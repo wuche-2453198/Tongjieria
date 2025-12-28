@@ -1,14 +1,20 @@
 #include "PlayerSystems.h"
 #include "core/PlayerInput.h"
+#include "core/GameManager.h"
+#include "core/block_world.h"
+#include "core/consts.h"
 #include "PlayerAnimationLoader.h"
 #include "PlayerInventoryIntegration.h"
 #include "systems/items/ItemManager.h"
+#include "components/block/block_component.h"
+#include "systems/block_layer/block_layer.h"
 #include <cmath>
 
 USING_NS_CC;
 
 // Static member initialization
 cocos2d::Scene* PlayerSystemsManager::s_scene = nullptr;
+float PlayerCameraSystem::s_followSpeed = 0.1f;  // 默认跟随速度
 
 // ==================== PlayerInputSystem ====================
 
@@ -43,17 +49,6 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
 
         movement.wantsToJump = jumpPressed;
 
-        // Additional debug: display input state
-        // static int inputDebugCounter = 0;
-        // if (inputDebugCounter++ % 60 == 0) {
-        //     CCLOG("Input Debug: MoveLeft=%s, MoveRight=%s, Jump=%s",
-        //           movement.isMovingLeft ? "YES" : "NO",
-        //           movement.isMovingRight ? "YES" : "NO",
-        //           movement.wantsToJump ? "YES" : "NO");
-        // }
-
-        // ==================== Handle Hotbar Switching ====================
-        // Number keys 1-9 switch hotbar slots
         bool hotbarChanged = false;
         int newSlotIndex = -1;
 
@@ -93,28 +88,53 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
         }
 
         // ==================== Handle Block Interaction ====================
-        // Mouse left click - break/destroy blocks (debug mode)
-        if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_LEFT)) {
-            // Get mouse position (world coordinates for block interaction)
-            Vec2 mouseWorldPos = input.getMouseWorldPosition();
-            Vec2 mouseScreenPos = input.getMouseScreenPosition();
+        // Mouse left button - mining (hold to mine)
+        // SIMPLIFIED: Allow bare-hand mining for debugging
+        if (input.isMousePressed(EventMouse::MouseButton::BUTTON_LEFT)) {
+            // Get current hotbar item
+            int currentItemId = PlayerInventoryBridge::getCurrentHotbarItemId(registry, entity);
 
-            // TODO: Add UI hit test to prevent interaction when clicking UI elements
-            // For now, output debug info
-            CCLOG("========================================");
-            CCLOG("PlayerInputSystem: LEFT CLICK - BREAK BLOCK");
-            CCLOG("Mouse screen position: (%.1f, %.1f)", mouseScreenPos.x, mouseScreenPos.y);
-            CCLOG("Mouse world position: (%.1f, %.1f)", mouseWorldPos.x, mouseWorldPos.y);
-            CCLOG("TODO: Implement block breaking logic");
-            CCLOG("========================================");
+            // SIMPLIFIED: Always allow mining (bare-hand or with pickaxe)
+            float mineFactor = 500.0f;  // Default bare-hand mining speed
 
-            // Trigger break animation using transitionToState to properly hide previous frames
-            animation.isPlayingOneShot = true;
-            PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::BREAK);
-            CCLOG("PlayerInputSystem: Triggered BREAK animation with %d frames", animation.totalFrames);
+            // If holding a pickaxe, use its mining speed
+            if (currentItemId > 0) {
+                auto* itemMgr = ItemManager::getInstance();
+                const auto* itemData = itemMgr->getItemData(currentItemId);
+                if (itemData && itemData->equipType == EquipType::Pickaxe) {
+                    mineFactor = 500.0f + itemData->damage * 0.5f;
+                }
+            }
 
-            // Also use hotbar item (existing functionality)
-            PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
+            // Trigger MINE animation
+            if (animation.currentState != ecs::PlayerAnimationComponent::AnimState::MINE) {
+                animation.isPlayingOneShot = false;
+                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::MINE);
+            }
+
+            // Get player position from sprite component
+            auto* sprite = registry.try_get<ecs::PlayerSpriteComponent>(entity);
+
+            if (sprite && sprite->sprite) {
+                Vec2 playerPos = sprite->sprite->getPosition();
+                Vec2i playerBlockPos = BlockLayer::worldPosToBlockPos(playerPos);
+
+                // Mine 5x5 blocks around player (±2 blocks in each direction)
+                auto& blockWorld = GameManager::getInstance()->getBlockWorld();
+
+                for (int dy = -2; dy <= 2; dy++) {
+                    for (int dx = -2; dx <= 2; dx++) {
+                        Vec2i targetBlockPos(playerBlockPos.x + dx, playerBlockPos.y + dy);
+                        blockWorld.tryMine(LayerType::BLOCK, targetBlockPos, mineFactor, entity);
+                    }
+                }
+            }
+        } else {
+            // Mouse button released - exit MINE animation if currently mining
+            if (animation.currentState == ecs::PlayerAnimationComponent::AnimState::MINE) {
+                animation.isPlayingOneShot = false;
+                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::IDLE);
+            }
         }
 
         // Mouse right click - use weapon / place blocks
@@ -132,32 +152,28 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
             CCLOG("Mouse world position: (%.1f, %.1f)", mouseWorldPos.x, mouseWorldPos.y);
             CCLOG("Current hotbar item ID: %d", currentItemId);
 
-            // Check if holding a weapon
+            // Check if holding a weapon (use equipType instead of tags)
             bool isWeapon = false;
             if (currentItemId > 0) {
                 auto* itemMgr = ItemManager::getInstance();
                 const auto* itemData = itemMgr->getItemData(currentItemId);
                 if (itemData) {
-                    // Check if item has weapon tag (tag 2 or 201)
-                    for (int tag : itemData->tags) {
-                        if (tag == 2 || tag == 201) {
-                            isWeapon = true;
-                            break;
-                        }
-                    }
-                    CCLOG("Item: %s, Tags count: %d, Is Weapon: %s",
+                    // Check equipType - Weapon or Sword both count as weapons
+                    isWeapon = (itemData->equipType == EquipType::Weapon ||
+                               itemData->equipType == EquipType::Sword);
+                    CCLOG("Item: %s, EquipType: %d, Is Weapon: %s",
                           itemData->name.c_str(),
-                          (int)itemData->tags.size(),
+                          static_cast<int>(itemData->equipType),
                           isWeapon ? "YES" : "NO");
                 }
             }
 
             if (isWeapon) {
-                // Trigger weapon swing animation using transitionToState
-                CCLOG("WEAPON DETECTED - Triggering WEAPON_SWING animation");
+                // Trigger attack animation using transitionToState
+                CCLOG("WEAPON DETECTED - Triggering ATTACK animation");
                 animation.isPlayingOneShot = true;
-                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING);
-                CCLOG("PlayerInputSystem: Triggered WEAPON_SWING animation with %d frames", animation.totalFrames);
+                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::ATTACK);
+                CCLOG("PlayerInputSystem: Triggered ATTACK animation with %d frames", animation.totalFrames);
             } else {
                 // Trigger place animation using transitionToState
                 CCLOG("NO WEAPON - Triggering PLACE animation");
@@ -188,13 +204,13 @@ void PlayerMovementSystem::update(entt::registry& registry, float dt) {
         auto& sprite = view.get<ecs::PlayerSpriteComponent>(entity);
 
         // 1. Process horizontal movement
-        processHorizontalMovement(movement, stats, dt);
+        processHorizontalMovement(movement, stats, sprite, dt);
 
         // 2. Process jump
         processJump(movement, stats, sprite);
 
-        // 3. Sync to physics engine
-        syncPhysics(movement, transform, sprite);
+        // 3. Sync to physics engine and block system
+        syncPhysics(registry, entity, movement, transform, sprite);
 
         // 4. Update sprite direction
         updateSpriteDirection(movement, sprite);
@@ -204,6 +220,7 @@ void PlayerMovementSystem::update(entt::registry& registry, float dt) {
 void PlayerMovementSystem::processHorizontalMovement(
     ecs::PlayerMovementComponent& movement,
     ecs::PlayerStatsComponent& stats,
+    ecs::PlayerSpriteComponent& sprite,
     float dt)
 {
     float targetVelX = 0.0f;
@@ -216,6 +233,21 @@ void PlayerMovementSystem::processHorizontalMovement(
     if (movement.isMovingLeft) {
         targetVelX = -stats.moveSpeed;
         movement.isFacingRight = false;
+    }
+
+    // Check wall collision before applying movement
+    auto scene = PlayerSystemsManager::getScene();
+    if (scene && sprite.sprite) {
+        // Check left wall collision
+        if (targetVelX < 0 && PlayerGroundDetectionSystem::raycastLeftWall(sprite.sprite, scene, 3.0f)) {
+            targetVelX = 0.0f;
+            movement.velocity.x = 0.0f;  // Stop immediately when hitting wall
+        }
+        // Check right wall collision
+        else if (targetVelX > 0 && PlayerGroundDetectionSystem::raycastRightWall(sprite.sprite, scene, 3.0f)) {
+            targetVelX = 0.0f;
+            movement.velocity.x = 0.0f;  // Stop immediately when hitting wall
+        }
     }
 
     // Terraria-style accelerated movement
@@ -259,7 +291,7 @@ void PlayerMovementSystem::processJump(
     // Check if can jump
     if (!stats.isOnGround) {
         CCLOG("Jump rejected: player not on ground");
-        // TODO: Implement double jump (cloud in a bottle, etc.)
+        // TODO: Implement double jump 双跳暂时不做先
         // if (stats.currentJumpCount < stats.extraJumps) { ... }
         return;
     }
@@ -277,6 +309,8 @@ void PlayerMovementSystem::processJump(
 }
 
 void PlayerMovementSystem::syncPhysics(
+    entt::registry& registry,
+    entt::entity entity,
     ecs::PlayerMovementComponent& movement,
     ecs::TransformComponent& transform,
     ecs::PlayerSpriteComponent& sprite)
@@ -293,6 +327,24 @@ void PlayerMovementSystem::syncPhysics(
     // Update Transform component
     transform.x = sprite.sprite->getPositionX();
     transform.y = sprite.sprite->getPositionY();
+
+    // Sync Position component for block system (if exists)
+    static bool loggedPositionSync = false;
+    if (registry.all_of<Position>(entity)) {
+        auto& position = registry.get<Position>(entity);
+        position.setPosition(Vec2(transform.x, transform.y));
+
+        if (!loggedPositionSync) {
+            CCLOG("[PlayerMovement] Position component synced! transform(%.1f,%.1f)", transform.x, transform.y);
+            loggedPositionSync = true;
+        }
+    } else {
+        static bool warnedOnce = false;
+        if (!warnedOnce) {
+            CCLOG("[PlayerMovement] ERROR: Player has NO Position component!");
+            warnedOnce = true;
+        }
+    }
 
     // Update Movement component's vertical velocity (for debugging and animation)
     movement.velocity.y = body->getVelocity().y;
@@ -369,21 +421,30 @@ bool PlayerGroundDetectionSystem::raycastGround(cocos2d::Sprite* sprite, cocos2d
         return false;
     }
 
-    Vec2 playerPos = sprite->getPosition();
-    Size playerSize = sprite->getContentSize();
+    auto body = sprite->getPhysicsBody();
+    if (!body) {
+        return false;
+    }
 
-    // Raycast slightly downward from player bottom
-    Vec2 rayStart = Vec2(playerPos.x, playerPos.y - playerSize.height / 2);
-    Vec2 rayEnd = Vec2(playerPos.x, playerPos.y - playerSize.height / 2 - 5.0f); // 5 pixels down
+    Vec2 playerPos = sprite->getPosition();
+
+    // Use physics body size instead of sprite size (sprite is invisible)
+    // Physics body height is 42.0f (from PlayerFactory)
+    float bodyHalfHeight = 21.0f;  // 42.0f / 2
+
+    // Raycast from slightly inside the body to detect ground
+    // Start from 1 pixel above the bottom, extend 5 pixels down
+    Vec2 rayStart = Vec2(playerPos.x, playerPos.y - bodyHalfHeight + 1.0f);
+    Vec2 rayEnd = Vec2(playerPos.x, playerPos.y - bodyHalfHeight - 5.0f);
 
     bool hitGround = false;
 
     // Execute raycast
-    physicsWorld->rayCast([&hitGround, sprite](PhysicsWorld& world,
+    physicsWorld->rayCast([&hitGround, body](PhysicsWorld& world,
                                                const PhysicsRayCastInfo& info,
                                                void* data) -> bool {
         // Ignore player's own collider
-        if (info.shape->getBody() == sprite->getPhysicsBody()) {
+        if (info.shape->getBody() == body) {
             return true; // Continue detection
         }
 
@@ -393,6 +454,92 @@ bool PlayerGroundDetectionSystem::raycastGround(cocos2d::Sprite* sprite, cocos2d
     }, rayStart, rayEnd, nullptr);
 
     return hitGround;
+}
+
+bool PlayerGroundDetectionSystem::raycastLeftWall(cocos2d::Sprite* sprite, cocos2d::Scene* scene, float checkDistance) {
+    if (!sprite || !scene) {
+        return false;
+    }
+
+    auto physicsWorld = scene->getPhysicsWorld();
+    if (!physicsWorld) {
+        return false;
+    }
+
+    auto body = sprite->getPhysicsBody();
+    if (!body) {
+        return false;
+    }
+
+    Vec2 playerPos = sprite->getPosition();
+
+    // Physics body width is 20.0f (from PlayerFactory)
+    float bodyHalfWidth = 10.0f;  // 20.0f / 2
+
+    // Raycast from player left side
+    Vec2 rayStart = Vec2(playerPos.x - bodyHalfWidth, playerPos.y);
+    Vec2 rayEnd = Vec2(playerPos.x - bodyHalfWidth - checkDistance, playerPos.y);
+
+    bool hitWall = false;
+
+    // Execute raycast
+    physicsWorld->rayCast([&hitWall, body](PhysicsWorld& world,
+                                            const PhysicsRayCastInfo& info,
+                                            void* data) -> bool {
+        // Ignore player's own collider
+        if (info.shape->getBody() == body) {
+            return true; // Continue detection
+        }
+
+        // Hit wall
+        hitWall = true;
+        return false; // Stop detection
+    }, rayStart, rayEnd, nullptr);
+
+    return hitWall;
+}
+
+bool PlayerGroundDetectionSystem::raycastRightWall(cocos2d::Sprite* sprite, cocos2d::Scene* scene, float checkDistance) {
+    if (!sprite || !scene) {
+        return false;
+    }
+
+    auto physicsWorld = scene->getPhysicsWorld();
+    if (!physicsWorld) {
+        return false;
+    }
+
+    auto body = sprite->getPhysicsBody();
+    if (!body) {
+        return false;
+    }
+
+    Vec2 playerPos = sprite->getPosition();
+
+    // Physics body width is 20.0f (from PlayerFactory)
+    float bodyHalfWidth = 10.0f;  // 20.0f / 2
+
+    // Raycast from player right side
+    Vec2 rayStart = Vec2(playerPos.x + bodyHalfWidth, playerPos.y);
+    Vec2 rayEnd = Vec2(playerPos.x + bodyHalfWidth + checkDistance, playerPos.y);
+
+    bool hitWall = false;
+
+    // Execute raycast
+    physicsWorld->rayCast([&hitWall, body](PhysicsWorld& world,
+                                            const PhysicsRayCastInfo& info,
+                                            void* data) -> bool {
+        // Ignore player's own collider
+        if (info.shape->getBody() == body) {
+            return true; // Continue detection
+        }
+
+        // Hit wall
+        hitWall = true;
+        return false; // Stop detection
+    }, rayStart, rayEnd, nullptr);
+
+    return hitWall;
 }
 
 // ==================== PlayerAnimationSystem ====================
@@ -412,19 +559,23 @@ void PlayerAnimationSystem::update(entt::registry& registry, float dt) {
         playerCount++;
 
         // Print debug info every 5 seconds
-        if (debugCounter++ % 300 == 0) {
-            CCLOG("==================== PLAYER DEBUG ====================");
-            CCLOG("Number of player entities: %d", playerCount);
-            CCLOG("====================================================");
-        }
+        // if (debugCounter++ % 300 == 0) {
+        //     CCLOG("==================== PLAYER DEBUG ====================");
+        //     CCLOG("Number of player entities: %d", playerCount);
+        //     CCLOG("====================================================");
+        // }
         auto& animation = view.get<ecs::PlayerAnimationComponent>(entity);
         auto& movement = view.get<ecs::PlayerMovementComponent>(entity);
         auto& stats = view.get<ecs::PlayerStatsComponent>(entity);
         auto& sprite = view.get<ecs::PlayerSpriteComponent>(entity);
 
-        // Check if playing one-shot animation (weapon swing, etc.)
-        // One-shot animations cannot be interrupted
-        if (!animation.isPlayingOneShot) {
+        // Check if playing one-shot animation or special continuous animations
+        // One-shot animations (ATTACK, BREAK, PLACE) and special animations (MINE, EAT, DRINK) cannot be interrupted
+        bool isSpecialAnimation = (animation.currentState == ecs::PlayerAnimationComponent::AnimState::MINE ||
+                                   animation.currentState == ecs::PlayerAnimationComponent::AnimState::EAT ||
+                                   animation.currentState == ecs::PlayerAnimationComponent::AnimState::DRINK);
+
+        if (!animation.isPlayingOneShot && !isSpecialAnimation) {
             // Determine which animation should be playing
             auto targetState = determineAnimationState(movement, stats, sprite);
 
@@ -448,7 +599,7 @@ void PlayerAnimationSystem::update(entt::registry& registry, float dt) {
                     // One-shot animation finished, return to IDLE
                     animation.isPlayingOneShot = false;
                     targetFrame = animation.totalFrames - 1;  // Keep at last frame
-                    CCLOG("PlayerAnimationSystem: One-shot animation finished, returning to IDLE");
+                    // CCLOG("PlayerAnimationSystem: One-shot animation finished, returning to IDLE");
 
                     // Transition to IDLE state
                     transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::IDLE);
@@ -537,7 +688,10 @@ void PlayerAnimationSystem::hideAllCachedFrames() {
         AnimState::FALL,
         AnimState::BREAK,
         AnimState::PLACE,
-        AnimState::WEAPON_SWING
+        AnimState::ATTACK,
+        AnimState::EAT,
+        AnimState::DRINK,
+        AnimState::MINE
     };
 
     // DEBUG: Count visible sprites before hiding
@@ -608,7 +762,7 @@ void PlayerAnimationSystem::transitionToState(
 
     // Output debug info
     static const char* stateNames[] = {
-        "IDLE", "WALK", "RUN", "JUMP", "FALL", "USE_ITEM", "HURT", "DEATH", "SWIM", "BREAK", "PLACE", "WEAPON_SWING"
+        "IDLE", "WALK", "RUN", "JUMP", "FALL", "USE_ITEM", "HURT", "DEATH", "SWIM", "BREAK", "PLACE", "ATTACK", "EAT", "DRINK", "MINE"
     };
     CCLOG("Animation state changed: %s -> %s (%d frames)",
           stateNames[static_cast<int>(animation.previousState)],
@@ -698,6 +852,37 @@ void PlayerHealthSystem::updateUI(
     const ecs::PlayerStatsComponent& stats,
     ecs::PlayerSpriteComponent& sprite)
 {
+    // CRITICAL: Update UI position every frame to follow camera
+    // UI elements must move in world coords to stay fixed on screen
+    auto scene = PlayerSystemsManager::getScene();
+    if (scene) {
+        auto camera = scene->getDefaultCamera();
+        if (camera && sprite.healthBarBg) {
+            auto visibleSize = Director::getInstance()->getVisibleSize();
+            Vec3 camPos = camera->getPosition3D();
+
+            // Calculate UI position relative to camera
+            float rightMargin = 20.0f;
+            float barHeight = 20.0f;
+            float barSpacing = 8.0f;
+
+            // UI position = camera position + offset from camera center to screen edge
+            float startX = camPos.x + (visibleSize.width / 2.0f - rightMargin);
+            float startY = camPos.y + (visibleSize.height / 2.0f - 20.0f);
+
+            // Update all UI bar positions
+            if (sprite.healthBarBg) {
+                sprite.healthBarBg->setPosition(Vec2(startX, startY));
+            }
+            if (sprite.manaBarBg) {
+                sprite.manaBarBg->setPosition(Vec2(startX, startY - barHeight - barSpacing));
+            }
+            if (sprite.defenseBarBg) {
+                sprite.defenseBarBg->setPosition(Vec2(startX, startY - 2 * (barHeight + barSpacing)));
+            }
+        }
+    }
+
     // Update health bar
     if (sprite.healthBarFill) {
         float healthPercent = stats.currentHealth / stats.maxHealth;
@@ -767,6 +952,54 @@ void PlayerHealthSystem::updateUI(
     }
 }
 
+// ==================== PlayerCameraSystem ====================
+
+void PlayerCameraSystem::update(entt::registry& registry, float dt) {
+    if (!PlayerSystemsManager::getScene()) {
+        return;  // 没有场景，无法更新摄像机
+    }
+
+    // 获取默认摄像机
+    auto camera = PlayerSystemsManager::getScene()->getDefaultCamera();
+    if (!camera) {
+        return;
+    }
+
+    // 查找玩家实体
+    auto view = registry.view<ecs::PlayerTag, ecs::TransformComponent>();
+
+    for (auto entity : view) {
+        auto& transform = view.get<ecs::TransformComponent>(entity);
+
+        // 获取玩家位置
+        Vec2 playerPos(transform.x, transform.y);
+
+        // 获取当前摄像机位置
+        Vec3 currentCamPos = camera->getPosition3D();
+        Vec2 currentPos(currentCamPos.x, currentCamPos.y);
+
+        // 计算目标位置（玩家位置）
+        Vec2 targetPos = playerPos;
+
+        // 平滑插值到目标位置
+        Vec2 newPos = currentPos.lerp(targetPos, s_followSpeed);
+
+        // 更新摄像机位置
+        camera->setPosition3D(Vec3(newPos.x, newPos.y, currentCamPos.z));
+
+        // 只处理第一个玩家实体
+        break;
+    }
+}
+
+void PlayerCameraSystem::setFollowSpeed(float speed) {
+    s_followSpeed = cocos2d::clampf(speed, 0.0f, 1.0f);
+}
+
+float PlayerCameraSystem::getFollowSpeed() {
+    return s_followSpeed;
+}
+
 // ==================== PlayerSystemsManager ====================
 
 void PlayerSystemsManager::updateAllSystems(entt::registry& registry, float dt) {
@@ -786,6 +1019,9 @@ void PlayerSystemsManager::updateAllSystems(entt::registry& registry, float dt) 
 
     // 5. Animation system (priority: 100)
     PlayerAnimationSystem::update(registry, dt);
+
+    // 6. Camera system (priority: 200) - 最后执行，确保位置已更新
+    PlayerCameraSystem::update(registry, dt);
 }
 
 void PlayerSystemsManager::setScene(cocos2d::Scene* scene) {

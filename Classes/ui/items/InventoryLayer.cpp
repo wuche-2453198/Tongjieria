@@ -144,7 +144,33 @@ bool InventoryLayer::init() {
         CCLOG("Warning: Failed to create organization button");
     }
 
+    // CRITICAL: Enable update to keep inventory fixed on screen
+    this->scheduleUpdate();
+
     return true;
+}
+
+void InventoryLayer::update(float dt) {
+    // CRITICAL: Update position every frame to follow camera and stay fixed on screen
+    auto scene = Director::getInstance()->getRunningScene();
+    if (!scene) return;
+
+    auto camera = scene->getDefaultCamera();
+    if (!camera) return;
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec3 camPos = camera->getPosition3D();
+
+    // Calculate inventory position relative to camera
+    // Inventory is at bottom-left of screen
+    float panelWidth = getContentSize().width;
+    float panelHeight = getContentSize().height;
+
+    // Position = camera position + offset from camera center to screen bottom-left + up by panel height
+    float posX = camPos.x - (visibleSize.width / 2.0f);
+    float posY = camPos.y + (visibleSize.height / 2.0f) - panelHeight;
+
+    setPosition(Vec2(posX, posY));
 }
 
 void InventoryLayer::buildSlots() {
@@ -365,14 +391,21 @@ void InventoryLayer::refresh() {
 void InventoryLayer::attachMouseHandlers() {
     auto mouseListener = EventListenerMouse::create();
     mouseListener->onMouseDown = [this](EventMouse* event) {
-        // Manually convert screen coordinates (Y-down) to OpenGL coordinates (Y-up)
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
-        int idx = hitTestSlot(pos);
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
 
-        CCLOG("InventoryLayer: Mouse down at screen=(%.1f, %.1f) -> GL=(%.1f, %.1f), hit slot: %d",
-              mousePos.x, mousePos.y, pos.x, pos.y, idx);
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
+
+        int idx = hitTestSlot(worldPos);
+
+        CCLOG("InventoryLayer: Mouse down at screen=(%.1f, %.1f) -> world=(%.1f, %.1f), hit slot: %d",
+              mousePos.x, mousePos.y, worldPos.x, worldPos.y, idx);
 
         if (idx < 0) return;
 
@@ -388,7 +421,7 @@ void InventoryLayer::attachMouseHandlers() {
         if (event->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
             _selectedIndex = idx;
             updateHighlights();
-            beginDrag(idx, pos);
+            beginDrag(idx, worldPos);
         } else if (event->getMouseButton() == EventMouse::MouseButton::BUTTON_RIGHT) {
             // Split half to first empty slot
             int target = Inventory::getInstance()->getFirstEmptySlot();
@@ -404,13 +437,19 @@ void InventoryLayer::attachMouseHandlers() {
 
     mouseListener->onMouseUp = [this](EventMouse* event) {
         if (!_dragging) return;
-        // Manually convert screen coordinates (Y-down) to OpenGL coordinates (Y-up)
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
 
         // First try to equip to equipment panel
-        if (tryEquipToPanel(_dragSource, pos)) {
+        if (tryEquipToPanel(_dragSource, worldPos)) {
             // Successfully equipped
             _dragging = false;
             if (_dragSprite) _dragSprite->setVisible(false);
@@ -420,20 +459,26 @@ void InventoryLayer::attachMouseHandlers() {
         }
 
         // Otherwise handle normal inventory drag
-        int target = hitTestSlot(pos);
+        int target = hitTestSlot(worldPos);
         endDrag(target);
     };
 
     mouseListener->onMouseMove = [this](EventMouse* event) {
-        // Manually convert screen coordinates (Y-down) to OpenGL coordinates (Y-up)
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
 
         if (_dragging) {
-            updateDragSprite(pos);
+            updateDragSprite(worldPos);
         }
-        int idx = hitTestSlot(pos);
+        int idx = hitTestSlot(worldPos);
         if (idx >= 0) {
             if (idx != _hoverIndex) {
                 _hoverIndex = idx;
@@ -443,7 +488,7 @@ void InventoryLayer::attachMouseHandlers() {
             if (idx < (int)slots.size() && slots[idx].itemId != 0) {
                 auto def = ItemManager::getInstance()->getItemData(slots[idx].itemId);
                 // _nameLabel->setString(def ? def->name : "");
-                updateTooltip(def ? def->name : "", pos);
+                updateTooltip(def ? def->name : "", worldPos);
                 return;
             }
         } else if (_hoverIndex != -1) {

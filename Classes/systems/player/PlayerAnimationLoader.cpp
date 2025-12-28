@@ -33,7 +33,7 @@ bool PlayerAnimationLoader::initialize(Node* parentNode) {
     s_animationCache[ecs::PlayerAnimationComponent::AnimState::PLACE] =
         loadPlaceAnimation(parentNode);
 
-    s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING] =
+    s_animationCache[ecs::PlayerAnimationComponent::AnimState::ATTACK] =
         loadWeaponSwingAnimation(parentNode);
 
     s_animationCache[ecs::PlayerAnimationComponent::AnimState::EAT] =
@@ -52,7 +52,7 @@ bool PlayerAnimationLoader::initialize(Node* parentNode) {
     CCLOG("  - FALL: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::FALL].getFrameCount());
     CCLOG("  - BREAK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::BREAK].getFrameCount());
     CCLOG("  - PLACE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::PLACE].getFrameCount());
-    CCLOG("  - WEAPON_SWING: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING].getFrameCount());
+    CCLOG("  - ATTACK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::ATTACK].getFrameCount());
     CCLOG("  - EAT: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::EAT].getFrameCount());
     CCLOG("  - DRINK: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::DRINK].getFrameCount());
     CCLOG("  - MINE: %d frames", s_animationCache[ecs::PlayerAnimationComponent::AnimState::MINE].getFrameCount());
@@ -77,7 +77,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadAnimation(
             return loadBreakAnimation(parentNode);
         case ecs::PlayerAnimationComponent::AnimState::PLACE:
             return loadPlaceAnimation(parentNode);
-        case ecs::PlayerAnimationComponent::AnimState::WEAPON_SWING:
+        case ecs::PlayerAnimationComponent::AnimState::ATTACK:
             return loadWeaponSwingAnimation(parentNode);
         case ecs::PlayerAnimationComponent::AnimState::EAT:
             return loadEatAnimation(parentNode);
@@ -264,7 +264,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadWeaponSwingAni
     anim.frameTime = 0.05f;  // 50ms per frame (fast swing)
     anim.loop = false;       // Don't loop, play once
 
-    CCLOG("PlayerAnimationLoader: Loading WEAPON_SWING animation (16 frames)...");
+    CCLOG("PlayerAnimationLoader: Loading ATTACK animation (16 frames)...");
 
     // Load frames 000-015
     int successCount = 0;
@@ -279,7 +279,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadWeaponSwingAni
         }
     }
 
-    CCLOG("PlayerAnimationLoader: Loaded WEAPON_SWING animation: %d/16 frames successful", successCount);
+    CCLOG("PlayerAnimationLoader: Loaded ATTACK animation: %d/16 frames successful", successCount);
     return anim;
 }
 

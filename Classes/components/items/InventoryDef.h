@@ -34,7 +34,8 @@ enum class EquipType {
     Leggings,        // 护腿
     Accessory,       // 饰品
     Pickaxe,         // 镐子
-    Weapon           // 武器
+    Weapon,          // 武器（通用）
+    Sword            // 剑（武器子类）
 };
 
 struct ItemId {
@@ -84,6 +85,12 @@ struct DefenseComponent {
     DefenseComponent(int def = 0) : defense(def) {}
 };
 
+// Damage component for weapons and tools
+struct DamageComponent {
+    int damage;
+    DamageComponent(int dmg = 0) : damage(dmg) {}
+};
+
 // Consumable item components
 struct HealAmountComponent {
     int healAmount;
@@ -105,6 +112,7 @@ struct ItemDefinition {
     std::vector<int> tags;
     EquipType equipType = EquipType::None;  // Equipment type (None if not equipment)
     int defense = 0;                         // Defense value for armor
+    int damage = 0;                          // Damage/mining power for weapons and tools
 
     // Consumable item properties
     int healAmount = 0;                      // Health restored when consumed

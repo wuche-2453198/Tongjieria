@@ -447,7 +447,7 @@
     "icon": "items/Equipment/tools/wooden_sword.png",
     "value": 5,
     "tags": [2, 201],
-    "equipType": "weapon",
+    "equipType": "sword",
     "damage": 8
   },
   {
@@ -476,7 +476,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/stone_sword.png",
     "value": 10,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1212,
@@ -513,7 +514,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/copper_sword.png",
     "value": 15,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1222,
@@ -541,7 +543,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/iron_sword.png",
     "value": 25,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1232,
@@ -569,7 +572,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/silver_sword.png",
     "value": 40,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1242,
@@ -597,7 +601,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/gold_sword.png",
     "value": 60,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1252,
@@ -625,7 +630,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/aluminum_sword.png",
     "value": 35,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1262,
@@ -653,7 +659,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/lead_sword.png",
     "value": 20,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1272,
@@ -681,7 +688,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/zinc_sword.png",
     "value": 45,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1282,
@@ -709,7 +717,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/obdurite_sword.png",
     "value": 90,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1292,
@@ -737,7 +746,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/rhymestone_sword.png",
     "value": 120,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1302,
@@ -765,7 +775,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/magnetite_sword.png",
     "value": 110,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1312,
@@ -793,7 +804,8 @@
     "maxStack": 1,
     "icon": "items/Equipment/tools/irradium_sword.png",
     "value": 150,
-    "tags": [2, 201]
+    "tags": [2, 201],
+    "equipType": "sword"
   },
   {
     "id": 1322,

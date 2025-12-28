@@ -1,7 +1,7 @@
 #include "components/block/block_component.h"
 #include "block_entity_clean_system.h"
 
-#define ENTITY_NUM_LOG 1
+#define ENTITY_NUM_LOG 0
 #define ENTITY_DESTROY_LOG 1
 
 BlockEntityCleanSystem::BlockEntityCleanSystem(entt::registry& registry, entt::dispatcher& dispatcher)

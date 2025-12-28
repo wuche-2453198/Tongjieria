@@ -6,7 +6,8 @@ USING_NS_CC;
 
 entt::entity PlayerFactory::createPlayer(entt::registry& registry,
                                         const Vec2& spawnPos,
-                                        Node* parentNode) {
+                                        Node* parentNode,
+                                        Node* uiLayer) {
     CCLOG("PlayerFactory: Creating player at (%.1f, %.1f)", spawnPos.x, spawnPos.y);
 
     // 1. Create entity
@@ -76,8 +77,8 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
     auto& spriteComp = registry.emplace<ecs::PlayerSpriteComponent>(player);
     spriteComp.sprite = sprite;
 
-    // 14. Create player UI
-    createPlayerUI(player, registry, parentNode);
+    // 14. Create player UI (added to UI layer)
+    createPlayerUI(player, registry, uiLayer);
 
     CCLOG("PlayerFactory: Player created successfully!");
     CCLOG("  - Entity ID: %u", static_cast<uint32_t>(player));
@@ -201,7 +202,7 @@ void PlayerFactory::loadPlayerStats(ecs::PlayerStatsComponent& stats) {
 
 void PlayerFactory::createPlayerUI(entt::entity entity,
                                    entt::registry& registry,
-                                   Node* parentNode) {
+                                   Node* uiLayer) {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     auto origin = Director::getInstance()->getVisibleOrigin();
 
@@ -215,9 +216,10 @@ void PlayerFactory::createPlayerUI(entt::entity entity,
     float barHeight = 20.0f;
     float barSpacing = 8.0f;
 
-    // Calculate starting position (right side)
-    float startX = origin.x + visibleSize.width - rightMargin - barWidth;
-    // Starting Y position (top)
+    // CRITICAL FIX: Use absolute screen coordinates (origin + visibleSize)
+    // This ensures UI stays fixed at screen right-top corner regardless of camera movement
+    // Anchor point (1, 1) means positioning from top-right corner of the element
+    float startX = origin.x + visibleSize.width - rightMargin;
     float startY = origin.y + visibleSize.height - topMargin;
 
     // ==================== Health Bar (1st row) ====================
@@ -225,9 +227,9 @@ void PlayerFactory::createPlayerUI(entt::entity entity,
     auto healthBarBg = Sprite::create();
     healthBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
     healthBarBg->setColor(Color3B(50, 50, 50));
-    healthBarBg->setAnchorPoint(Vec2(0, 1));
+    healthBarBg->setAnchorPoint(Vec2(1, 1));  // Anchor at top-right corner
     healthBarBg->setPosition(Vec2(startX, startY));
-    parentNode->addChild(healthBarBg, 100);
+    uiLayer->addChild(healthBarBg, 100);
 
     // Health bar fill
     auto healthBarFill = Sprite::create();
@@ -252,9 +254,9 @@ void PlayerFactory::createPlayerUI(entt::entity entity,
     auto manaBarBg = Sprite::create();
     manaBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
     manaBarBg->setColor(Color3B(50, 50, 50));
-    manaBarBg->setAnchorPoint(Vec2(0, 1));
+    manaBarBg->setAnchorPoint(Vec2(1, 1));  // Anchor at top-right corner
     manaBarBg->setPosition(Vec2(startX, startY - barHeight - barSpacing));
-    parentNode->addChild(manaBarBg, 100);
+    uiLayer->addChild(manaBarBg, 100);
 
     // Mana bar fill
     auto manaBarFill = Sprite::create();
@@ -279,9 +281,9 @@ void PlayerFactory::createPlayerUI(entt::entity entity,
     auto defenseBarBg = Sprite::create();
     defenseBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
     defenseBarBg->setColor(Color3B(60, 60, 60));
-    defenseBarBg->setAnchorPoint(Vec2(0, 1));
+    defenseBarBg->setAnchorPoint(Vec2(1, 1));  // Anchor at top-right corner
     defenseBarBg->setPosition(Vec2(startX, startY - 2 * (barHeight + barSpacing)));
-    parentNode->addChild(defenseBarBg, 100);
+    uiLayer->addChild(defenseBarBg, 100);
 
     // Defense label (centered)
     auto defenseLabel = Label::createWithSystemFont("Defense: 0", "Arial", 14);

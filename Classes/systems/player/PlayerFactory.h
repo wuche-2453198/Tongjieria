@@ -20,12 +20,14 @@ public:
      * @brief 创建玩家实体
      * @param registry EnTT 注册表
      * @param spawnPos 生成位置
-     * @param parentNode 父节点（用于添加精灵）
+     * @param parentNode 父节点（用于添加精灵和动画）
+     * @param uiLayer UI层（固定在屏幕上，用于HP/Mana条）
      * @return 玩家实体
      */
     static entt::entity createPlayer(entt::registry& registry,
                                      const cocos2d::Vec2& spawnPos,
-                                     cocos2d::Node* parentNode);
+                                     cocos2d::Node* parentNode,
+                                     cocos2d::Node* uiLayer);
 
     /**
      * @brief 创建玩家精灵
@@ -52,11 +54,11 @@ public:
      * @brief 创建玩家UI（血条、魔法条等）
      * @param entity 玩家实体
      * @param registry EnTT 注册表
-     * @param parentNode 父节点
+     * @param uiLayer UI层（固定在屏幕上）
      */
     static void createPlayerUI(entt::entity entity,
                                entt::registry& registry,
-                               cocos2d::Node* parentNode);
+                               cocos2d::Node* uiLayer);
 
 private:
     PlayerFactory() = delete;

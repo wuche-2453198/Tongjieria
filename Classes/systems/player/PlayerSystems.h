@@ -5,6 +5,9 @@
 #include "entt/entt.hpp"
 #include "components/player/PlayerComponents.h"
 
+// Forward declaration for block system components
+class Position;
+
 /**
  * @file PlayerSystems.h
  * @brief 玩家系统集合
@@ -73,6 +76,7 @@ private:
     static void processHorizontalMovement(
         ecs::PlayerMovementComponent& movement,
         ecs::PlayerStatsComponent& stats,
+        ecs::PlayerSpriteComponent& sprite,
         float dt
     );
 
@@ -86,9 +90,11 @@ private:
     );
 
     /**
-     * @brief 同步到物理引擎
+     * @brief 同步到物理引擎和方块系统
      */
     static void syncPhysics(
+        entt::registry& registry,
+        entt::entity entity,
         ecs::PlayerMovementComponent& movement,
         ecs::TransformComponent& transform,
         ecs::PlayerSpriteComponent& sprite
@@ -124,9 +130,6 @@ public:
      */
     static void update(entt::registry& registry, float dt);
 
-private:
-    PlayerGroundDetectionSystem() = delete;
-
     /**
      * @brief 使用射线检测地面
      * @param sprite 玩家精灵
@@ -134,6 +137,27 @@ private:
      * @return 是否在地面上
      */
     static bool raycastGround(cocos2d::Sprite* sprite, cocos2d::Scene* scene);
+
+    /**
+     * @brief 使用射线检测左侧墙体
+     * @param sprite 玩家精灵
+     * @param scene 场景（用于物理世界查询）
+     * @param checkDistance 检测距离（像素）
+     * @return 是否碰到左侧墙体
+     */
+    static bool raycastLeftWall(cocos2d::Sprite* sprite, cocos2d::Scene* scene, float checkDistance = 2.0f);
+
+    /**
+     * @brief 使用射线检测右侧墙体
+     * @param sprite 玩家精灵
+     * @param scene 场景（用于物理世界查询）
+     * @param checkDistance 检测距离（像素）
+     * @return 是否碰到右侧墙体
+     */
+    static bool raycastRightWall(cocos2d::Sprite* sprite, cocos2d::Scene* scene, float checkDistance = 2.0f);
+
+private:
+    PlayerGroundDetectionSystem() = delete;
 };
 
 // ==================== PlayerAnimationSystem ====================
@@ -231,6 +255,43 @@ private:
         const ecs::PlayerStatsComponent& stats,
         ecs::PlayerSpriteComponent& sprite
     );
+};
+
+// ==================== PlayerCameraSystem ====================
+/**
+ * @class PlayerCameraSystem
+ * @brief 摄像机跟随系统
+ *
+ * 职责：
+ * - 让摄像机平滑跟随玩家位置
+ * - 支持可配置的跟随速度和死区
+ *
+ * 优先级：200（最后执行，确保位置已更新）
+ */
+class PlayerCameraSystem {
+public:
+    /**
+     * @brief 更新摄像机系统
+     * @param registry EnTT注册表
+     * @param dt 帧时间
+     */
+    static void update(entt::registry& registry, float dt);
+
+    /**
+     * @brief 设置摄像机跟随速度
+     * @param speed 跟随速度 (0-1, 1表示立即跟随)
+     */
+    static void setFollowSpeed(float speed);
+
+    /**
+     * @brief 获取当前跟随速度
+     */
+    static float getFollowSpeed();
+
+private:
+    PlayerCameraSystem() = delete;
+
+    static float s_followSpeed;  // 摄像机跟随速度
 };
 
 // ==================== PlayerSystemsManager ====================

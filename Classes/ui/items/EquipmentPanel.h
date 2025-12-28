@@ -15,6 +15,7 @@ class EquipmentPanel : public cocos2d::Layer {
 public:
     static EquipmentPanel* create();
     virtual bool init() override;
+    virtual void update(float dt) override;
 
     // Refresh all equipment slots from player equipment data
     void refresh();

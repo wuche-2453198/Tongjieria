@@ -30,21 +30,14 @@ bool WorldTest::init() {
     if (!Scene::initWithPhysics()) {
         return false;
     }
-
-    CCLOG("========================================");
-    CCLOG("= ENTERING WORLD TEST SCENE");
-    CCLOG("========================================");
-
     // Set background color
     auto background = LayerColor::create(Color4B(135, 206, 235, 255)); // Sky blue
     this->addChild(background, 0);
-
     // Initialize systems
     if (!initSystems()) {
         CCLOG("WorldTest: Failed to initialize systems");
         return false;
     }
-
     // Create a test entity with LoadingTicket to trigger chunk loading
     auto testEntity = _registry->create();
     _registry->emplace<Position>(testEntity, Vec2(400, 300));
@@ -70,7 +63,8 @@ bool WorldTest::initSystems() {
     CCLOG("WorldTest: Registry and dispatcher created");
 
     // 2. Register context (following World scene pattern)
-    _registry->ctx().emplace<WorldScene>(this);  // No World* for this test
+    // WorldTest 是 Scene，所以传入 this
+    _registry->ctx().emplace<WorldScene>(this);
     _registry->ctx().emplace<BlockPhysicsLayer>();
     _registry->ctx().emplace<AssetManager>();
     CCLOG("WorldTest: Context registered (WorldScene, AssetManager)");

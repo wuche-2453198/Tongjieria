@@ -10,7 +10,7 @@
 #include "debug_system.h"
 
 #define PHYSICS_TICKET_DEBUG 1
-#define PHYSICS_LOG  0
+#define PHYSICS_LOG  1
 
 BlockPhysicsSystem::BlockPhysicsSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     : ISystem(registry, dispatcher),
@@ -27,6 +27,9 @@ BlockPhysicsSystem::BlockPhysicsSystem(entt::registry& registry, entt::dispatche
     _registry.ctx().get<WorldScene>()->addChild(_physicsNode);
     _body = cocos2d::PhysicsBody::create();
     _body->setDynamic(false);
+    _body->setCollisionBitmask(0xFFFFFFFF);  // 与所有物体碰撞
+    _body->setCategoryBitmask(0x02);         // 方块类别
+    _body->setContactTestBitmask(0xFFFFFFFF); // 碰撞检测
     _physicsNode->addComponent(_body);
 
 #if PHYSICS_LOG 

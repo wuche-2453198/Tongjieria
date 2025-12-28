@@ -73,7 +73,32 @@ bool EquipmentPanel::init() {
     _tooltipBg->setVisible(false);
     this->addChild(_tooltipBg, 20);
 
+    // CRITICAL: Enable update to keep equipment panel fixed on screen
+    this->scheduleUpdate();
+
     return true;
+}
+
+void EquipmentPanel::update(float dt) {
+    // CRITICAL: Update position every frame to follow camera and stay fixed on screen
+    auto scene = Director::getInstance()->getRunningScene();
+    if (!scene) return;
+
+    auto camera = scene->getDefaultCamera();
+    if (!camera) return;
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec3 camPos = camera->getPosition3D();
+
+    // Calculate equipment panel position relative to camera
+    // Equipment panel is at bottom-right of screen
+    float bottomOffset = 70.0f;  // Same as in init()
+
+    // Position = camera position + offset from camera center to screen bottom-right
+    float posX = camPos.x + (visibleSize.width / 2.0f);
+    float posY = camPos.y - (visibleSize.height / 2.0f) + bottomOffset;
+
+    setPosition(Vec2(posX, posY));
 }
 
 void EquipmentPanel::buildSlots() {
@@ -152,42 +177,65 @@ void EquipmentPanel::attachMouseHandlers() {
     auto mouseListener = EventListenerMouse::create();
 
     mouseListener->onMouseDown = [this](EventMouse* event) {
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
-        int idx = hitTestEquipSlot(pos);
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
 
-        CCLOG("EquipmentPanel: Mouse down at screen=(%.1f, %.1f) -> GL=(%.1f, %.1f), hit slot: %d",
-              mousePos.x, mousePos.y, pos.x, pos.y, idx);
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
+
+        int idx = hitTestEquipSlot(worldPos);
+
+        CCLOG("EquipmentPanel: Mouse down at screen=(%.1f, %.1f) -> world=(%.1f, %.1f), hit slot: %d",
+              mousePos.x, mousePos.y, worldPos.x, worldPos.y, idx);
 
         if (idx < 0) return;
 
         if (event->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
             _selectedIndex = idx;
             updateHighlights();
-            beginDrag(idx, pos);
+            beginDrag(idx, worldPos);
         }
     };
 
     mouseListener->onMouseUp = [this](EventMouse* event) {
         if (!_dragging) return;
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
-        int target = hitTestEquipSlot(pos);
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
+
+        int target = hitTestEquipSlot(worldPos);
         endDrag(target);
     };
 
     mouseListener->onMouseMove = [this](EventMouse* event) {
+        // Convert screen coordinates to world coordinates
         Vec2 mousePos = event->getLocation();
         auto visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+        Vec2 screenPos(mousePos.x, visibleSize.height - mousePos.y);  // Flip Y-axis
+
+        // Get camera position to convert screen coords to world coords
+        auto scene = Director::getInstance()->getRunningScene();
+        Vec3 camPos = scene ? scene->getDefaultCamera()->getPosition3D() : Vec3::ZERO;
+        Vec2 worldPos = screenPos + Vec2(camPos.x - visibleSize.width / 2.0f,
+                                          camPos.y - visibleSize.height / 2.0f);
 
         if (_dragging) {
-            updateDragSprite(pos);
+            updateDragSprite(worldPos);
         }
 
-        int idx = hitTestEquipSlot(pos);
+        int idx = hitTestEquipSlot(worldPos);
         if (idx >= 0) {
             if (idx != _hoverIndex) {
                 _hoverIndex = idx;
@@ -197,7 +245,7 @@ void EquipmentPanel::attachMouseHandlers() {
             const auto& equipSlots = Inventory::getInstance()->getEquipmentSlots();
             if (idx < (int)equipSlots.size() && equipSlots[idx].itemId != 0) {
                 auto def = ItemManager::getInstance()->getItemData(equipSlots[idx].itemId);
-                updateTooltip(def ? def->name : "", pos);
+                updateTooltip(def ? def->name : "", worldPos);
                 return;
             }
             return;

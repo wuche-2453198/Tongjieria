@@ -38,6 +38,7 @@ EquipType convertToEquipType(const std::string& str) {
     if (str == "accessory") return EquipType::Accessory;
     if (str == "pickaxe") return EquipType::Pickaxe;
     if (str == "weapon") return EquipType::Weapon;
+    if (str == "sword") return EquipType::Sword;
     return EquipType::None;
 }
 
@@ -125,6 +126,11 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
             defense = itemJson["defense"].GetInt();
         }
 
+        int damage = 0;
+        if (itemJson.HasMember("damage") && itemJson["damage"].IsInt()) {
+            damage = itemJson["damage"].GetInt();
+        }
+
         // Read consumable-specific fields
         int healAmount = 0;
         if (itemJson.HasMember("healAmount") && itemJson["healAmount"].IsInt()) {
@@ -146,6 +152,7 @@ bool ItemManager::loadItems(const std::string& filePath, bool append) {
         _registry.emplace<ItemTags>(entity, tags);
         _registry.emplace<EquipTypeComponent>(entity, equipType);
         _registry.emplace<DefenseComponent>(entity, defense);
+        _registry.emplace<DamageComponent>(entity, damage);
         _registry.emplace<HealAmountComponent>(entity, healAmount);
         _registry.emplace<UseAnimationComponent>(entity, useAnimation);
 
@@ -212,6 +219,9 @@ ItemDefinition ItemManager::entityToDefinition(entt::entity entity) const {
     }
     if (auto* defenseComp = _registry.try_get<DefenseComponent>(entity)) {
         def.defense = defenseComp->defense;
+    }
+    if (auto* damageComp = _registry.try_get<DamageComponent>(entity)) {
+        def.damage = damageComp->damage;
     }
     if (auto* healComp = _registry.try_get<HealAmountComponent>(entity)) {
         def.healAmount = healComp->healAmount;

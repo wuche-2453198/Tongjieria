@@ -41,6 +41,34 @@ bool PlayerTestScene::init() {
     auto background = LayerColor::create(Color4B(135, 206, 235, 255)); // 天蓝色
     this->addChild(background, 0);
 
+    // Create UI layer (fixed to screen) - COMMENTED OUT (not needed for this test scene)
+    /*
+    _uiLayer = Node::create();
+    _uiLayer->setPosition(Vec2::ZERO);
+    _uiLayer->setAnchorPoint(Vec2::ZERO);
+    _uiLayer->setGlobalZOrder(1000);
+    this->addChild(_uiLayer, 1000);
+
+    // Create a separate camera for UI that doesn't move
+    auto uiCamera = Camera::createOrthographic(
+        visibleSize.width,
+        visibleSize.height,
+        -1024, 1024
+    );
+    uiCamera->setCameraFlag(CameraFlag::USER1);
+    uiCamera->setDepth(10);  // Higher depth so it renders on top
+
+    // Position UI camera at screen center (orthographic projection)
+    uiCamera->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    this->addChild(uiCamera);
+
+    // Set UI layer to only be visible to the UI camera
+    _uiLayer->setCameraMask((unsigned short)CameraFlag::USER1);
+
+    CCLOG("PlayerTestScene: UI layer and UI camera created (fixed to screen)");
+    */
+    _uiLayer = nullptr;  // Not using UI layer in test scene
+
     // 添加标题
     auto titleLabel = Label::createWithTTF("Player System Test Scene",
                                           "fonts/Marker Felt.ttf", 32);
@@ -182,7 +210,8 @@ void PlayerTestScene::createPlayer() {
 
     // 使用 PlayerFactory 创建玩家
     Vec2 spawnPos(visibleSize.width / 2, 300);
-    _playerEntity = PlayerFactory::createPlayer(_registry, spawnPos, this);
+    auto scene = this->getScene();
+    _playerEntity = PlayerFactory::createPlayer(_registry, spawnPos, scene, _uiLayer);
 
     CCLOG("Player created in test scene!");
 }
@@ -244,8 +273,6 @@ void PlayerTestScene::updatePlayerUI(float dt) {
 
 void PlayerTestScene::updateDebugInfo(float dt) {
     if (!_debugLabel) return;
-
-    auto& input = PlayerInput::getInstance();
 
     auto view = _registry.view<ecs::PlayerTag,
                                 ecs::PlayerStatsComponent,

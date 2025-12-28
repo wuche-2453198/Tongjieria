@@ -12,7 +12,7 @@ namespace ecs {
 struct PlayerTag {};
 
 // ==================== Transform Component ====================
-// 注意：如果你的项目已经有 TransformComponent，可以复用
+// 注意：如果已经有 TransformComponent，可以复用
 //存储玩家坐标
 struct TransformComponent {
     float x = 0.0f;
@@ -174,7 +174,7 @@ struct PlayerAnimationComponent {
         SWIM,
         BREAK,          // 左键破坏方块动画（2帧）
         PLACE,          // 右键放置方块动画（2帧）
-        WEAPON_SWING,   // 手持武器时的挥剑动作（16帧）
+        ATTACK,         // 攻击动作（剑、斧、锤等武器攻击，16帧）
         EAT,            // 吃东西动画
         DRINK,          // 喝药水动画
         MINE            // 镐子挖掘动画

@@ -23,7 +23,7 @@ bool ItemUseSystem::useItem(entt::registry& registry, entt::entity playerEntity,
     switch (itemData->type) {
         case ItemType::Equipment:
             // Equipment items - check equipType to determine if it's weapon or tool
-            if (itemData->equipType == EquipType::Weapon) {
+            if (itemData->equipType == EquipType::Weapon || itemData->equipType == EquipType::Sword) {
                 return useWeapon(registry, playerEntity, itemId);
             } else if (itemData->equipType == EquipType::Pickaxe) {
                 return useTool(registry, playerEntity, itemId);
