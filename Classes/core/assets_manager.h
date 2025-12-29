@@ -46,7 +46,12 @@ public:
     template <typename T>
     std::optional<T> getOriginVal(const std::string& firstTag, const std::string& secondTag) const
     {
-        return getVal<T>(*getOrigin(), firstTag, secondTag);
+        auto origin = getOrigin();
+        if (!origin)
+        {
+            return std::nullopt;
+        }
+        return getVal<T>(*origin, firstTag, secondTag);
     }
 
     template <typename T>
@@ -124,32 +129,32 @@ private:
 };
 
 /**
-* @brief ×ÊÔ´»º´æÖĞĞÄ¡£
+* @brief èµ„æºç¼“å­˜ä¸­å¿ƒã€‚
 */
 class AssetManager {
 public:
     AssetManager();
 
     /**
-    * @brief ¸ù¾İÂ·¾¶»ñÈ¡ÌùÍ¼¡£
+    * @brief æ ¹æ®è·¯å¾„è·å–è´´å›¾ã€‚
     */
     cocos2d::Texture2D* const getTexture(const std::string& path) const;
 
     /**
-    * @brief ¸ù¾İid»ñÈ¡·½¿éÅäÖÃ¡£
+    * @brief æ ¹æ®idè·å–æ–¹å—é…ç½®ã€‚
     */
     const BlockConfig& getBlockConfig(entt::id_type id) const;
 
     /**
-    * @brief ³õÊ¼»¯£¬´ËÊ±¶ÁÈ¡ËùÓĞµÄjsonÎÄ¼ş¡£
+    * @brief åˆå§‹åŒ–ï¼Œæ­¤æ—¶è¯»å–æ‰€æœ‰çš„jsonæ–‡ä»¶ã€‚
     */
     bool init();
 private:
     
     /**
-    * @brief ¶ÁÈ¡ËùÓĞ·½¿é¡£
+    * @brief è¯»å–æ‰€æœ‰æ–¹å—ã€‚
     */
     void loadAllBlockJson();
 
-    std::unordered_map<entt::id_type, BlockConfig*> _block_config; ///< ·½¿éÅäÖÃ
+    std::unordered_map<entt::id_type, BlockConfig*> _block_config; ///< æ–¹å—é…ç½®
 };

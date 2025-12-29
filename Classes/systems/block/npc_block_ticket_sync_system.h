@@ -3,6 +3,7 @@
 #include "block_system_manager.h"
 #include "components/AllComponents.h"
 #include "components/block/block_component.h"
+#include "core/assets_manager.h"
 
 #include <algorithm>
 #include <cmath>
@@ -15,8 +16,42 @@ public:
 
     void update(float delta) override
     {
+        auto& assetManager = _registry.ctx().get<AssetManager>();
+        auto& blockLayer = _blockWorld.getLayer(LayerType::BLOCK);
+
+        auto hasSolidCollisionAt = [&](const Vec2i& blockPos) -> bool {
+            auto blockState = blockLayer.getBlockAtBlockPos(blockPos);
+            if (!blockState.id.has_value()) {
+                return false;
+            }
+
+            const auto& config = assetManager.getBlockConfig(blockState.id.value());
+
+            if (auto* origin = config.getOrigin()) {
+                if (origin->HasMember("collision") && (*origin)["collision"].IsObject()) {
+                    const auto& collisionObj = (*origin)["collision"];
+                    if (collisionObj.HasMember("enable") && collisionObj["enable"].IsBool()) {
+                        return collisionObj["enable"].GetBool();
+                    }
+                }
+            }
+
+            const auto& raw = config.getConfig();
+            if (raw.HasMember("collision") && raw["collision"].IsBool()) {
+                return raw["collision"].GetBool();
+            }
+
+            return false;
+        };
+
+        auto isEmbeddedInSolid = [&](const cocos2d::Vec2& worldPos, const ecs::PhysicsBodyComponent& physics) -> bool {
+            const cocos2d::Vec2 center = worldPos + physics.offset;
+            const Vec2i centerB = BlockLayer::worldPosToBlockPos(center);
+            return hasSolidCollisionAt(centerB);
+        };
+
         auto view = _registry.view<ecs::TransformComponent, ecs::PhysicsBodyComponent>();
-        view.each([this, delta](entt::entity entity, const ecs::TransformComponent& transform, const ecs::PhysicsBodyComponent& physics) {
+        view.each([this, delta, &isEmbeddedInSolid](entt::entity entity, const ecs::TransformComponent& transform, const ecs::PhysicsBodyComponent& physics) {
             if (auto* pooled = _registry.try_get<ecs::PooledEntity>(entity)) {
                 if (!pooled->inUse) {
                     if (_registry.all_of<Position>(entity)) {
@@ -65,6 +100,39 @@ public:
                             worldPos = sprite->getPosition();
                             velocity = body->getVelocity();
                         }
+                    }
+                }
+            }
+
+            {
+                cocos2d::Vec2 resolvedPos = worldPos;
+                constexpr int maxLiftSteps = 256;
+                int steps = 0;
+                while (steps < maxLiftSteps && isEmbeddedInSolid(resolvedPos, physics)) {
+                    resolvedPos.y += static_cast<float>(BLOCK_SIZE);
+                    ++steps;
+                }
+
+                if (steps > 0) {
+                    worldPos = resolvedPos;
+                    velocity = cocos2d::Vec2::ZERO;
+
+                    if (auto* state = _registry.try_get<ecs::SpriteStateComponent>(entity)) {
+                        if (state->spriteCreated && state->spriteHandle) {
+                            auto* sprite = static_cast<cocos2d::Sprite*>(state->spriteHandle);
+                            if (sprite) {
+                                sprite->setPosition(worldPos);
+                                if (auto* body = sprite->getPhysicsBody()) {
+                                    body->setVelocity(cocos2d::Vec2::ZERO);
+                                }
+                            }
+                        }
+                    }
+
+                    if (_registry.all_of<ecs::TransformComponent>(entity)) {
+                        auto& t = _registry.get<ecs::TransformComponent>(entity);
+                        t.position = worldPos;
+                        t.velocity = cocos2d::Vec2::ZERO;
                     }
                 }
             }

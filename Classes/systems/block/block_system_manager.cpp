@@ -9,6 +9,8 @@
 #include "chunk_render_system.h"
 #include "block_interact_system.h"
 
+#include "npc_block_ticket_sync_system.h"
+
 #include "debug_system.h" 
 #include "CCProfiling.h"
 
@@ -34,6 +36,9 @@ BlockSystemManager::BlockSystemManager(entt::registry& registry, entt::dispatche
     _blockInteractSystem = std::make_unique<BlockInteractSystem>(_registry, _dispatcher);
     _blockMiningSystem = std::make_unique<BlockMiningSystem>(_registry, _dispatcher);
     _blockEntityCleanSystem = std::make_unique<BlockEntityCleanSystem>(_registry, _dispatcher);
+
+    _npcBlockTicketSyncSystem = std::make_unique<NpcBlockTicketSyncSystem>(_registry, _dispatcher);
+
     _blockPhysicsSystem = std::make_unique<BlockPhysicsSystem>(_registry, _dispatcher);
     _chunkRenderCommandSystem = std::make_unique<ChunkRenderSystem>(_registry, _dispatcher);
 
@@ -52,6 +57,8 @@ void BlockSystemManager::update(float delta)
     _chunkUnloadSystem->update(delta);
     _blockMiningSystem->update(delta);
     _blockEntityCleanSystem->update(delta);
+
+    _npcBlockTicketSyncSystem->update(delta);
 
     _blockPhysicsSystem->update(delta);
 

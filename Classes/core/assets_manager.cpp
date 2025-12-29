@@ -27,22 +27,41 @@ BlockConfig::BlockConfig(optional_id id, rapidjson::Document* config)
 optional_id BlockConfig::id() const { return _id; }
 const rapidjson::Value* BlockConfig::getOrigin() const
 {
+    if (!_config) {
+        return nullptr;
+    }
     return tools::get_obj(*_config, "origin");
 }
 
 const rapidjson::Value* BlockConfig::getStateConfig(state stateCode) const
 {
+    if (!_config) {
+        return nullptr;
+    }
     auto states = tools::get_obj(*_config, "states");
     if (states)
     {
-        const auto& stateName = stateCodeToName.at(stateCode);
+        const auto it = stateCodeToName.find(stateCode);
+        if (it == stateCodeToName.end()) {
+            CCLOG("BlockConfig: Missing stateCode %u", static_cast<unsigned>(stateCode));
+            return nullptr;
+        }
+
+        const auto& stateName = it->second;
         auto state = tools::get_obj(*states, stateName.c_str());
         return state;
     }
     return nullptr;
 }
 
-const rapidjson::Document& BlockConfig::getConfig() const { return *_config; }
+const rapidjson::Document& BlockConfig::getConfig() const
+{
+    if (_config) {
+        return *_config;
+    }
+    static rapidjson::Document emptyDoc(rapidjson::kObjectType);
+    return emptyDoc;
+}
 BlockConfig::operator bool() const { return _id.has_value(); }
 
 AssetManager::AssetManager() 
@@ -57,7 +76,14 @@ cocos2d::Texture2D* const AssetManager::getTexture(const std::string& path) cons
 
 const BlockConfig& AssetManager::getBlockConfig(entt::id_type id) const 
 {
-    return *(_block_config.at(id));
+    const auto it = _block_config.find(id);
+    if (it == _block_config.end() || !it->second) {
+        CCLOG("AssetManager: Missing BlockConfig for id=%u", static_cast<unsigned>(id));
+        static rapidjson::Document emptyDoc(rapidjson::kObjectType);
+        static BlockConfig emptyConfig(optional_id{}, &emptyDoc);
+        return emptyConfig;
+    }
+    return *(it->second);
 }
 
 bool AssetManager::init() 

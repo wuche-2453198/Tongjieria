@@ -27,8 +27,6 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     flyingCamera->setSpeed(1600.0f);
     world->addChild(flyingCamera);
     flyingCamera->setActive(true);
-
-    _dispatcher.sink<MouseEvent>().connect<&DebugSystem::onMouseEvent>(this);
 #endif
 
 #if MOUSE_ENTITY
@@ -40,6 +38,10 @@ DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher)
     mouseDrawNode->drawDot({0,0}, 3, cocos2d::Color4F::RED);
     mouseDrawNode->setGlobalZOrder(10);
 #endif 
+
+#if FLYINGCAMERA
+    _dispatcher.sink<MouseEvent>().connect<&DebugSystem::onMouseEvent>(this);
+#endif
     for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 10; j++)
@@ -69,13 +71,13 @@ void DebugSystem::onMouseEvent(const MouseEvent& event)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.tryPlace(blockPos, entt::hashed_string("dirt"), 0, testEntites.at("mouse"));
+        blockWorld.tryPlace(blockPos, entt::hashed_string("dirt"), 0, getEntity(_registry, "mouse"));
     }
     else if(event.button == cocos2d::EventMouse::MouseButton::BUTTON_LEFT)
     {
         Vec2i blockPos =
             BlockLayer::worldPosToBlockPos(tools::MouseDebugTool::getWorldPosition());
-        blockWorld.tryMine(LayerType::BLOCK, blockPos, 10, testEntites.at("mouse"));
+        blockWorld.tryMine(LayerType::BLOCK, blockPos, 10, getEntity(_registry, "mouse"));
     }
 }
 
@@ -94,14 +96,20 @@ void DebugSystem::update(float delta)
     auto camera = cocos2d::Camera::getDefaultCamera();
     if (camera)
     {
-        _registry.get<Position>(testEntites.at("mouse")) = camera->getPosition();
+        const entt::entity mouse = getEntity(_registry, "mouse");
+        if (_registry.valid(mouse) && _registry.any_of<Position>(mouse)) {
+            _registry.get<Position>(mouse) = camera->getPosition();
+        }
         if (flyingCamera)
         {
             flyingCamera->setTarget(camera);
         }
     }
 
-    drawNodes.at("mouse")->setPosition(tools::MouseDebugTool::getWorldPosition());
+    auto it = drawNodes.find("mouse");
+    if (it != drawNodes.end() && it->second) {
+        it->second->setPosition(tools::MouseDebugTool::getWorldPosition());
+    }
 }
 
 entt::entity DebugSystem::getEntity(entt::registry& registry, const std::string& name)
