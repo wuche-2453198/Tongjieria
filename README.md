@@ -1,18 +1,4 @@
-# Tongjieria 项目仓库 # 
+# Tongjieria 项目仓库 NPC分支# 
 
-## 项目说明 ##
-本项目为Tongjieria游戏复刻项目（复刻对象 Terraria）
-
-## 配置教程 ##
-于指定文件夹中打开cmd，输入指令
-```cmd
-git clone "https://github.com/wuche-2453198/Tongjieria"
-```
-随后运行 setup.bat 配置编译环境\
-随后打开sln文件即可开始complie\
-注意：记得设置启动项目
-
-
-## 目前进度 ##
-2025.12.1 实现了开场动画和开场音乐 commit by 2453198 \
-2025.12.2 正式搭建仓库并写好配置文件setup.bat commit by 2453198
+已经完成 多种僵尸 史莱姆 骷髅 恶魔眼 吞噬者 蚁狮 秃鹰 史莱姆王 恶魔等怪物的生成
+已经迁移并于blocks分支合并
