@@ -1,5 +1,6 @@
 #include "PlayerFactory.h"
 #include "components/player/PlayerComponents.h"
+#include "components/block/block_component.h"
 #include "PlayerAnimationLoader.h"
 
 USING_NS_CC;
@@ -20,6 +21,12 @@ entt::entity PlayerFactory::createPlayer(entt::registry& registry,
     auto& transform = registry.emplace<ecs::TransformComponent>(player);
     transform.x = spawnPos.x;
     transform.y = spawnPos.y;
+
+    // 3.5. Add Position component for block system
+    registry.emplace<Position>(player, spawnPos);
+
+    // 3.6. Add LoadingTicket for chunk loading (radius=8 means load 8 chunks around player)
+    registry.emplace<LoadingTicket>(player, player, 8, true);
 
     // 4. Add stats component
     auto& stats = registry.emplace<ecs::PlayerStatsComponent>(player);

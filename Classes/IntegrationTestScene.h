@@ -41,6 +41,7 @@ private:
     cocos2d::Camera* _uiCamera = nullptr;  // UI camera that follows default camera
     class InventoryLayer* _inventoryLayer = nullptr;
     class EquipmentPanel* _equipmentPanel = nullptr;
+    class CraftBar* _craftBar = nullptr;  // Crafting UI
     bool _inventoryVisible = false;
 
     // Block system manager

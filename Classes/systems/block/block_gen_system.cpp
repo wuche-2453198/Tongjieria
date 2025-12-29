@@ -1,5 +1,6 @@
 #include "block_gen_system.h"
 #include "components/block/block_component.h"
+#include "systems/block_layer/block_layer.h"
 #include "noise/noise.h"
 
 #define BLOCK_GEN_LOG 0
@@ -15,8 +16,15 @@ BlockGenSystem::~BlockGenSystem() {}
 void BlockGenSystem::update(float delta)
 {
     auto view = _registry.view<Position, ChunkHead, NeedGen>();
+    static int chunksGenerated = 0;
     view.each([&](entt::entity entity, Position& pos, ChunkHead& head)
         {
+            if (chunksGenerated < 5 && head.getLayerType() == LayerType::BLOCK) {
+                Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
+                CCLOG("[BlockGenSystem] Generating terrain for Chunk (%d,%d)", chunkPos.x, chunkPos.y);
+                chunksGenerated++;
+            }
+
             auto& blocks = _registry.emplace<ChunkBlocks>(entity);
             for (int y = 0; y < CHUNK_SIZE; y++)
             {
@@ -34,6 +42,11 @@ void BlockGenSystem::update(float delta)
                 }
             }
             _registry.remove<NeedGen>(entity);
+
+            if (chunksGenerated <= 5 && head.getLayerType() == LayerType::BLOCK) {
+                Vec2i chunkPos = BlockLayer::worldPosToChunkPos(pos);
+                CCLOG("[BlockGenSystem] Chunk (%d,%d) generation complete, ChunkBlocks added", chunkPos.x, chunkPos.y);
+            }
         });
 }
 

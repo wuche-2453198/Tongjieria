@@ -32,7 +32,8 @@ CraftBar* CraftBar::create() {
 bool CraftBar::init() {
     if (!Layer::init()) return false;
 
-    // Position at bottom-left corner with margin
+    // Initial position at bottom-left corner with margin
+    // This will be updated in update() to follow camera
     this->setPosition(Vec2(20, 70));  // Moved up 50 pixels (from 20 to 70)
 
     setupCollapsedUI();
@@ -40,8 +41,35 @@ bool CraftBar::init() {
     setupEventListeners();
     refreshRecipes();
 
+    // CRITICAL: Enable update to keep CraftBar fixed on screen (same as InventoryLayer)
+    this->scheduleUpdate();
+
     CCLOG("CraftBar: initialized with scrolling window support");
     return true;
+}
+
+void CraftBar::update(float dt) {
+    // CRITICAL: Update position every frame to follow camera and stay fixed on screen
+    // This is the EXACT same logic as InventoryLayer::update()
+    auto scene = Director::getInstance()->getRunningScene();
+    if (!scene) return;
+
+    auto camera = scene->getDefaultCamera();
+    if (!camera) return;
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec3 camPos = camera->getPosition3D();
+
+    // Calculate CraftBar position relative to camera
+    // CraftBar is at bottom-left of screen with margin
+    float marginX = 20.0f;
+    float marginY = 70.0f;
+
+    // Position = camera position + offset from camera center to screen bottom-left + margin
+    float posX = camPos.x - (visibleSize.width / 2.0f) + marginX;
+    float posY = camPos.y - (visibleSize.height / 2.0f) + marginY;
+
+    setPosition(Vec2(posX, posY));
 }
 
 void CraftBar::setupCollapsedUI() {
@@ -404,6 +432,11 @@ void CraftBar::setupEventListeners() {
     auto stationListener = EventListenerCustom::create("Event_StationChanged",
         CC_CALLBACK_1(CraftBar::onStationChanged, this));
     dispatcher->addEventListenerWithSceneGraphPriority(stationListener, this);
+
+    // Listen to PlayerCraftingSystem station detection events
+    auto craftingStationListener = EventListenerCustom::create("Event_CraftingStationsChanged",
+        CC_CALLBACK_1(CraftBar::onStationChanged, this));
+    dispatcher->addEventListenerWithSceneGraphPriority(craftingStationListener, this);
 }
 
 void CraftBar::onInventoryChanged(EventCustom* event) {

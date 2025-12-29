@@ -1,4 +1,5 @@
 #include "PlayerSystems.h"
+#include "PlayerCraftingSystem.h"
 #include "core/PlayerInput.h"
 #include "core/GameManager.h"
 #include "core/block_world.h"
@@ -87,31 +88,11 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
             PlayerInventoryBridge::useCurrentHotbarItem(registry, entity);
         }
 
+        // Note: ESC key for crafting UI is handled in IntegrationTestScene::toggleInventory()
+
         // ==================== Handle Block Interaction ====================
-        // Mouse left button - mining (hold to mine)
-        // SIMPLIFIED: Allow bare-hand mining for debugging
-        if (input.isMousePressed(EventMouse::MouseButton::BUTTON_LEFT)) {
-            // Get current hotbar item
-            int currentItemId = PlayerInventoryBridge::getCurrentHotbarItemId(registry, entity);
-
-            // SIMPLIFIED: Always allow mining (bare-hand or with pickaxe)
-            float mineFactor = 500.0f;  // Default bare-hand mining speed
-
-            // If holding a pickaxe, use its mining speed
-            if (currentItemId > 0) {
-                auto* itemMgr = ItemManager::getInstance();
-                const auto* itemData = itemMgr->getItemData(currentItemId);
-                if (itemData && itemData->equipType == EquipType::Pickaxe) {
-                    mineFactor = 500.0f + itemData->damage * 0.5f;
-                }
-            }
-
-            // Trigger MINE animation
-            if (animation.currentState != ecs::PlayerAnimationComponent::AnimState::MINE) {
-                animation.isPlayingOneShot = false;
-                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::MINE);
-            }
-
+        // Mouse left button - instant destroy blocks
+        if (input.isMouseJustPressed(EventMouse::MouseButton::BUTTON_LEFT)) {
             // Get player position from sprite component
             auto* sprite = registry.try_get<ecs::PlayerSpriteComponent>(entity);
 
@@ -119,21 +100,15 @@ void PlayerInputSystem::update(entt::registry& registry, float dt) {
                 Vec2 playerPos = sprite->sprite->getPosition();
                 Vec2i playerBlockPos = BlockLayer::worldPosToBlockPos(playerPos);
 
-                // Mine 5x5 blocks around player (±2 blocks in each direction)
+                // Destroy 5x5 blocks around player (±2 blocks in each direction)
                 auto& blockWorld = GameManager::getInstance()->getBlockWorld();
 
                 for (int dy = -2; dy <= 2; dy++) {
                     for (int dx = -2; dx <= 2; dx++) {
                         Vec2i targetBlockPos(playerBlockPos.x + dx, playerBlockPos.y + dy);
-                        blockWorld.tryMine(LayerType::BLOCK, targetBlockPos, mineFactor, entity);
+                        blockWorld.tryDestroy(LayerType::BLOCK, targetBlockPos, entity);
                     }
                 }
-            }
-        } else {
-            // Mouse button released - exit MINE animation if currently mining
-            if (animation.currentState == ecs::PlayerAnimationComponent::AnimState::MINE) {
-                animation.isPlayingOneShot = false;
-                PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::IDLE);
             }
         }
 
@@ -1014,13 +989,16 @@ void PlayerSystemsManager::updateAllSystems(entt::registry& registry, float dt) 
     // 3. Movement system (priority: 10)
     PlayerMovementSystem::update(registry, dt);
 
-    // 4. Health system (priority: 30)
+    // 4. Crafting system (priority: 15) - 检测附近工作台
+    PlayerCraftingSystem::update(registry, dt);
+
+    // 5. Health system (priority: 30)
     PlayerHealthSystem::update(registry, dt);
 
-    // 5. Animation system (priority: 100)
+    // 6. Animation system (priority: 100)
     PlayerAnimationSystem::update(registry, dt);
 
-    // 6. Camera system (priority: 200) - 最后执行，确保位置已更新
+    // 7. Camera system (priority: 200) - 最后执行，确保位置已更新
     PlayerCameraSystem::update(registry, dt);
 }
 

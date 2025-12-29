@@ -14,6 +14,7 @@ class CraftBar : public cocos2d::Layer {
 public:
     static CraftBar* create();
     virtual bool init() override;
+    virtual void update(float dt) override;
 
     void refreshRecipes();
     void onInventoryChanged(cocos2d::EventCustom* event);

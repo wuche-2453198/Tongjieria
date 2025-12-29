@@ -238,8 +238,8 @@ class PlayerAbilitySystem : public ecs::System {
     - 翅膀飞行（可选）
 
 12. **与现有系统集成**
-    - 连接背包系统
-    - 连接合成系统
+    - ✅ 连接背包系统 (PlayerInventoryIntegration)
+    - ✅ 连接合成系统 (PlayerCraftingSystem - 2025-12-29)
     - 测试完整游戏流程
 
 ---
@@ -319,8 +319,8 @@ list(APPEND GAME_SOURCE
 - [ ] 实现 `PlayerHealthSystem`
 - [ ] 实现 `PlayerBuffSystem`
 - [ ] 实现 `PlayerAbilitySystem`
-- [ ] 与背包系统集成
-- [ ] 与合成系统集成
+- [x] 与背包系统集成
+- [x] 与合成系统集成 (2025-12-29)
 - [ ] 完整测试
 
 ---

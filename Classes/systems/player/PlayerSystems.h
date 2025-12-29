@@ -294,6 +294,10 @@ private:
     static float s_followSpeed;  // 摄像机跟随速度
 };
 
+// ==================== PlayerCraftingSystem ====================
+// Forward declaration
+class PlayerCraftingSystem;
+
 // ==================== PlayerSystemsManager ====================
 /**
  * @class PlayerSystemsManager

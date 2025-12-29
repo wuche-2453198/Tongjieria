@@ -1,10 +1,14 @@
 #include "IntegrationTestScene.h"
 #include "ui/items/InventoryLayer.h"
 #include "ui/items/EquipmentPanel.h"
+#include "ui/items/CraftBar.h"
 #include "systems/items/ItemManager.h"
 #include "systems/items/Inventory.h"
+#include "systems/items/RecipeManager.h"
+#include "systems/items/StationDetector.h"
 #include "systems/player/PlayerFactory.h"
 #include "systems/player/PlayerSystems.h"
+#include "systems/player/PlayerCraftingSystem.h"
 #include "core/PlayerInput.h"
 #include "core/GameManager.h"
 #include "core/assets_manager.h"
@@ -114,6 +118,17 @@ bool IntegrationTestScene::init() {
     itemMgr->loadItems("items/items_json/items_equipment.json", false);
     itemMgr->loadItems("items/items_json/items_placeables.json", true);
     itemMgr->loadItems("items/items_json/items_consumables.json", true);
+    itemMgr->loadItems("items/items_json/items_materials.json", true);
+
+    // Load recipes for crafting system
+    auto* recipeMgr = RecipeManager::getInstance();
+    recipeMgr->loadRecipes("items/items_json/recipes.json");
+    CCLOG("IntegrationTestScene: Loaded %zu recipes", recipeMgr->getRecipeCount());
+
+    // Initialize StationDetector with Hand station by default
+    auto* stationDetector = StationDetector::getInstance();
+    stationDetector->addStation(StationType::Hand);
+    CCLOG("IntegrationTestScene: StationDetector initialized with Hand station");
 
     // 不使用这个物理环境而是使用blocks系统
     //createPhysicsEnvironment();
@@ -263,15 +278,14 @@ void IntegrationTestScene::createPlayer() {
 
     // Use PlayerFactory to create player
 
-    Vec2 spawnPos(visibleSize.width / 2, 1200);  // 在地形上方一点
+    Vec2 spawnPos(visibleSize.width / 2, 1220);  // 在地形上方一点
     _playerEntity = PlayerFactory::createPlayer(*_registry, spawnPos, this, _uiLayer);
 
     // Register player entity in GameManager (for UI and other systems)
     GameManager::getInstance()->setPlayerEntity(_playerEntity);
 
-    // Add Position component for block system (方块系统需要Position组件来追踪实体位置)
-    _registry->emplace<Position>(_playerEntity, spawnPos);
-    CCLOG("IntegrationTestScene: Position component added to player");
+    // NOTE: Position and LoadingTicket components are now added in PlayerFactory
+    // No need to add them here anymore
 
     // Add PhysicsTicket for block collision (方块碰撞检测需要PhysicsTicket)
     // 碰撞箱大小应该与玩家物理体一致
@@ -281,13 +295,9 @@ void IntegrationTestScene::createPlayer() {
     CCLOG("IntegrationTestScene: PhysicsTicket component added to player (size: %.1fx%.1f)",
           collisionSize.x, collisionSize.y);
 
-    // Add loading ticket to player for chunk loading
-    _registry->emplace<LoadingTicket>(
-        _playerEntity,
-        _playerEntity,  // entity_id parameter for LoadingTicket constructor
-        5,              // Load radius: 5 chunks
-        true            // Permanent ticket
-    );
+    // NOTE: LoadingTicket is now added in PlayerFactory with radius=8
+    // No need to add it here anymore
+    CCLOG("IntegrationTestScene: Player has LoadingTicket (radius=8, added by PlayerFactory)");
 
     CCLOG("IntegrationTestScene: Player created with all block system components");
 }
@@ -362,6 +372,14 @@ void IntegrationTestScene::setupUI() {
         CCLOG("IntegrationTestScene: EquipmentPanel created (hidden) - added to UI layer");
     }
 
+    // Create CraftBar (initially hidden) - Add to UI layer
+    _craftBar = CraftBar::create();
+    if (_craftBar) {
+        _craftBar->setVisible(false);
+        _uiLayer->addChild(_craftBar, 100);
+        CCLOG("IntegrationTestScene: CraftBar created (hidden) - added to UI layer");
+    }
+
     // Link InventoryLayer and EquipmentPanel
     if (_inventoryLayer && _equipmentPanel) {
         _inventoryLayer->setEquipmentPanel(_equipmentPanel);
@@ -392,6 +410,16 @@ void IntegrationTestScene::toggleInventory() {
     }
     if (_equipmentPanel) {
         _equipmentPanel->setVisible(_inventoryVisible);
+    }
+    if (_craftBar) {
+        _craftBar->setVisible(_inventoryVisible);
+    }
+
+    // Also notify PlayerCraftingSystem
+    if (_inventoryVisible) {
+        PlayerCraftingSystem::openCraftingUI();
+    } else {
+        PlayerCraftingSystem::closeCraftingUI();
     }
 
     CCLOG("IntegrationTestScene: Inventory %s", _inventoryVisible ? "SHOWN" : "HIDDEN");
