@@ -298,6 +298,45 @@ private:
 // Forward declaration
 class PlayerCraftingSystem;
 
+// ==================== PlayerEquipmentSyncSystem ====================
+/**
+ * @class PlayerEquipmentSyncSystem
+ * @brief 装备同步系统
+ *
+ * 职责：
+ * - 监听 Event_EquipmentChanged 事件
+ * - 将 Inventory 的装备槽同步到 PlayerEquipmentComponent
+ * - 自动触发装备属性重新计算
+ *
+ * 优先级：N/A（事件驱动）
+ */
+class PlayerEquipmentSyncSystem {
+public:
+    /**
+     * @brief 初始化装备同步系统（注册事件监听器）
+     * @param registry EnTT注册表
+     */
+    static void initialize(entt::registry& registry);
+
+    /**
+     * @brief 清理装备同步系统（移除事件监听器）
+     */
+    static void shutdown();
+
+    /**
+     * @brief 同步装备槽数据：Inventory -> PlayerEquipmentComponent
+     * @param registry EnTT注册表
+     * @param playerEntity 玩家实体
+     */
+    static void syncEquipmentToPlayer(entt::registry& registry, entt::entity playerEntity);
+
+private:
+    PlayerEquipmentSyncSystem() = delete;
+
+    static cocos2d::EventListenerCustom* s_equipmentListener;
+    static entt::registry* s_registry;
+};
+
 // ==================== PlayerSystemsManager ====================
 /**
  * @class PlayerSystemsManager

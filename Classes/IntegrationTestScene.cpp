@@ -26,14 +26,13 @@ IntegrationTestScene::IntegrationTestScene() {
 }
 
 IntegrationTestScene::~IntegrationTestScene() {
+    // Shutdown equipment sync system
+    PlayerEquipmentSyncSystem::shutdown();
+
     // unique_ptr 会自动清理资源
 }
 
 Scene* IntegrationTestScene::createScene() {
-    CCLOG("========================================");
-    CCLOG("= ENTERING INTEGRATION TEST SCENE");
-    CCLOG("========================================");
-
     auto scene = new IntegrationTestScene();
     if (scene && scene->init()) {
         scene->autorelease();
@@ -150,127 +149,15 @@ bool IntegrationTestScene::init() {
     PlayerSystemsManager::setScene(this);
     CCLOG("IntegrationTestScene: Input system initialized");
 
+    // Initialize equipment sync system
+    PlayerEquipmentSyncSystem::initialize(*_registry);
+    CCLOG("IntegrationTestScene: Equipment sync system initialized");
+
     // Start update
     this->scheduleUpdate();
 
     CCLOG("IntegrationTestScene: Initialization complete (with BlockWorld)");
     return true;
-}
-
-void IntegrationTestScene::createPhysicsEnvironment() {
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
-    PhysicsMaterial material(1.0f, 0.0f, 1.0f); // density/restitution/friction
-
-    // Create ground
-    auto ground = Sprite::create();
-    ground->setTextureRect(Rect(0, 0, visibleSize.width, 40));
-    ground->setColor(Color3B(100, 150, 100)); // Grass green
-    ground->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + 20));
-    this->addChild(ground, 0);
-
-    auto groundBody = PhysicsBody::createBox(ground->getContentSize(), material);
-    groundBody->setDynamic(false);
-    groundBody->setContactTestBitmask(0xFFFFFFFF);
-    ground->setPhysicsBody(groundBody);
-
-    // Create left wall
-    auto leftWall = Sprite::create();
-    leftWall->setTextureRect(Rect(0, 0, 10, visibleSize.height));
-    leftWall->setColor(Color3B(80, 80, 80));
-    leftWall->setPosition(Vec2(origin.x + 5, origin.y + visibleSize.height / 2));
-    this->addChild(leftWall, 0);
-
-    auto leftWallBody = PhysicsBody::createBox(leftWall->getContentSize(), material);
-    leftWallBody->setDynamic(false);
-    leftWallBody->setContactTestBitmask(0xFFFFFFFF);
-    leftWall->setPhysicsBody(leftWallBody);
-
-    // Create right wall
-    auto rightWall = Sprite::create();
-    rightWall->setTextureRect(Rect(0, 0, 10, visibleSize.height));
-    rightWall->setColor(Color3B(80, 80, 80));
-    rightWall->setPosition(Vec2(origin.x + visibleSize.width - 5,
-                               origin.y + visibleSize.height / 2));
-    this->addChild(rightWall, 0);
-
-    auto rightWallBody = PhysicsBody::createBox(rightWall->getContentSize(), material);
-    rightWallBody->setDynamic(false);
-    rightWallBody->setContactTestBitmask(0xFFFFFFFF);
-    rightWall->setPhysicsBody(rightWallBody);
-
-    // Create platform 1
-    auto platform1 = Sprite::create();
-    platform1->setTextureRect(Rect(0, 0, 200, 20));
-    platform1->setColor(Color3B(139, 90, 43)); // Brown
-    platform1->setPosition(Vec2(origin.x + visibleSize.width / 2 - 180,
-                               origin.y + visibleSize.height / 2 - 50));
-    this->addChild(platform1, 0);
-
-    auto platform1Body = PhysicsBody::createBox(platform1->getContentSize(), material);
-    platform1Body->setDynamic(false);
-    platform1Body->setContactTestBitmask(0xFFFFFFFF);
-    platform1->setPhysicsBody(platform1Body);
-
-    // Create platform 2
-    auto platform2 = Sprite::create();
-    platform2->setTextureRect(Rect(0, 0, 200, 20));
-    platform2->setColor(Color3B(139, 90, 43)); // Brown
-    platform2->setPosition(Vec2(origin.x + visibleSize.width / 2 + 180,
-                               origin.y + visibleSize.height / 2));
-    this->addChild(platform2, 0);
-
-    auto platform2Body = PhysicsBody::createBox(platform2->getContentSize(), material);
-    platform2Body->setDynamic(false);
-    platform2Body->setContactTestBitmask(0xFFFFFFFF);
-    platform2->setPhysicsBody(platform2Body);
-
-    // Create platform 3
-    auto platform3 = Sprite::create();
-    platform3->setTextureRect(Rect(0, 0, 200, 20));
-    platform3->setColor(Color3B(139, 90, 43)); // Brown
-    platform3->setPosition(Vec2(origin.x + visibleSize.width / 2 + 180,
-                               origin.y + visibleSize.height / 2-100));
-    this->addChild(platform3, 0);
-
-    auto platform3Body = PhysicsBody::createBox(platform3->getContentSize(), material);
-    platform3Body->setDynamic(false);
-    platform3Body->setContactTestBitmask(0xFFFFFFFF);
-    platform3->setPhysicsBody(platform3Body);
-
-    CCLOG("IntegrationTestScene: Physics environment created");
-
-    // Create platform 4
-    auto platform4 = Sprite::create();
-    platform4->setTextureRect(Rect(0, 0, 200, 20));
-    platform4->setColor(Color3B(139, 90, 43)); // Brown
-    platform4->setPosition(Vec2(origin.x + visibleSize.width / 2 ,
-                               origin.y + visibleSize.height / 2-150));
-    this->addChild(platform4, 0);
-
-    auto platform4Body = PhysicsBody::createBox(platform4->getContentSize(), material);
-    platform4Body->setDynamic(false);
-    platform4Body->setContactTestBitmask(0xFFFFFFFF);
-    platform4->setPhysicsBody(platform4Body);
-
-    CCLOG("IntegrationTestScene: Physics environment created");
-
-    // Create platform 3
-    auto platform5 = Sprite::create();
-    platform5->setTextureRect(Rect(0, 0, 200, 20));
-    platform5->setColor(Color3B(139, 90, 43)); // Brown
-    platform5->setPosition(Vec2(origin.x + visibleSize.width / 2 ,
-                               origin.y + visibleSize.height / 2-150));
-    this->addChild(platform5, 0);
-
-    auto platform5Body = PhysicsBody::createBox(platform5->getContentSize(), material);
-    platform5Body->setDynamic(false);
-    platform5Body->setContactTestBitmask(0xFFFFFFFF);
-    platform5->setPhysicsBody(platform5Body);
-
-    CCLOG("IntegrationTestScene: Physics environment created");
-
-
 }
 
 void IntegrationTestScene::createPlayer() {
@@ -424,6 +311,7 @@ void IntegrationTestScene::toggleInventory() {
 
     CCLOG("IntegrationTestScene: Inventory %s", _inventoryVisible ? "SHOWN" : "HIDDEN");
 }
+//UI界面实时刷新
 
 void IntegrationTestScene::update(float delta) {
     // Update block systems (chunk loading, terrain generation, mining, etc.)
@@ -474,6 +362,3 @@ void IntegrationTestScene::update(float delta) {
     // Update input state (reset justPressed state for next frame)
     PlayerInput::getInstance().update(delta);
 }
-
-// Mouse listener and block destruction removed - now handled by PlayerInputSystem
-// Mining is now controlled by pickaxe items through the player input system

@@ -7,6 +7,7 @@
 #include "PlayerAnimationLoader.h"
 #include "PlayerInventoryIntegration.h"
 #include "systems/items/ItemManager.h"
+#include "systems/items/Inventory.h"
 #include "components/block/block_component.h"
 #include "systems/block_layer/block_layer.h"
 #include <cmath>
@@ -16,6 +17,8 @@ USING_NS_CC;
 // Static member initialization
 cocos2d::Scene* PlayerSystemsManager::s_scene = nullptr;
 float PlayerCameraSystem::s_followSpeed = 0.1f;  // 默认跟随速度
+cocos2d::EventListenerCustom* PlayerEquipmentSyncSystem::s_equipmentListener = nullptr;
+entt::registry* PlayerEquipmentSyncSystem::s_registry = nullptr;
 
 // ==================== PlayerInputSystem ====================
 
@@ -1008,4 +1011,96 @@ void PlayerSystemsManager::setScene(cocos2d::Scene* scene) {
 
 cocos2d::Scene* PlayerSystemsManager::getScene() {
     return s_scene;
+}
+
+// ==================== PlayerEquipmentSyncSystem ====================
+
+void PlayerEquipmentSyncSystem::initialize(entt::registry& registry) {
+    s_registry = &registry;
+
+    // Create event listener for equipment changes
+    s_equipmentListener = EventListenerCustom::create("Event_EquipmentChanged",
+        [](EventCustom* event) {
+            if (!s_registry) {
+                CCLOG("PlayerEquipmentSyncSystem: Registry is null, cannot sync equipment");
+                return;
+            }
+
+            // Find player entity and sync equipment
+            auto view = s_registry->view<ecs::PlayerTag, ecs::PlayerEquipmentComponent>();
+            for (auto entity : view) {
+                syncEquipmentToPlayer(*s_registry, entity);
+                break;  // Only sync the first player entity
+            }
+        }
+    );
+
+    // Register listener with global event dispatcher
+    Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(s_equipmentListener, 1);
+
+    CCLOG("PlayerEquipmentSyncSystem: Initialized and listening for Event_EquipmentChanged");
+}
+
+void PlayerEquipmentSyncSystem::shutdown() {
+    if (s_equipmentListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(s_equipmentListener);
+        s_equipmentListener = nullptr;
+    }
+    s_registry = nullptr;
+
+    CCLOG("PlayerEquipmentSyncSystem: Shutdown complete");
+}
+
+void PlayerEquipmentSyncSystem::syncEquipmentToPlayer(entt::registry& registry, entt::entity playerEntity) {
+    if (!registry.valid(playerEntity)) {
+        CCLOG("PlayerEquipmentSyncSystem: Invalid player entity");
+        return;
+    }
+
+    auto* equipment = registry.try_get<ecs::PlayerEquipmentComponent>(playerEntity);
+    if (!equipment) {
+        CCLOG("PlayerEquipmentSyncSystem: Player entity has no PlayerEquipmentComponent");
+        return;
+    }
+
+    auto* inventory = Inventory::getInstance();
+    const auto& equipSlots = inventory->getEquipmentSlots();
+
+    CCLOG("========================================");
+    CCLOG("PlayerEquipmentSyncSystem: Syncing equipment from Inventory to PlayerEquipmentComponent");
+
+    // Sync helmet (slot 0)
+    if (equipSlots.size() > 0) {
+        equipment->helmet.itemId = equipSlots[0].itemId;
+        equipment->helmet.prefixId = equipSlots[0].prefixId;
+        CCLOG("  Helmet: Item ID %d", equipment->helmet.itemId);
+    }
+
+    // Sync chestplate (slot 1)
+    if (equipSlots.size() > 1) {
+        equipment->chestplate.itemId = equipSlots[1].itemId;
+        equipment->chestplate.prefixId = equipSlots[1].prefixId;
+        CCLOG("  Chestplate: Item ID %d", equipment->chestplate.itemId);
+    }
+
+    // Sync leggings (slot 2)
+    if (equipSlots.size() > 2) {
+        equipment->leggings.itemId = equipSlots[2].itemId;
+        equipment->leggings.prefixId = equipSlots[2].prefixId;
+        CCLOG("  Leggings: Item ID %d", equipment->leggings.itemId);
+    }
+
+    // Sync accessories (slots 3-6)
+    for (int i = 0; i < ecs::PlayerEquipmentComponent::MAX_ACCESSORIES && (i + 3) < equipSlots.size(); i++) {
+        equipment->accessories[i].itemId = equipSlots[i + 3].itemId;
+        equipment->accessories[i].prefixId = equipSlots[i + 3].prefixId;
+        CCLOG("  Accessory %d: Item ID %d", i, equipment->accessories[i].itemId);
+    }
+
+    CCLOG("PlayerEquipmentSyncSystem: Equipment sync complete, recalculating stats...");
+
+    // Recalculate player stats based on new equipment
+    PlayerInventoryBridge::calculateEquipmentStats(registry, playerEntity);
+
+    CCLOG("========================================");
 }
