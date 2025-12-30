@@ -9,6 +9,7 @@
 #include "components/block/chunk_render.h"
 #include "components/block/block_component.h"
 #include "components/block/block_behavior.h"
+#include "components\player\PlayerComponents.h"
 #include "core/assets_manager.h"
 #include "core/input_manager.h"
 #include "systems/block_layer/block_layer.h"
@@ -120,8 +121,8 @@ bool World::init()
 				return;
 			}
 
-			auto view = _registry->view<ecs::PlayerTag, ecs::PlayerAnimationComponent, ecs::PlayerHotbarComponent>();
-			view.each([this, mouseEvent](auto entity, auto& tag, auto& animation, auto& hotbar) {
+			auto view = _registry->view<ecs::PlayerTag, ecs::PlayerAnimationComponent, ecs::PlayerHotbarComponent, ecs::TransformComponent>();
+			view.each([this, mouseEvent](auto entity, auto& tag, auto& animation, auto& hotbar, auto& transform) {
 				if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_LEFT) {
 					// 左键 - 根据手持物品触发不同动画
 					auto* inventory = Inventory::getInstance();
@@ -141,16 +142,36 @@ bool World::init()
 								// 不设置isPlayingOneShot，让动画持续循环
 								PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::MINE);
 
-								
+
 								auto mousePos = tools::MouseDebugTool::getWorldPosition();
 								// 转换为世界坐标
 								auto camera = this->getDefaultCamera();
 								if (camera) {
-								
-									// 尝试破坏方块
-									auto& blockWorld = _registry->ctx().get<BlockWorld>();
-									bool destroyed = blockWorld.tryDestroyAtWorldPos(LayerType::BLOCK, mousePos, entity);
-									
+									// 获取玩家位置
+									cocos2d::Vec2 playerPos = transform.position;
+
+									// 计算玩家和鼠标点击位置的距离
+									float distance = playerPos.distance(mousePos);
+
+									// 7x7范围 = 2.5个方块的半径（对角线距离）
+									const float BLOCK_SIZE = 16.0f;
+									const float MAX_MINING_RANGE = 3.5f * BLOCK_SIZE * 1.414f; // 对角线距离
+
+									if (distance <= MAX_MINING_RANGE) {
+										// 在范围内，尝试挖掘方块
+										auto& blockWorld = _registry->ctx().get<BlockWorld>();
+
+										// 使用tryMineAtWorldPos进行挖掘，mineFactor基于镐子的挖掘力
+										
+										float mineFactor = 10.0f; // 默认挖掘力
+										bool mined = blockWorld.tryMineAtWorldPos(LayerType::BLOCK, mousePos, mineFactor, entity);
+
+										if (mined) {
+											CCLOG("Block mined at distance: %.2f", distance);
+										}
+									} else {
+										CCLOG("Block too far! Distance: %.2f, Max: %.2f", distance, MAX_MINING_RANGE);
+									}
 								}
 							}
 							else if (itemData->equipType == EquipType::Weapon || itemData->equipType == EquipType::Sword) {

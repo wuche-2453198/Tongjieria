@@ -110,6 +110,9 @@ third_party/libnoise/cmake_install.cmake
 # 强制包含 cocos2d/external 文件夹的所有内容
 !cocos2d/external/
 !cocos2d/external/**
+/cocos2d/
 
+# 忽略 cocos2d 和 build 目录
+cocos2d/
 build/
 
