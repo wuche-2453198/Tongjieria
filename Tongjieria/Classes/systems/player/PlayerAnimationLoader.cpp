@@ -398,7 +398,7 @@ PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadDrinkAnimation
 PlayerAnimationLoader::AnimationFrames PlayerAnimationLoader::loadMineAnimation(Node* parentNode) {
     AnimationFrames anim;
     anim.frameTime = 0.07f;  // 70ms per frame
-    anim.loop = false;       // Don't loop, play once
+    anim.loop = true;        // Loop continuously while mining
 
     CCLOG("PlayerAnimationLoader: Loading MINE animation...");
 

@@ -4,7 +4,7 @@
 *
 * @note 应当尽量是二的整数倍
 */
-constexpr static int BLOCK_SIZE = 16;
+constexpr static int BLOCK_SIZE = 24;
 constexpr static int CHUNK_SIZE = 16;
 
 /**

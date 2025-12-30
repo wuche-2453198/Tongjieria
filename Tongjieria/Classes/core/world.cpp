@@ -112,6 +112,8 @@ bool World::init()
 	// 添加鼠标监听器用于触发破坏、放置和挖掘动画
 	{
 		auto* mouseListener = cocos2d::EventListenerMouse::create();
+
+		// 鼠标按下事件
 		mouseListener->onMouseDown = [this](cocos2d::Event* event) {
 			auto* mouseEvent = static_cast<cocos2d::EventMouse*>(event);
 			if (!_registry) {
@@ -134,9 +136,22 @@ bool World::init()
 						if (itemData) {
 							// 检查物品类型
 							if (itemData->equipType == EquipType::Pickaxe) {
-								// 镐子 - 播放MINE动画
-								CCLOG("=== 触发MINE动画（持有镐子）===");
+								// 镐子 - 开始播放MINE动画（持续循环）+ 破坏方块
+								CCLOG("=== 开始MINE动画（持有镐子，持续挖掘）===");
+								// 不设置isPlayingOneShot，让动画持续循环
 								PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::MINE);
+
+								
+								auto mousePos = tools::MouseDebugTool::getWorldPosition();
+								// 转换为世界坐标
+								auto camera = this->getDefaultCamera();
+								if (camera) {
+								
+									// 尝试破坏方块
+									auto& blockWorld = _registry->ctx().get<BlockWorld>();
+									bool destroyed = blockWorld.tryDestroyAtWorldPos(LayerType::BLOCK, mousePos, entity);
+									
+								}
 							}
 							else if (itemData->equipType == EquipType::Weapon || itemData->equipType == EquipType::Sword) {
 								// 武器 - 播放ATTACK动画
@@ -171,6 +186,26 @@ bool World::init()
 				}
 			});
 		};
+
+		// 鼠标松开事件 - 停止挖掘动画
+		mouseListener->onMouseUp = [this](cocos2d::Event* event) {
+			auto* mouseEvent = static_cast<cocos2d::EventMouse*>(event);
+			if (!_registry) {
+				return;
+			}
+
+			auto view = _registry->view<ecs::PlayerTag, ecs::PlayerAnimationComponent>();
+			view.each([mouseEvent](auto entity, auto& tag, auto& animation) {
+				if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_LEFT) {
+					// 如果当前正在播放MINE动画，则停止并返回IDLE
+					if (animation.currentState == ecs::PlayerAnimationComponent::AnimState::MINE) {
+						CCLOG("=== 停止MINE动画（松开左键）===");
+						PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::IDLE);
+					}
+				}
+			});
+		};
+
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 	}
 	this->scheduleOnce([this](float) {
