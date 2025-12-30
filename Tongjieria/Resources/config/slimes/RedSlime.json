@@ -1,0 +1,52 @@
+{
+  "id": "RedSlime",
+  "type": "Slime",
+  "description": "红色史莱姆",
+  
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/RedSlime",
+    "spritePrefix": "Red_Slime",
+    "frameCount": 2,
+    "frameTime": 0.15,
+    "scale": 1
+  },
+
+  "physics": {
+    "bodyWidth": 32.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 1.8,
+    "horizontalImpulse": 380.0,
+    "verticalImpulse": 580.0,
+    "patrolImpulseRatio": 0.5,
+    "directionChangeChance": 0.35
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 350.0,
+    "deaggroRange": 450.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 70.0,
+    "attackDamage": 15.0,
+    "attackRange": 55.0,
+    "attackCooldown": 0.9,
+    "defense": 1.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 2, "maxCount": 5, "dropChance": 0.9},
+    {"itemId": "coin", "minCount": 10, "maxCount": 25, "dropChance": 0.7}
+  ]
+}

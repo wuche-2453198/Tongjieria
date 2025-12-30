@@ -1,0 +1,55 @@
+{
+  "id": "Bigger-DemonEye",
+  "type": "DemonEye",
+  "description": "大型恶魔眼",
+  
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Bigger-DemonEye",
+    "spritePrefix": "Bigger-DemonEye",
+    "frameCount": 2,
+    "frameTime": 0.18,
+    "scale": 1.0
+  },
+  
+  "physics": {
+    "bodyWidth": 52.0,
+    "bodyHeight": 32.0,
+    "bodyHeightOffset": -10.0,
+    "mass": 1.5,
+    "friction": 0.0,
+    "restitution": 2,
+    "collisionGroup": -1,
+    "useGravity": false
+  },
+  
+  "movement": {
+    "type": "fly",
+    "flySpeed": 160.0,
+    "maxSpeed": 350.0,
+    "acceleration": 150.0,
+    "turnRate": 1.0,
+    "bounceArcDuration": 1.0,
+    "wobbleAmplitude": 0.25,
+    "wobbleFrequency": 1.5
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 1200.0,
+    "deaggroRange": 1400.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 100.0,
+    "attackDamage": 25.0,
+    "attackRange": 50.0,
+    "attackCooldown": 1.2,
+    "defense": 4.0
+  },
+  
+  "loot": [
+    {"itemId": "lens", "minCount": 1, "maxCount": 2, "dropChance": 0.5},
+    {"itemId": "coin", "minCount": 20, "maxCount": 50, "dropChance": 0.7}
+  ]
+}

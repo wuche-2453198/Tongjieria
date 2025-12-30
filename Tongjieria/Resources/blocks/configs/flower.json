@@ -1,0 +1,31 @@
+{
+  "id": "flower",
+  "name": "Flower",
+  "origin": {
+    "base": {
+      "replaceable": true,
+      "behavior": "flower_behavior",
+      "texture": "blocks\\textures\\flower1.png"
+    },
+    "collision": {
+      "enable": false
+    }
+  },
+  "states": {
+    "flower1": {
+      "base": {
+        "texture": "blocks\\textures\\flower1.png"
+      }
+    },
+    "flower2": {
+      "base": {
+        "texture": "blocks\\textures\\flower2.png"
+      }
+    },
+    "flowerd3": {
+      "base": {
+        "texture": "blocks\\textures\\flower3.png"
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "UmbrellaSlime",
+  "type": "Slime",
+  "description": "伞史莱姆，下落时像撑着伞一样缓缓飘落",
+  
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/UmbrellaSlime",
+    "spritePrefix": "Umbrella_Slime",
+    "frameCount": 2,
+    "frameTime": 0.25,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 45.0,
+    "bodyHeight": 60.0,
+    "bodyHeightOffset": -4.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.0,
+    "horizontalImpulse": 280.0,
+    "verticalImpulse": 550.0,
+    "patrolImpulseRatio": 0.5,
+    "directionChangeChance": 0.3
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 350.0,
+    "deaggroRange": 450.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 55.0,
+    "attackDamage": 8.0,
+    "attackRange": 50.0,
+    "attackCooldown": 1.0,
+    "defense": 1.0
+  },
+  
+  "slowFall": {
+    "maxFallSpeed": 80.0,
+    "fallDamping": 0.7,
+    "horizontalDamping": 0.98
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 1, "maxCount": 3, "dropChance": 0.85},
+    {"itemId": "coin", "minCount": 5, "maxCount": 15, "dropChance": 0.6},
+    {"itemId": "umbrella_fragment", "minCount": 1, "maxCount": 1, "dropChance": 0.1}
+  ]
+}

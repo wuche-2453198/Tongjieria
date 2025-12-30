@@ -1,0 +1,59 @@
+{
+  "id": "MotherSlime",
+  "type": "Slime",
+  "description": "史莱姆母体，死亡时会生成1-3只史莱姆宝宝",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/MotherSlime",
+    "spritePrefix": "Mother_Slime",
+    "frameCount": 2,
+    "frameTime": 0.2,
+    "scale": 1.3
+  },
+
+  "physics": {
+    "bodyWidth": 44.0,
+    "bodyHeight": 32.0,
+    "bodyHeightOffset": 1.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.2,
+    "horizontalImpulse": 2500.0,
+    "verticalImpulse": 4500.0,
+    "patrolImpulseRatio": 0.4,
+    "directionChangeChance": 0.2
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 350.0,
+    "deaggroRange": 450.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 120.0,
+    "attackDamage": 18.0,
+    "attackRange": 65.0,
+    "attackCooldown": 1.3,
+    "defense": 4.0
+  },
+  
+  "onDeath": {
+    "spawnType": "BabySlime",
+    "spawnCountMin": 1,
+    "spawnCountMax": 3
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 3, "maxCount": 8, "dropChance": 0.95},
+    {"itemId": "coin", "minCount": 20, "maxCount": 40, "dropChance": 0.8},
+    {"itemId": "slime_crown", "minCount": 1, "maxCount": 1, "dropChance": 0.05}
+  ]
+}

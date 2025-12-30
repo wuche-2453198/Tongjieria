@@ -1,0 +1,15 @@
+{
+  "id": "air_wall",
+  "name": "Air Wall",
+  "origin": {
+    "base": {
+      "wall" : true,
+      "replaceable": true,
+      "behavior": "air_behavior",
+      "texture": "blocks\\textures\\air.png"
+    },
+    "collision": {
+      "enable": false
+    }
+  }
+}

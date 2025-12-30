@@ -1,0 +1,52 @@
+{
+  "id": "Face_Monster",
+  "type": "Zombie",
+  "description": "Face Monster - warrior AI, higher knockback resistance",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Face_Monster",
+    "spritePrefix": "Face_Monster",
+    "frameCount": 15,
+    "frameSequence": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    "frameTime": 0.06,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1
+  },
+
+  "physics": {
+    "bodyWidth": 34.0,
+    "bodyHeight": 64.0,
+    "bodyHeightOffset": -4.0,
+    "mass": 4.0,
+    "friction": 0.5,
+    "restitution": 0.0,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 85.0,
+    "jumpForce": 480.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.1,
+    "patrolDirectionChangeInterval": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 360.0,
+    "deaggroRange": 460.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 110.0,
+    "attackDamage": 18.0,
+    "attackRange": 32.0,
+    "attackCooldown": 1.0,
+    "defense": 4.0
+  }
+}
