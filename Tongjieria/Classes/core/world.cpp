@@ -28,6 +28,7 @@
 #include "ui/items/CraftBar.h"
 #include "systems/item/Inventory.h"
 #include "systems/item/ItemManager.h"
+#include "systems/player/ItemUseSystem.h"
 #include "components/player/PlayerComponents.h"
 #include "world.h"
 
@@ -200,10 +201,56 @@ bool World::init()
 					}
 				}
 				else if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-					// 右键 - 放置方块动画
-					CCLOG("=== 触发PLACE动画（右键点击）===");
-					animation.isPlayingOneShot = true;
-					PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::PLACE);
+					// 右键 - 放置方块
+					// 检查玩家手持物品
+					auto* inventory = Inventory::getInstance();
+					int currentSlot = hotbar.slots[hotbar.selectedIndex];
+					const auto& slots = inventory->getSlots();
+					int itemId = (currentSlot >= 0 && currentSlot < slots.size()) ? slots[currentSlot].itemId : 0;
+
+					if (itemId != 0) {
+						auto* itemMgr = ItemManager::getInstance();
+						auto itemData = itemMgr->getItemData(itemId);
+
+						// 检查是否为可放置物品
+						if (itemData && itemData->type == ItemType::Placeables) {
+							CCLOG("=== 触发PLACE动画（放置方块）===");
+							animation.isPlayingOneShot = true;
+							PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::PLACE);
+
+							// 获取鼠标位置和玩家位置
+							auto mousePos = tools::MouseDebugTool::getWorldPosition();
+							cocos2d::Vec2 playerPos = transform.position;
+
+							// 计算距离
+							float distance = playerPos.distance(mousePos);
+
+							// 7x7范围限制（与挖掘范围相同）
+							const float BLOCK_SIZE = 16.0f;
+							const float MAX_PLACE_RANGE = 3.5f * BLOCK_SIZE * 1.414f;
+
+							if (distance <= MAX_PLACE_RANGE) {
+								// 在范围内，尝试放置方块
+								auto& blockWorld = _registry->ctx().get<BlockWorld>();
+
+								// 根据物品ID获取对应的方块类型
+								const char* blockType = ItemUseSystem::getBlockTypeFromItemId(itemId);
+								bool placed = blockWorld.tryPlaceAtWorldPos(mousePos, entt::hashed_string(blockType), 0, entity);
+
+								if (placed) {
+									CCLOG("Block placed: %s at distance: %.2f", blockType, distance);
+									// TODO: 从背包中扣除一个物品
+									// inventory->removeItem(itemId, 1);
+								}
+							} else {
+								CCLOG("Block placement too far! Distance: %.2f, Max: %.2f", distance, MAX_PLACE_RANGE);
+							}
+						} else {
+							CCLOG("=== 物品不可放置（ItemType != Placeables）===");
+						}
+					} else {
+						CCLOG("=== 空手无法放置方块 ===");
+					}
 				}
 			});
 		};
@@ -574,6 +621,8 @@ void World::setupTestItems() {
 
     // Add Dirt blocks (ID 2001)
     inventory->addItem(2001, 99);
+	inventory->addItem(2009, 99);
+	inventory->addItem(3001, 99);
     CCLOG("World: Added Dirt blocks (2001)");
 
     // Add consumables - Food items (heals 20-50 HP, uses "eat" animation)

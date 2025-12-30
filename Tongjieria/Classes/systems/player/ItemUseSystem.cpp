@@ -197,3 +197,19 @@ bool ItemUseSystem::placeBlock(entt::registry& registry, entt::entity playerEnti
 
     return true;
 }
+
+const char* ItemUseSystem::getBlockTypeFromItemId(int itemId) {
+    //
+    if (itemId == 2001) {
+        return "dirt";      // 
+    } else if (itemId == 2009) {
+        return "sand";      // 
+    } else if (itemId == 2015) {
+        return "snow";      // 
+    } else if (itemId == 3001) {
+        return "copper_ore"; // 
+    } else {
+        CCLOG("ItemUseSystem::getBlockTypeFromItemId: Unknown item ID %d, defaulting to dirt", itemId);
+        return "dirt";      // 
+    }
+}

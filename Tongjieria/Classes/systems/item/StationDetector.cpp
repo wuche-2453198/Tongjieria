@@ -5,8 +5,13 @@ using namespace cocos2d;
 StationDetector* StationDetector::_instance = nullptr;
 
 StationDetector::StationDetector() {
-    // Default: always have Hand station available
+    // 
     _currentStations.insert(StationType::Hand);
+    _currentStations.insert(StationType::Workbench);
+    _currentStations.insert(StationType::Furnace);
+    _currentStations.insert(StationType::Anvil);
+
+    CCLOG("StationDetector: 初始化完成，默认拥有所有工作台");
 }
 
 StationDetector* StationDetector::getInstance() {

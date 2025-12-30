@@ -62,6 +62,13 @@ public:
      */
     static bool placeBlock(entt::registry& registry, entt::entity playerEntity, int itemId, cocos2d::Vec2 worldPos);
 
+    /**
+     * @brief 根据物品ID获取对应的方块类型名称
+     * @param itemId 物品ID
+     * @return 方块类型名称（用于entt::hashed_string）
+     */
+    static const char* getBlockTypeFromItemId(int itemId);
+
 private:
     ItemUseSystem() = default;
 };
