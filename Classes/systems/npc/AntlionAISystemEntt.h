@@ -45,7 +45,7 @@ public:
 
         auto view = _registry->view<AntlionMovementComponent, TransformComponent, AggroComponent, RenderComponent>();
 
-        view.each([this, delta](auto entity, 
+        view.each([this, delta](entt::entity entity, 
                                AntlionMovementComponent& antlion,
                                TransformComponent& transform,
                                AggroComponent& aggro,

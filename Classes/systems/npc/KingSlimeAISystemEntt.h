@@ -56,7 +56,7 @@ private:
                                    SpriteStateComponent, RenderComponent, TransformComponent, 
                                    GroundDetectorComponent>();
         
-        view.each([delta, this](auto entity, KingSlimeComponent& kingSlime,
+        view.each([delta, this](entt::entity entity, KingSlimeComponent& kingSlime,
                                JumpMovementComponent& jump, HealthComponent& health,
                                AggroComponent& aggro, SpriteStateComponent& state,
                                RenderComponent& render, TransformComponent& transform, GroundDetectorComponent& ground) {

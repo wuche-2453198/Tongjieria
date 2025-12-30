@@ -16,6 +16,9 @@
 #include "systems/block/block_system_manager.h"
 #include "systems/block/render_command_system.h"
 #include "systems/AllSystems.h"
+#include "systems/player/PlayerFactory.h"
+#include "systems/player/PlayerSystems.h"
+#include "core/PlayerInput.h"
 #include "core/factory/monster/MonsterMasterFactory.h"
 #include "components/render/SpriteComponent.h"
 #include "utils/tools.h"
@@ -89,16 +92,6 @@ bool World::init()
 		};
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 	}
-
-	if (auto* cam = getDefaultCamera()) {
-		cam->setPosition(cocos2d::Vec2(0.0f, 1200.0f));
-		if (_registry && _registry->valid(_playerEntity)) {
-			if (auto* transform = _registry->try_get<ecs::TransformComponent>(_playerEntity)) {
-				transform->position = cam->getPosition();
-			}
-		}
-	}
-
 	this->scheduleOnce([this](float) {
 		if (!_registry) {
 			return;
@@ -116,12 +109,9 @@ void World::update(float delta)
 {
 	cocos2d::Scene::update(delta);
 
-	if (_registry && _registry->valid(_playerEntity)) {
-		if (auto* cam = getDefaultCamera()) {
-			if (auto* transform = _registry->try_get<ecs::TransformComponent>(_playerEntity)) {
-				transform->position = cam->getPosition();
-			}
-		}
+	if (_registry) {
+		PlayerSystemsManager::updateAllSystems(*_registry, delta);
+		PlayerInput::getInstance().update(delta);
 	}
 
 	if (_npcSystemManager) {
@@ -319,14 +309,17 @@ bool World::initServers()
 	}
 
 	{
-		_playerEntity = _registry->create();
-		auto& transform = _registry->emplace<ecs::TransformComponent>(_playerEntity);
-		transform.position = cocos2d::Vec2(0.0f, 1200.0f);
-		_registry->emplace<ecs::PlayerTag>(_playerEntity);
-		auto& health = _registry->emplace<ecs::HealthComponent>(_playerEntity);
-		health.maxHealth = 1000.0f;
-		health.currentHealth = 1000.0f;
-		health.invincibleTime = 0.3f;
+		auto uiLayer = cocos2d::Node::create();
+		uiLayer->setName("player_ui_layer");
+		addChild(uiLayer, std::numeric_limits<int>::max());
+
+		_playerEntity = PlayerFactory::createPlayer(*_registry,
+			cocos2d::Vec2(0.0f, 1200.0f),
+			this,
+			uiLayer);
+
+		PlayerSystemsManager::setScene(this);
+		PlayerInput::getInstance().initialize(this);
 	}
 
 	{

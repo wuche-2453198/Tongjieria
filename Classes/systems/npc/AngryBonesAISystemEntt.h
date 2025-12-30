@@ -23,7 +23,7 @@ public:
                                 GroundDetectorComponent, AggroComponent,
                                 SpriteStateComponent, RenderComponent, TransformComponent>();
 
-    view.each([this, delta](auto entity,
+    view.each([this, delta](entt::entity entity,
                            WarriorMovementComponent& warrior,
                            PounceAttackComponent& pounce,
                            GroundDetectorComponent& ground,

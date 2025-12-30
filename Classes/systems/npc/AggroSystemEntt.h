@@ -32,9 +32,8 @@ public:
         // 遍历所有具有仇恨组件的实体
         auto aggroView = _registry->view<AggroComponent, TransformComponent>();
         
-        aggroView.each([this, cachedPlayer, cachedPlayerTransform](auto entity, AggroComponent& aggro, 
+        aggroView.each([this, cachedPlayer, cachedPlayerTransform](entt::entity entity, AggroComponent& aggro, 
                              TransformComponent& transform) {
-            // Requirements 2.2, 2.3: 在每帧开始时验证现有目标实体有效性
             // 清除无效或待销毁的目标引用
             if (aggro.targetEntity != INVALID_ENTITY) {
                 if (!isEntityReferenceValid(*_registry, aggro.targetEntity)) {

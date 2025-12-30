@@ -29,7 +29,7 @@ public:
     auto view = _registry->view<DemonMovementComponent, DemonAttackComponent, AggroComponent,
                                 SpriteStateComponent, RenderComponent, TransformComponent>();
 
-    view.each([this, delta](auto entity, DemonMovementComponent &move,
+    view.each([this, delta](entt::entity entity, DemonMovementComponent &move,
                            DemonAttackComponent &attack, AggroComponent &aggro,
                            SpriteStateComponent &state, RenderComponent &render,
                            TransformComponent &transform) {

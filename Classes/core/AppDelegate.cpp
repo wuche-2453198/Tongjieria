@@ -76,6 +76,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
         auto* fu = FileUtils::getInstance();
         fu->setDefaultResourceRootPath("");
         fu->addSearchPath("Resources", true);
+        fu->addSearchPath("Resources/picture", true);
         appendStartupLog("applicationDidFinishLaunching: set resource root to Resources/");
     }
 

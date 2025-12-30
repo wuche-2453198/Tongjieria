@@ -11,11 +11,14 @@
 #include "debug_system.h"
 
 #define MOUSE_ENTITY 1
-#define FLYINGCAMERA 1
+#define FLYINGCAMERA 0
 
 DebugSystem::DebugSystem(entt::registry& registry, entt::dispatcher& dispatcher) 
     : ISystem(registry, dispatcher)
 {
+#if !FLYINGCAMERA
+    flyingCamera = nullptr;
+#endif
     auto& world = _registry.ctx().get<WorldScene>();
     auto& assetManager = _registry.ctx().get<AssetManager>();
     auto physicsWorld = world->getPhysicsWorld();

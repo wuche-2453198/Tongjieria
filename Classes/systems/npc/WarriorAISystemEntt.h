@@ -37,7 +37,7 @@ public:
         auto view = _registry->view<WarriorMovementComponent, GroundDetectorComponent,
                                      AggroComponent, SpriteStateComponent, RenderComponent, TransformComponent>();
         
-        view.each([delta, this](auto entity, WarriorMovementComponent& warrior,
+        view.each([delta, this](entt::entity entity, WarriorMovementComponent& warrior,
                                GroundDetectorComponent& ground, AggroComponent& aggro,
                                SpriteStateComponent& state, RenderComponent& render, TransformComponent& transform) {
             if (!state.spriteCreated || !state.spriteHandle) return;

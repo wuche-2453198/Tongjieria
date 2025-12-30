@@ -37,7 +37,7 @@ public:
         auto view = _registry->view<VultureMovementComponent, AggroComponent, HealthComponent,
                                     SpriteStateComponent, RenderComponent, TransformComponent, PhysicsBodyComponent>();
 
-        view.each([this, delta, &pendingFlyingSpawns](auto entity,
+        view.each([this, delta, &pendingFlyingSpawns](entt::entity entity,
                                VultureMovementComponent& vulture,
                                AggroComponent& aggro,
                                HealthComponent& health,

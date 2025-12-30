@@ -40,7 +40,7 @@ public:
         auto view = _registry->view<EaterOfSoulsMovementComponent, AggroComponent,
                                      SpriteStateComponent, RenderComponent, TransformComponent>();
         
-        view.each([delta, this](auto entity, EaterOfSoulsMovementComponent& eater,
+        view.each([delta, this](entt::entity entity, EaterOfSoulsMovementComponent& eater,
                                AggroComponent& aggro, SpriteStateComponent& state,
                                RenderComponent& render, TransformComponent& transform) {
             

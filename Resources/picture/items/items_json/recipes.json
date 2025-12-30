@@ -1,0 +1,190 @@
+{
+  "recipes": [
+    {
+      "Comment": "合成银币 (Copper Coin → Silver Coin)",
+      "Result": { "ItemID": 3503, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3502, "Count": 100 }
+      ]
+    },
+    {
+      "Comment": "合成金币 (Silver Coin → Gold Coin)",
+      "Result": { "ItemID": 3504, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3503, "Count": 100 }
+      ]
+    },
+    {
+      "Comment": "合成白金币 (Gold Coin → Platinum Coin)",
+      "Result": { "ItemID": 3505, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3504, "Count": 100 }
+      ]
+    },
+    {
+      "Comment": "分解为铜币 (Silver Coin → Copper Coin)",
+      "Result": { "ItemID": 3502, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3503, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "分解为银币 (Gold Coin → Silver Coin)",
+      "Result": { "ItemID": 3503, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3504, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "分解为金币 (Platinum Coin → Gold Coin)",
+      "Result": { "ItemID": 3504, "Count": 100 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3505, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "合成木平台 (Wood → Wood Platform)",
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "合成木平台 (Boreal Wood → Wood Platform)",
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "合成木平台 (Palm Wood → Wood Platform)",
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "合成木平台 (Mahogany → Wood Platform)",
+      "Result": { "ItemID": 2121, "Count": 2 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 1 }
+      ]
+    },
+    {
+      "Comment": "合成工作台 (Wood → Workbench)",
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 10 }
+      ]
+    },
+    {
+      "Comment": "合成工作台 (Boreal Wood → Workbench)",
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 10 }
+      ]
+    },
+    {
+      "Comment": "合成工作台 (Palm Wood → Workbench)",
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 10 }
+      ]
+    },
+    {
+      "Comment": "合成工作台 (Mahogany → Workbench)",
+      "Result": { "ItemID": 2101, "Count": 1 },
+      "Station": "Hand",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 10 }
+      ]
+    },
+    {
+      "Comment": "合成木门 (Wood → Wooden Door)",
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3506, "Count": 6 }
+      ]
+    },
+    {
+      "Comment": "合成木门 (Boreal Wood → Wooden Door)",
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3507, "Count": 6 }
+      ]
+    },
+    {
+      "Comment": "合成木门 (Palm Wood → Wooden Door)",
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3508, "Count": 6 }
+      ]
+    },
+    {
+      "Comment": "合成木门 (Mahogany → Wooden Door)",
+      "Result": { "ItemID": 2120, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3509, "Count": 6 }
+      ]
+    },
+    {
+      "Comment": "冶炼铜锭 (Copper Ore → Copper Ingot)",
+      "Result": { "ItemID": 3101, "Count": 1 },
+      "Station": "Furnace",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3001, "Count": 3 }
+      ]
+    },
+    {
+      "Comment": "合成铜镐 (Copper Ingot + Wood → Copper Pick)",
+      "Result": { "ItemID": 1223, "Count": 1 },
+      "Station": "Anvil",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3101, "Count": 12 },
+        { "Type": "Item", "ID": 3506, "Count": 4 }
+      ]
+    },
+    {
+      "Comment": "合成铜斧 (Copper Ingot + Wood → Copper Axe)",
+      "Result": { "ItemID": 1222, "Count": 1 },
+      "Station": "Anvil",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3101, "Count": 9 },
+        { "Type": "Item", "ID": 3506, "Count": 3 }
+      ]
+    },
+    {
+      "Comment": "合成铁砧 (Iron Ingot → Anvil)",
+      "Result": { "ItemID": 2103, "Count": 1 },
+      "Station": "Workbench",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3102, "Count": 5 }
+      ]
+    },
+    {
+      "Comment": "合成铜剑 (Copper Ingot → Copper Sword)",
+      "Result": { "ItemID": 1221, "Count": 1 },
+      "Station": "Anvil",
+      "Ingredients": [
+        { "Type": "Item", "ID": 3101, "Count": 8 }
+      ]
+    }
+  ]
+}

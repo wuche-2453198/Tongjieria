@@ -2,6 +2,8 @@
 #define __PLAYER_COMPONENTS_H__
 
 #include "cocos2d.h"
+#include "components/player/PlayerTag.h"
+#include "components/core/TransformComponent.h"
 #include <vector>
 
 namespace ecs {
@@ -9,6 +11,7 @@ namespace ecs {
 // ==================== Player Tag ====================
 //作为玩家标签
 //在创建玩家时添加标签
+#if 0
 struct PlayerTag {};
 
 // ==================== Transform Component ====================
@@ -21,6 +24,7 @@ struct TransformComponent {
     TransformComponent() = default;
     TransformComponent(float _x, float _y) : x(_x), y(_y) {}
 };
+#endif
 
 // ==================== Player Stats Component ====================
 //存储玩家的所有属性值
@@ -171,13 +175,20 @@ struct PlayerAnimationComponent {
         USE_ITEM,
         HURT,
         DEATH,
-        SWIM
+        SWIM,
+        BREAK,
+        PLACE,
+        ATTACK,
+        EAT,
+        DRINK,
+        MINE
     };
 
     AnimState currentState = AnimState::IDLE;
     AnimState previousState = AnimState::IDLE;
 
     float animationTime = 0.0f;
+    bool isPlayingOneShot = false;
     int currentFrame = 0;
     int totalFrames = 1;               // 当前动画的总帧数
     float frameTime = 0.07f;           // 当前动画的每帧时间
@@ -357,6 +368,9 @@ struct PlayerSpriteComponent {
     // 魔法条UI
     cocos2d::Sprite* manaBarBg = nullptr;
     cocos2d::Sprite* manaBarFill = nullptr;
+
+    cocos2d::Sprite* defenseBarBg = nullptr;
+    cocos2d::Label* defenseLabel = nullptr;
 
     ~PlayerSpriteComponent() {
         // 注意：不在这里释放，由Cocos2d管理

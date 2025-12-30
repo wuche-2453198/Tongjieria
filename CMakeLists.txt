@@ -42,8 +42,8 @@ if(APPLE OR WINDOWS)
 endif()
 
 # add cross-platforms source files and header files 
-file(GLOB_RECURSE GAME_SOURCE_CLASSES "Classes/*.cpp")
-file(GLOB_RECURSE GAME_HEADER_CLASSES "Classes/*.h")
+file(GLOB_RECURSE GAME_SOURCE_CLASSES CONFIGURE_DEPENDS "Classes/*.cpp")
+file(GLOB_RECURSE GAME_HEADER_CLASSES CONFIGURE_DEPENDS "Classes/*.h")
 
 list(FILTER GAME_SOURCE_CLASSES EXCLUDE REGEX "/core/scenes/")
 list(FILTER GAME_HEADER_CLASSES EXCLUDE REGEX "/core/scenes/")

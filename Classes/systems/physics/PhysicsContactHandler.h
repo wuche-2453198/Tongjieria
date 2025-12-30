@@ -246,6 +246,23 @@ public:
                                 healthB->takeDamage(combatA->attackDamage);
                                 healthB->invincibleTimer = healthB->invincibleTime;
                                 combatA->attackTimer = combatA->attackCooldown;
+
+                                if (bodyB) {
+                                    cocos2d::Vec2 dir = cocos2d::Vec2::ZERO;
+                                    if (nodeA && nodeB) {
+                                        dir = nodeB->getPosition() - nodeA->getPosition();
+                                    }
+                                    if (dir.lengthSquared() < 0.001f) {
+                                        dir = cocos2d::Vec2(1.0f, 0.0f);
+                                    }
+                                    dir.normalize();
+                                    if (std::abs(dir.x) < 0.2f) {
+                                        dir.x = (nodeB && nodeA && nodeB->getPositionX() >= nodeA->getPositionX()) ? 1.0f : -1.0f;
+                                    }
+                                    cocos2d::Vec2 v = bodyB->getVelocity();
+                                    cocos2d::Vec2 knock(dir.x * 360.0f, 220.0f);
+                                    bodyB->setVelocity(cocos2d::Vec2(knock.x, std::max(v.y, 0.0f) + knock.y));
+                                }
                             }
                         }
                         auto* combatB = registry.try_get<CombatComponent>(entB);
@@ -256,6 +273,23 @@ public:
                                 healthA->takeDamage(combatB->attackDamage);
                                 healthA->invincibleTimer = healthA->invincibleTime;
                                 combatB->attackTimer = combatB->attackCooldown;
+
+                                if (bodyA) {
+                                    cocos2d::Vec2 dir = cocos2d::Vec2::ZERO;
+                                    if (nodeB && nodeA) {
+                                        dir = nodeA->getPosition() - nodeB->getPosition();
+                                    }
+                                    if (dir.lengthSquared() < 0.001f) {
+                                        dir = cocos2d::Vec2(1.0f, 0.0f);
+                                    }
+                                    dir.normalize();
+                                    if (std::abs(dir.x) < 0.2f) {
+                                        dir.x = (nodeA && nodeB && nodeA->getPositionX() >= nodeB->getPositionX()) ? 1.0f : -1.0f;
+                                    }
+                                    cocos2d::Vec2 v = bodyA->getVelocity();
+                                    cocos2d::Vec2 knock(dir.x * 360.0f, 220.0f);
+                                    bodyA->setVelocity(cocos2d::Vec2(knock.x, std::max(v.y, 0.0f) + knock.y));
+                                }
                             }
                         }
                     }
@@ -281,8 +315,35 @@ public:
         };
         
         // 预求解 - 防止滑墙
-        listener->onContactPreSolve = [](cocos2d::PhysicsContact& contact, 
+        listener->onContactPreSolve = [&registry](cocos2d::PhysicsContact& contact, 
                                          cocos2d::PhysicsContactPreSolve& solve) {
+            auto* bodyA = contact.getShapeA() ? contact.getShapeA()->getBody() : nullptr;
+            auto* bodyB = contact.getShapeB() ? contact.getShapeB()->getBody() : nullptr;
+            cocos2d::Node* nodeA = bodyA ? bodyA->getNode() : nullptr;
+            cocos2d::Node* nodeB = bodyB ? bodyB->getNode() : nullptr;
+
+            EntityId idA = nodeA ? NodeEntityMap::getInstance().findEntity(nodeA) : INVALID_ENTITY;
+            EntityId idB = nodeB ? NodeEntityMap::getInstance().findEntity(nodeB) : INVALID_ENTITY;
+
+            if (idA != INVALID_ENTITY && idB != INVALID_ENTITY) {
+                auto entA = static_cast<entt::entity>(idA);
+                auto entB = static_cast<entt::entity>(idB);
+                if (registry.valid(entA) && registry.valid(entB)) {
+                    const bool aPlayer = registry.any_of<PlayerTag>(entA);
+                    const bool bPlayer = registry.any_of<PlayerTag>(entB);
+                    if (aPlayer != bPlayer) {
+                        auto* physA = registry.try_get<PhysicsBodyComponent>(entA);
+                        auto* physB = registry.try_get<PhysicsBodyComponent>(entB);
+                        constexpr int NPC_CATEGORY = 0x0002;
+                        const bool aNpc = physA && ((physA->categoryBitmask & NPC_CATEGORY) != 0);
+                        const bool bNpc = physB && ((physB->categoryBitmask & NPC_CATEGORY) != 0);
+                        if ((aPlayer && bNpc) || (bPlayer && aNpc)) {
+                            solve.ignore();
+                        }
+                    }
+                }
+            }
+
             auto info = parseContact(contact);
             handleWallPreSolve(info, solve);
             return true;

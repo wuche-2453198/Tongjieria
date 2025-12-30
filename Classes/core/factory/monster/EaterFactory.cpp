@@ -96,7 +96,7 @@ void EaterFactory::configurePhysicsForFlying(entt::registry &registry, entt::ent
   physics.rotationEnabled = false;
   physics.categoryBitmask = 0x0002;
   physics.contactTestBitmask = 0xFFFFFFFF;
-  physics.collisionBitmask = 0x0001;  // 只与地形碰撞
+  physics.collisionBitmask = 0x0001 | 0x0008;  // 只与地形/玩家接触
   physics.group = config.physics.collisionGroup;
 
   CCLOG("  Added PhysicsBodyComponent (box, %.1fx%.1f, no gravity)",

@@ -137,6 +137,39 @@ public:
                 auto* player = _registry->try_get<ecs::PlayerTag>(otherEnt);
                 auto* health = _registry->try_get<ecs::HealthComponent>(otherEnt);
                 if (player && health) {
+                    if (otherBody && otherBody->isDynamic()) {
+                        cocos2d::Vec2 playerPos = cocos2d::Vec2::ZERO;
+                        if (auto* node = otherBody->getNode()) {
+                            playerPos = node->getPosition();
+                        }
+
+                        cocos2d::Vec2 projPos = cocos2d::Vec2::ZERO;
+                        if (auto* state = _registry->try_get<ecs::SpriteStateComponent>(projEntity)) {
+                            if (state->spriteCreated && state->spriteHandle) {
+                                if (auto* sprite = static_cast<cocos2d::Sprite*>(state->spriteHandle)) {
+                                    projPos = sprite->getPosition();
+                                }
+                            }
+                        }
+                        if (projPos.isZero()) {
+                            if (auto* transform = _registry->try_get<ecs::TransformComponent>(projEntity)) {
+                                projPos = transform->position;
+                            }
+                        }
+
+                        cocos2d::Vec2 dir = playerPos - projPos;
+                        if (dir.lengthSquared() < 0.001f) {
+                            dir = cocos2d::Vec2(1.0f, 0.0f);
+                        }
+                        dir.normalize();
+                        if (std::abs(dir.x) < 0.2f) {
+                            dir.x = (playerPos.x >= projPos.x) ? 1.0f : -1.0f;
+                        }
+
+                        cocos2d::Vec2 v = otherBody->getVelocity();
+                        cocos2d::Vec2 knock(dir.x * 420.0f, 240.0f);
+                        otherBody->setVelocity(cocos2d::Vec2(knock.x, std::max(v.y, 0.0f) + knock.y));
+                    }
                     if (health->invincibleTimer <= 0.0f) {
                         health->takeDamage(proj->damage);
                         health->invincibleTimer = health->invincibleTime;

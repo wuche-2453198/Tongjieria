@@ -520,7 +520,7 @@ void BaseMonsterFactory::attachPhysicsComponents(entt::registry &registry, entt:
   physics.rotationEnabled = false;
   physics.categoryBitmask = 0x0002;
   physics.contactTestBitmask = 0xFFFFFFFF;
-  physics.collisionBitmask = 0x0001;
+  physics.collisionBitmask = 0x0001 | 0x0008;
   physics.group = config.physics.collisionGroup;
 }
 
