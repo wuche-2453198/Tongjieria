@@ -2,6 +2,7 @@
 #define __PLAYER_INPUT_H__
 
 #include "cocos2d.h"
+#include "entt/entt.hpp"
 #include <map>
 
 /**
@@ -37,6 +38,11 @@ public:
      * @brief 每帧更新（用于处理JustPressed状态）
      */
     void update(float dt);
+
+    /**
+     * @brief 设置registry指针用于处理物品丢弃
+     */
+    void setRegistry(entt::registry* registry);
 
     // ==================== 键盘输入查询 ====================
 
@@ -117,9 +123,13 @@ private:
 
     cocos2d::EventListenerKeyboard* _keyboardListener = nullptr;
     cocos2d::EventListenerMouse* _mouseListener = nullptr;
+    cocos2d::EventListenerCustom* _itemDropListener = nullptr;
 
     // 按键映射
     std::map<std::string, cocos2d::EventKeyboard::KeyCode> _keyMappings;
+
+    // Registry pointer for item drop handling
+    entt::registry* _registry = nullptr;
 
     // ==================== 回调函数 ====================
 

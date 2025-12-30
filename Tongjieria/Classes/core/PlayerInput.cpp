@@ -1,4 +1,7 @@
 #include "PlayerInput.h"
+#include "components/player/PlayerComponents.h"
+#include "components/item/InventoryDef.h"
+#include "systems/item/Inventory.h"
 
 USING_NS_CC;
 //输入部分
@@ -41,7 +44,47 @@ void PlayerInput::initialize(Scene* scene) {
     _mouseListener->onMouseMove = CC_CALLBACK_1(PlayerInput::onMouseMove, this);
     scene->getEventDispatcher()->addEventListenerWithSceneGraphPriority(_mouseListener, scene);
 
-    CCLOG("PlayerInput initialized");
+    // 创建物品丢弃事件监听器
+    _itemDropListener = EventListenerCustom::create("Event_ItemDropped",
+        [this](EventCustom* event) {
+            // 获取丢弃的物品数据
+            InventorySlot* droppedData = static_cast<InventorySlot*>(event->getUserData());
+            if (!droppedData) {
+                CCLOG("PlayerInput: Event_ItemDropped received but no data!");
+                return;
+            }
+
+            CCLOG("========================================");
+            CCLOG("PlayerInput: Event_ItemDropped received!");
+            CCLOG("Item ID: %d, Count: %d", droppedData->itemId, droppedData->count);
+
+            // 获取玩家位置作为物品掉落位置
+            if (_registry) {
+                auto view = _registry->view<ecs::PlayerTag, ecs::TransformComponent>();
+                view.each([droppedData](auto entity, auto& tag, auto& transform) {
+                    Vec2 dropPos = transform.position;
+                    // 在玩家前方掉落物品（稍微偏移）
+                    dropPos.x += 20.0f; // 向右偏移20像素
+
+                    CCLOG("TODO: Spawn item entity at position (%.2f, %.2f)", dropPos.x, dropPos.y);
+                    CCLOG("- Item ID: %d", droppedData->itemId);
+                    CCLOG("- Count: %d", droppedData->count);
+                    // TODO: 在这里创建物品实体
+                    // 例如: ItemEntityFactory::createDroppedItem(*_registry, dropPos, droppedData->itemId, droppedData->count);
+                });
+            } else {
+                CCLOG("PlayerInput: Cannot spawn item - registry is null!");
+            }
+
+            CCLOG("========================================");
+
+            // 释放堆内存
+            delete droppedData;
+        }
+    );
+    scene->getEventDispatcher()->addEventListenerWithSceneGraphPriority(_itemDropListener, scene);
+
+    CCLOG("PlayerInput initialized with item drop listener");
 }
 
 void PlayerInput::cleanup() {
@@ -55,8 +98,18 @@ void PlayerInput::cleanup() {
         _mouseListener = nullptr;
     }
 
+    if (_itemDropListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(_itemDropListener);
+        _itemDropListener = nullptr;
+    }
+
     _keyStates.clear();
     _mouseStates.clear();
+}
+
+void PlayerInput::setRegistry(entt::registry* registry) {
+    _registry = registry;
+    CCLOG("PlayerInput: Registry set to %p", (void*)registry);
 }
 
 void PlayerInput::update(float dt) {

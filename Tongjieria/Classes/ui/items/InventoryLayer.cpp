@@ -523,8 +523,15 @@ void InventoryLayer::attachMouseHandlers() {
                     }
                     CCLOG("Count: %d", droppedItem.count);
                     CCLOG("From slot: %d (hovered)", _hoverIndex);
-                    CCLOG("TODO: Spawn item entity in world");
+                    CCLOG("Dispatching Event_ItemDropped to spawn item entity in world");
                     CCLOG("========================================");
+
+                    // Dispatch custom event with dropped item data
+                    // Allocate on heap so world.cpp can receive it
+                    InventorySlot* droppedData = new InventorySlot(droppedItem);
+                    auto dropEvent = EventCustom("Event_ItemDropped");
+                    dropEvent.setUserData(droppedData);
+                    Director::getInstance()->getEventDispatcher()->dispatchEvent(&dropEvent);
 
                     // Stop event propagation to prevent PlayerInput from handling this event
                     event->stopPropagation();

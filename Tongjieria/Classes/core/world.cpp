@@ -516,6 +516,7 @@ bool World::initServers()
 
 		PlayerSystemsManager::setScene(this);
 		PlayerInput::getInstance().initialize(this);
+		PlayerInput::getInstance().setRegistry(_registry.get());
 
 		// Create and add inventory UI
 		_inventoryLayer = InventoryLayer::create();
