@@ -9,38 +9,38 @@
 
 /**
  * @class PlayerAnimationLoader
- * @brief Player animation resource loader
+ * @brief 玩家动画资源加载器
  *
- * Responsibilities:
- * - Load animation frames from Resources/player/
- * - Manage frame sequences for different animation states
- * - Provide animation data to PlayerAnimationSystem
+ * 职责：
+ * - 从 Resources/player/ 加载动画帧
+ * - 管理不同动画状态的帧序列
+ * - 为 PlayerAnimationSystem 提供动画数据
  */
 class PlayerAnimationLoader {
 public:
     /**
-     * @brief Animation frame data
+     * @brief 动画帧数据
      */
     struct AnimationFrames {
-        std::vector<cocos2d::Sprite*> frames;  // Frame sprite list
-        float frameTime = 0.07f;               // Time per frame (seconds)
-        bool loop = true;                      // Whether to loop playback
+        std::vector<cocos2d::Sprite*> frames;  
+        float frameTime = 0.07f;               
+        bool loop = true;                      
 
         int getFrameCount() const { return static_cast<int>(frames.size()); }
     };
 
     /**
-     * @brief Initialize animation resources (preload all animations)
-     * @param parentNode Parent node (for adding sprites)
-     * @return Whether loading succeeded
+     * @brief 初始化动画资源（预加载所有动画）
+     * @param parentNode 父节点（用于添加精灵）
+     * @return 是否加载成功
      */
     static bool initialize(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load frames for specified animation state
-     * @param state Animation state
-     * @param parentNode Parent node
-     * @return Animation frame data
+     * @brief 加载指定动画状态的帧
+     * @param state 动画状态
+     * @param parentNode 父节点
+     * @return 动画帧数据
      */
     static AnimationFrames loadAnimation(
         ecs::PlayerAnimationComponent::AnimState state,
@@ -48,83 +48,83 @@ public:
     );
 
     /**
-     * @brief Get loaded animation data
-     * @param state Animation state
-     * @return Animation frame data pointer, returns nullptr if not loaded
+     * @brief 获取已加载的动画数据
+     * @param state 动画状态
+     * @return 动画帧数据指针，未加载则返回 nullptr
      */
     static const AnimationFrames* getAnimation(
         ecs::PlayerAnimationComponent::AnimState state
     );
 
     /**
-     * @brief Clean up all animation resources
+     * @brief 清理所有动画资源
      */
     static void cleanup();
 
 private:
     PlayerAnimationLoader() = delete;
 
-    // Animation resource cache
+    
     static std::map<ecs::PlayerAnimationComponent::AnimState, AnimationFrames> s_animationCache;
 
     /**
-     * @brief Load walk animation (14 frame sequence)
+     * @brief 加载行走动画（14帧序列）
      */
     static AnimationFrames loadWalkAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load idle animation (single frame)
+     * @brief 加载待机动画（单帧）
      */
     static AnimationFrames loadIdleAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load jump animation (single frame)
+     * @brief 加载跳跃动画（单帧）
      */
     static AnimationFrames loadJumpAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load fall animation (single frame)
+     * @brief 加载下落动画（单帧）
      */
     static AnimationFrames loadFallAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load sit animation (single frame)
+     * @brief 加载坐下动画（单帧）
      */
     static AnimationFrames loadSitAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load break animation (left click - break block, 2 frames)
+     * @brief 加载破坏动画（左键 - 破坏方块，2帧）
      */
     static AnimationFrames loadBreakAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load place animation (right click - place block, 2 frames)
+     * @brief 加载放置动画（右键 - 放置方块，2帧）
      */
     static AnimationFrames loadPlaceAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load weapon swing animation (16 frames)
-     * Used when player holds a weapon and clicks
+     * @brief 加载武器挥砍动画（16帧）
+     * 玩家持有武器并点击时使用
      */
     static AnimationFrames loadWeaponSwingAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load eat animation (eating food)
+     * @brief 加载进食动画（吃食物）
      */
     static AnimationFrames loadEatAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load drink animation (drinking potion)
+     * @brief 加载饮用动画（喝药水）
      */
     static AnimationFrames loadDrinkAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Load mine animation (mining with pickaxe)
+     * @brief 加载挖掘动画（使用镐子挖掘）
      */
     static AnimationFrames loadMineAnimation(cocos2d::Node* parentNode);
 
     /**
-     * @brief Create sprite frame (common method)
+     * @brief 创建精灵帧（通用方法）
      */
     static cocos2d::Sprite* createFrameSprite(
         const std::string& path,

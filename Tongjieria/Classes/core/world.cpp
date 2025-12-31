@@ -111,7 +111,8 @@ bool World::init()
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 	}
 
-	// 添加鼠标监听器用于触发破坏、放置和挖掘动画
+	// 添加鼠标监听器用于触发破坏、放置和挖掘动画//暂时整合到world中在input中有对应的函数，
+	//但是还未完整实现，因此暂时在world中化简逻辑
 	{
 		auto* mouseListener = cocos2d::EventListenerMouse::create();
 
@@ -201,7 +202,7 @@ bool World::init()
 					}
 				}
 				else if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-					// 右键 - 放置方块
+					// 右键 - 根据物品类型执行不同操作
 					// 检查玩家手持物品
 					auto* inventory = Inventory::getInstance();
 					int currentSlot = hotbar.slots[hotbar.selectedIndex];
@@ -212,44 +213,63 @@ bool World::init()
 						auto* itemMgr = ItemManager::getInstance();
 						auto itemData = itemMgr->getItemData(itemId);
 
-						// 检查是否为可放置物品
-						if (itemData && itemData->type == ItemType::Placeables) {
-							CCLOG("=== 触发PLACE动画（放置方块）===");
-							animation.isPlayingOneShot = true;
-							PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::PLACE);
+						if (itemData) {
+							// 检查是否为消耗品（食物/药水）
+							if (itemData->type == ItemType::Consumables) {
+								// 根据 useAnimation 字段播放对应动画
+								if (!itemData->useAnimation.empty()) {
+									if (itemData->useAnimation == "eat") {
+										CCLOG("=== 触发EAT动画（食用物品）===");
+										animation.isPlayingOneShot = true;
+										PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::EAT);
+									} else if (itemData->useAnimation == "drink") {
+										CCLOG("=== 触发DRINK动画（饮用物品）===");
+										animation.isPlayingOneShot = true;
+										PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::DRINK);
+									}
+								}
+								// 调用 ItemUseSystem 来处理消耗品效果（恢复血量等）
+								ItemUseSystem::useConsumable(*_registry, entity, itemId);
+							}
+							// 检查是否为可放置物品
+							else if (itemData->type == ItemType::Placeables) {
+								CCLOG("=== 触发PLACE动画（放置方块）===");
+								animation.isPlayingOneShot = true;
+								PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::PLACE);
 
-							// 获取鼠标位置和玩家位置
-							auto mousePos = tools::MouseDebugTool::getWorldPosition();
-							cocos2d::Vec2 playerPos = transform.position;
+								// 获取鼠标位置和玩家位置
+								auto mousePos = tools::MouseDebugTool::getWorldPosition();
+								cocos2d::Vec2 playerPos = transform.position;
 
-							// 计算距离
-							float distance = playerPos.distance(mousePos);
+								// 计算距离
+								float distance = playerPos.distance(mousePos);
 
-							// 7x7范围限制（与挖掘范围相同）
-							const float BLOCK_SIZE = 16.0f;
-							const float MAX_PLACE_RANGE = 3.5f * BLOCK_SIZE * 1.414f;
+								// 7x7范围限制（与挖掘范围相同）
+								const float BLOCK_SIZE = 16.0f;
+								const float MAX_PLACE_RANGE = 3.5f * BLOCK_SIZE * 1.414f;
 
-							if (distance <= MAX_PLACE_RANGE) {
-								// 在范围内，尝试放置方块
-								auto& blockWorld = _registry->ctx().get<BlockWorld>();
+								if (distance <= MAX_PLACE_RANGE) {
+									// 在范围内，尝试放置方块
+									auto& blockWorld = _registry->ctx().get<BlockWorld>();
 
-								// 根据物品ID获取对应的方块类型
-								const char* blockType = ItemUseSystem::getBlockTypeFromItemId(itemId);
-								bool placed = blockWorld.tryPlaceAtWorldPos(mousePos, entt::hashed_string(blockType), 0, entity);
+									// 根据物品ID获取对应的方块类型
+									const char* blockType = ItemUseSystem::getBlockTypeFromItemId(itemId);
+									bool placed = blockWorld.tryPlaceAtWorldPos(mousePos, entt::hashed_string(blockType), 0, entity);
 
-								if (placed) {
-									CCLOG("Block placed: %s at distance: %.2f", blockType, distance);
-									// TODO: 从背包中扣除一个物品
-									// inventory->removeItem(itemId, 1);
+									if (placed) {
+										CCLOG("Block placed: %s at distance: %.2f", blockType, distance);
+										// 从背包中扣除一个物品
+										inventory->removeItem(itemId, 1);
+									}
+								} else {
+									CCLOG("Block placement too far! Distance: %.2f, Max: %.2f", distance, MAX_PLACE_RANGE);
 								}
 							} else {
-								CCLOG("Block placement too far! Distance: %.2f, Max: %.2f", distance, MAX_PLACE_RANGE);
+								CCLOG("=== 物品类型不支持右键使用 ===");
 							}
-						} else {
-							CCLOG("=== 物品不可放置（ItemType != Placeables）===");
 						}
 					} else {
-						CCLOG("=== 空手无法放置方块 ===");
+						CCLOG("=== 空手无法使用右键 ===");
 					}
 				}
 			});
@@ -287,16 +307,16 @@ bool World::init()
 	}, 0.3f, "world_spawn_test_wall");
 
 	// 测试：1秒后切换到BREAK动画，验证动画是否加载成功
-	this->scheduleOnce([this](float) {
-		if (!_registry) {
-			return;
-		}
-		auto view = _registry->view<ecs::PlayerTag, ecs::PlayerAnimationComponent>();
-		view.each([](auto entity, auto& tag, auto& animation) {
-			CCLOG("=== 测试切换到BREAK动画 ===");
-			PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::BREAK);
-		});
-	}, 1.0f, "test_break_animation");
+	// this->scheduleOnce([this](float) {
+	// 	if (!_registry) {
+	// 		return;
+	// 	}
+	// 	auto view = _registry->view<ecs::PlayerTag, ecs::PlayerAnimationComponent>();
+	// 	view.each([](auto entity, auto& tag, auto& animation) {
+	// 		CCLOG("=== 测试切换到BREAK动画 ===");
+	// 		PlayerAnimationSystem::transitionToState(animation, ecs::PlayerAnimationComponent::AnimState::BREAK);
+	// 	});
+	// }, 1.0f, "test_break_animation");
 	
 	return true;
 }

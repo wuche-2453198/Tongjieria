@@ -6,7 +6,7 @@
 #include "components/player/PlayerComponents.h"
 #include "components/physics/PhysicsBodyComponent.h"
 
-// Forward declaration for block system components
+// 这个系统已经整合到其他部分中了
 class Position;
 
 /**
@@ -30,7 +30,7 @@ class Position;
  * - 读取 PlayerInput 单例的输入状态
  * - 更新 PlayerMovementComponent 的输入标志
  * - 处理快捷栏切换
- *
+ * - 已经弃用（暂时还未删除）
  * 优先级：0（最先执行）
  */
 class PlayerInputSystem {
@@ -56,7 +56,7 @@ private:
  * - 应用加速度、摩擦力
  * - 处理跳跃
  * - 同步到物理引擎
- *
+ * - 已经弃用
  * 优先级：10
  */
 class PlayerMovementSystem {
