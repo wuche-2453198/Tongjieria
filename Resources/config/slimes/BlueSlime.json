@@ -1,0 +1,52 @@
+{
+  "id": "BlueSlime",
+  "type": "Slime",
+  "description": "蓝色史莱姆",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/BlueSlime",
+    "spritePrefix": "Blue_Slime",
+    "frameCount": 2,
+    "frameTime": 0.15,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 32.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 2.0,
+    "horizontalImpulse": 350.0,
+    "verticalImpulse": 550.0,
+    "patrolImpulseRatio": 0.5,
+    "directionChangeChance": 0.3
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 300.0,
+    "deaggroRange": 400.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 60.0,
+    "attackDamage": 12.0,
+    "attackRange": 50.0,
+    "attackCooldown": 1.0,
+    "defense": 2.0
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 1, "maxCount": 4, "dropChance": 0.85},
+    {"itemId": "coin", "minCount": 8, "maxCount": 20, "dropChance": 0.6}
+  ]
+}

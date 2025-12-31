@@ -1,0 +1,659 @@
+[
+  {
+    "id": 3001,
+    "name": "Copper Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/copper_ore.png",
+    "value": 3,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3002,
+    "name": "Iron Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/iron_ore.png",
+    "value": 5,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3003,
+    "name": "Silver Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/silver_ore.png",
+    "value": 8,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3004,
+    "name": "Gold Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/gold_ore.png",
+    "value": 12,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3005,
+    "name": "Aluminum Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/aluminum_ore.png",
+    "value": 6,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3006,
+    "name": "Lead Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/lead_ore.png",
+    "value": 4,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3007,
+    "name": "Zinc Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/zinc_ore.png",
+    "value": 9,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3008,
+    "name": "Obdurite Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/obdurite_ore.png",
+    "value": 18,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3009,
+    "name": "Rhymestone Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/rhymestone_ore.png",
+    "value": 22,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3010,
+    "name": "Zythium Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/zythium_ore.png",
+    "value": 40,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3011,
+    "name": "Magnetite Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/magnetite_ore.png",
+    "value": 20,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3012,
+    "name": "Irradium Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/irradium_ore.png",
+    "value": 28,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3013,
+    "name": "Silicon Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/silicon_ore.png",
+    "value": 7,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3014,
+    "name": "Uranium Ore",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/uranium_ore.png",
+    "value": 25,
+    "tags": [3, 301]
+  },
+  {
+    "id": 3015,
+    "name": "Coal",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/coal.png",
+    "value": 2,
+    "tags": [3, 302]
+  },
+  {
+    "id": 3016,
+    "name": "Lumenstone",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/lumenstone.png",
+    "value": 30,
+    "tags": [3, 303]
+  },
+  {
+    "id": 3017,
+    "name": "Meltstone",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/meltstone.png",
+    "value": 35,
+    "tags": [3, 303]
+  },
+  {
+    "id": 3018,
+    "name": "Nullstone",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/nullstone.png",
+    "value": 38,
+    "tags": [3, 303]
+  },
+  {
+    "id": 3019,
+    "name": "Skystone",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ores/skystone.png",
+    "value": 32,
+    "tags": [3, 303]
+  },
+  {
+    "id": 3101,
+    "name": "Copper Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/copper_ingot.png",
+    "value": 10,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3102,
+    "name": "Iron Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/iron_ingot.png",
+    "value": 15,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3103,
+    "name": "Silver Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/silver_ingot.png",
+    "value": 25,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3104,
+    "name": "Gold Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/gold_ingot.png",
+    "value": 40,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3105,
+    "name": "Aluminum Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/aluminum_ingot.png",
+    "value": 18,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3106,
+    "name": "Lead Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/lead_ingot.png",
+    "value": 12,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3107,
+    "name": "Zinc Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/zinc_ingot.png",
+    "value": 28,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3108,
+    "name": "Obdurite Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/obdurite_ingot.png",
+    "value": 55,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3109,
+    "name": "Rhymestone Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/rhymestone_ingot.png",
+    "value": 70,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3110,
+    "name": "Magnetite Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/magnetite_ingot.png",
+    "value": 60,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3111,
+    "name": "Irradium Ingot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/irradium_ingot.png",
+    "value": 85,
+    "tags": [3, 311]
+  },
+  {
+    "id": 3112,
+    "name": "Silicon Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/silicon_bar.png",
+    "value": 22,
+    "tags": [3, 312]
+  },
+  {
+    "id": 3113,
+    "name": "Uranium Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/uranium_bar.png",
+    "value": 75,
+    "tags": [3, 312]
+  },
+  {
+    "id": 3114,
+    "name": "Refined Uranium",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/refined_uranium.png",
+    "value": 150,
+    "tags": [3, 312]
+  },
+  {
+    "id": 3115,
+    "name": "Meltstone Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/meltstone_bar.png",
+    "value": 100,
+    "tags": [3, 313]
+  },
+  {
+    "id": 3116,
+    "name": "Nullstone Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/nullstone_bar.png",
+    "value": 110,
+    "tags": [3, 313]
+  },
+  {
+    "id": 3117,
+    "name": "Skystone Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/skystone_bar.png",
+    "value": 95,
+    "tags": [3, 313]
+  },
+  {
+    "id": 3118,
+    "name": "Zythium Bar",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/ingots/zythium_bar.png",
+    "value": 120,
+    "tags": [3, 313]
+  },
+  {
+    "id": 3201,
+    "name": "Green Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/green_goo.png",
+    "value": 2,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3202,
+    "name": "Blue Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/blue_goo.png",
+    "value": 3,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3203,
+    "name": "Red Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/red_goo.png",
+    "value": 4,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3204,
+    "name": "Yellow Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/yellow_goo.png",
+    "value": 5,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3205,
+    "name": "White Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/white_goo.png",
+    "value": 6,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3206,
+    "name": "Black Goo",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/black_goo.png",
+    "value": 8,
+    "tags": [3, 321]
+  },
+  {
+    "id": 3207,
+    "name": "Rotten Chunk",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/rotten_chunk.png",
+    "value": 3,
+    "tags": [3, 322]
+  },
+  {
+    "id": 3208,
+    "name": "Astral Shard",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/astral_shard.png",
+    "value": 15,
+    "tags": [3, 323]
+  },
+  {
+    "id": 3209,
+    "name": "Bark",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/goo/bark.png",
+    "value": 1,
+    "tags": [3, 324]
+  },
+  {
+    "id": 3301,
+    "name": "Greenleaf",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/greenleaf.png",
+    "value": 5,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3302,
+    "name": "Sunflower",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/sunflower.png",
+    "value": 6,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3303,
+    "name": "Moonflower",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/moonflower.png",
+    "value": 7,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3304,
+    "name": "Skyblossom",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/skyblossom.png",
+    "value": 8,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3305,
+    "name": "Frostleaf",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/frostleaf.png",
+    "value": 7,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3306,
+    "name": "Dryweed",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/dryweed.png",
+    "value": 6,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3307,
+    "name": "Marshleaf",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/marshleaf.png",
+    "value": 6,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3308,
+    "name": "Caveroot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/caveroot.png",
+    "value": 8,
+    "tags": [3, 331]
+  },
+  {
+    "id": 3309,
+    "name": "Void Rot",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/herbs/void_rot.png",
+    "value": 10,
+    "tags": [3, 332]
+  },
+  {
+    "id": 3401,
+    "name": "Greenleaf Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/greenleaf_seeds.png",
+    "value": 2,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3402,
+    "name": "Sunflower Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/sunflower_seeds.png",
+    "value": 2,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3403,
+    "name": "Moonflower Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/moonflower_seeds.png",
+    "value": 3,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3404,
+    "name": "Skyblossom Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/skyblossom_seeds.png",
+    "value": 3,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3405,
+    "name": "Frostleaf Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/frostleaf_seeds.png",
+    "value": 3,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3406,
+    "name": "Dryweed Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/dryweed_seeds.png",
+    "value": 2,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3407,
+    "name": "Marshleaf Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/marshleaf_seeds.png",
+    "value": 2,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3408,
+    "name": "Caveroot Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/caveroot_seeds.png",
+    "value": 3,
+    "tags": [3, 341]
+  },
+  {
+    "id": 3409,
+    "name": "Void Rot Seeds",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/seeds/void_rot_seeds.png",
+    "value": 4,
+    "tags": [3, 342]
+  },
+  {
+    "id": 3501,
+    "name": "Charcoal",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/dust/charcoal.png",
+    "value": 3,
+    "tags": [3, 351]
+  },
+  {
+    "id": 3502,
+    "name": "Copper Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/copper_coin.png",
+    "value": 1,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3503,
+    "name": "Silver Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/silver_coin.png",
+    "value": 100,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3504,
+    "name": "Gold Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/gold_coin.png",
+    "value": 10000,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3505,
+    "name": "Platinum Coin",
+    "type": 3,
+    "maxStack": 100,
+    "icon": "items/Materials/coins/platinum_coin.png",
+    "value": 1000000,
+    "tags": [3, 361]
+  },
+  {
+    "id": 3506,
+    "name": "Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3507,
+    "name": "Boreal Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/boreal_wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3508,
+    "name": "Palm Wood",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/palm_wood.png",
+    "value": 1,
+    "tags": [3, 362]
+  },
+  {
+    "id": 3509,
+    "name": "Mahogany",
+    "type": 3,
+    "maxStack": 999,
+    "icon": "items/Materials/woods/mahogany.png",
+    "value": 1,
+    "tags": [3, 362]
+  }
+]

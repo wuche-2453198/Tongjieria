@@ -1,0 +1,65 @@
+{
+  "id": "31px-Zombie",
+  "type": "Zombie",
+  "description": "小型僵尸 - 体型较小但移动速度较快的僵尸",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/31px-Zombie",
+    "spritePrefix": "31px-Zombie",
+    "frameCount": 3,
+    "frameSequence": [ 1, 2, 3, 2 ],
+    "frameTime": 0.15,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 31.0,
+    "bodyHeight": 42.0,
+    "bodyHeightOffset": -4,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 90.0,
+    "jumpForce": 430.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.08,
+    "patrolDirectionChangeInterval": 2.5,
+    "patrolDirectionChangeChance": 0.35
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 330.0,
+    "deaggroRange": 430.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 45.0,
+    "attackDamage": 10.0,
+    "attackRange": 28.0,
+    "attackCooldown": 0.9,
+    "defense": 1.5
+  },
+  
+  "loot": [
+    {
+      "itemId": "RottenFlesh",
+      "minCount": 0,
+      "maxCount": 2,
+      "dropChance": 0.7
+    },
+    {
+      "itemId": "ZombieArm",
+      "minCount": 1,
+      "maxCount": 1,
+      "dropChance": 0.015
+    }
+  ]
+}

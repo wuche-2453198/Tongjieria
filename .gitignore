@@ -1,0 +1,118 @@
+# Visual Studio 生成的文件
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# 构建输出目录
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+/Win32/
+[Bb]in/
+[Oo]bj/
+[Ll]ib/
+
+# CMake 生成的文件
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+_deps
+
+# CMake 生成的 VS 项目文件
+ALL_BUILD.dir/
+ALL_BUILD.vcxproj*
+ZERO_CHECK.dir/
+ZERO_CHECK.vcxproj*
+SYNC_RESOURCE-*.dir/
+SYNC_RESOURCE-*.vcxproj*
+*.dir/
+
+# cocos2d-x 编译输出
+simulator/
+runtime/
+
+# Android 构建文件
+proj.android/app/build/
+proj.android/app/.cxx/
+proj.android/app/.externalNativeBuild/
+proj.android/.gradle/
+proj.android/local.properties
+proj.android/.idea/
+
+# iOS/Mac 构建文件
+proj.ios_mac/build/
+proj.ios_mac/*.xcworkspace/
+proj.ios_mac/*.xcodeproj/
+
+# 临时文件和缓存
+*.log
+*.tlog
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.dll
+*.exe
+*.app
+*.apk
+*.ipa
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# engine 目录（通常是构建时生成的）
+engine/
+
+# 编辑器备份文件
+*.backup
+DocumentLayout.json
+DocumentLayout.backup.json
+# 编辑器备份文件
+*.backup
+DocumentLayout.json
+DocumentLayout.backup.json
+/Classes/systems/block/block_physics_system.cpp
+
+# 强制包含 third_party 文件夹的所有内容
+!third_party/
+!third_party/**
+third_party/libnoise/.git/
+third_party/libnoise/CMakeFiles/
+third_party/libnoise/**/CMakeFiles/
+third_party/libnoise/ALL_BUILD.dir/
+third_party/libnoise/ALL_BUILD.vcxproj*
+third_party/libnoise/INSTALL.dir/
+third_party/libnoise/INSTALL.vcxproj*
+third_party/libnoise/libnoise.dir/
+third_party/libnoise/libnoise.sln
+third_party/libnoise/libnoise.vcxproj*
+third_party/libnoise/Debug/
+third_party/libnoise/Release/
+third_party/libnoise/cmake_install.cmake
+
+# 强制包含 cocos2d/external 文件夹的所有内容
+!cocos2d/external/
+!cocos2d/external/**
+/cocos2d/
+
+# 忽略 cocos2d 和 build 目录
+cocos2d/
+build/
+

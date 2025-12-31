@@ -1,0 +1,52 @@
+{
+  "id": "Skeleton",
+  "type": "Skeleton",
+  "description": "Skeleton - warrior AI similar to Zombie",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Skeleton",
+    "spritePrefix": "Skeleton",
+    "frameCount": 14,
+    "frameSequence": [1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    "frameTime": 0.06,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1
+  },
+
+  "physics": {
+    "bodyWidth": 30.0,
+    "bodyHeight": 48.0,
+    "bodyHeightOffset": -3.0,
+    "mass": 1.2,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 85.0,
+    "jumpForce": 460.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.1,
+    "patrolDirectionChangeInterval": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 350.0,
+    "deaggroRange": 450.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 70.0,
+    "attackDamage": 14.0,
+    "attackRange": 30.0,
+    "attackCooldown": 1.0,
+    "defense": 2.0
+  }
+}

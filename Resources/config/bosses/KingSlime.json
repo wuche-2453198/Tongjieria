@@ -1,0 +1,84 @@
+{
+  "id": "KingSlime",
+  "type": "KingSlime",
+  
+  "display": {
+    "spriteFolder": "Picture/Bosses/KingSlime",
+    "spritePrefix": "King_Slime",
+    "frameCount": 4,
+    "frameSequence": [1, 2, 3, 4],
+    "frameTime": 0.1,
+    "scale": 1.0,
+    "fallbackColor": [255, 255, 255]
+  },
+  
+  "physics": {
+    "bodyWidth": 166.0,
+    "bodyHeight": 152.0,
+    "bodyHeightOffset": -20.0,
+    "mass": 15.0,
+    "friction": 2.0,
+    "restitution": 0.0,
+    "collisionGroup": -1,
+    "useGravity": true
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 1.5,
+    "horizontalImpulse": 3500.0,
+    "verticalImpulse": 8000.0,
+    "patrolImpulseRatio": 0.8,
+    "directionChangeChance": 0.2
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 8000.0,
+    "deaggroRange": 10000.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 4000.0,
+    "attackDamage": 50.0,
+    "attackRange": 80.0,
+    "attackCooldown": 2.0,
+    "defense": 10.0
+  },
+  
+  "loot": [
+    {
+      "itemId": "KingSlimeCrown",
+      "minCount": 1,
+      "maxCount": 1,
+      "dropChance": 1.0
+    }
+  ],
+  
+  "kingSlime": {
+    "baseScale": 1.0,
+    "minScale": 0.8,
+    "jumpPattern": {
+      "smallJumps": 3,
+      "bigJumpMultiplier": 2.0
+    },
+    "teleport": {
+      "interval": 15.0,
+      "range": 300.0,
+      "groundOnly": true
+    },
+    "scaling": {
+      "healthThresholds": [1.0, 0.75, 0.5, 0.25, 0.1],
+      "scaleMultipliers": [2.0, 1.7, 1.4, 1.1, 0.8],
+      "cooldownMultipliers": [1.0, 0.9, 0.8, 0.6, 0.4]
+    },
+    "spawning": {
+      "totalSlimes": 80,
+      "healthInterval": 0.012,
+      "spawnTypes": ["GreenSlime", "BlueSlime", "YellowSlime", "RedSlime", "PurpleSlime", "SpikedIceSlime"],
+      "spawnPerInterval": 1,
+      "maxSpawnPerInterval": 2
+    }
+  }
+}

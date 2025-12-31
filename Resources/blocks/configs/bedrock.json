@@ -1,0 +1,21 @@
+{
+  "id": "bedrock",
+  "name": "Stone",
+  "origin": {
+    "base": {
+      "wall": false,
+      "replaceable": false,
+      "behavior": "dirt_behavior",
+      "texture": "blocks\\textures\\bedrock.png"
+    },
+    "mining": {
+      "hardness": -1.0,
+      "tool": "pickaxe"
+    },
+    "collision": {
+      "enable": true,
+      "shape": [ 1, 1 ],
+      "offset": [ 0, 0 ]
+    }
+  }
+}

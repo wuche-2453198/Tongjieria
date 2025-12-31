@@ -1,0 +1,27 @@
+{
+  "entity_type": "demon_eye",
+  "default_state": "idle",
+  "animations": {
+    "idle": {
+      "animation_set_id": "demon_eye_idle",
+      "frame_sequence": [1, 2, 3, 2],
+      "frame_time": 0.2,
+      "loop": true,
+      "priority": 0
+    },
+    "hovering": {
+      "animation_set_id": "demon_eye_fly",
+      "frame_sequence": [1, 2, 3, 4],
+      "frame_time": 0.12,
+      "loop": true,
+      "priority": 1
+    },
+    "dashing": {
+      "animation_set_id": "demon_eye_attack",
+      "frame_sequence": [1, 2, 3, 4, 5],
+      "frame_time": 0.08,
+      "loop": false,
+      "priority": 2
+    }
+  }
+}

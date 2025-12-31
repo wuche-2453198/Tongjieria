@@ -1,0 +1,53 @@
+{
+  "id": "YellowSlime",
+  "type": "Slime",
+  "description": "黄色史莱姆",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/YellowSlime",
+    "spritePrefix": "Yellow_Slime",
+    "frameCount": 2,
+    "frameTime": 0.12,
+    "scale": 1.0
+  },
+
+  "physics": {
+    "bodyWidth": 32.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": -2.0,
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "jump",
+    "jumpCooldown": 1.5,
+    "horizontalImpulse": 400.0,
+    "verticalImpulse": 600.0,
+    "patrolImpulseRatio": 0.6,
+    "directionChangeChance": 0.4
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 400.0,
+    "deaggroRange": 500.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 80.0,
+    "attackDamage": 18.0,
+    "attackRange": 60.0,
+    "attackCooldown": 0.8,
+    "defense": 1.5
+  },
+  
+  "loot": [
+    {"itemId": "gel", "minCount": 2, "maxCount": 6, "dropChance": 0.95},
+    {"itemId": "coin", "minCount": 15, "maxCount": 30, "dropChance": 0.8},
+    {"itemId": "rare_gem", "minCount": 1, "maxCount": 1, "dropChance": 0.1}
+  ]
+}

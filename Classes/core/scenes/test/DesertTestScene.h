@@ -1,0 +1,56 @@
+#ifndef __DESERT_TEST_SCENE_H__
+#define __DESERT_TEST_SCENE_H__
+
+#include "cocos2d.h"
+#include "components/AllComponents.h"
+#include "systems/AllSystems.h"
+#include <entt/entt.hpp>
+#include <map>
+
+/**
+ * @class DesertTestScene
+ * @brief 沙漠测试场景 - 测试沙漠地形怪物AI
+ * 
+ * 沙漠环境特性：
+ * - 沙漠地形和颜色主题
+ * - 适合测试各种沙漠怪物
+ * - 复制恶魔眼场景的虚拟玩家系统
+ */
+class DesertTestScene : public cocos2d::Layer {
+public:
+  static cocos2d::Scene *createScene();
+  virtual bool init();
+  virtual void update(float delta) override;
+  void menuBackCallback(cocos2d::Ref *pSender);
+
+  CREATE_FUNC(DesertTestScene);
+
+private:
+  // ==================== ECS系统（EnTT版本） ====================
+  entt::registry _registry;             // EnTT实体注册表
+  ecs::SystemManagerEntt _systemManager; // EnTT System管理器
+  ecs::ProjectileCollisionSystemEntt* _projectileCollisionSystem = nullptr; // 射弹碰撞系统
+
+  // 虚拟玩家（复制自恶魔眼场景）
+  cocos2d::Sprite *_fakePlayer = nullptr;
+  cocos2d::Label *_playerLabel = nullptr;
+  bool _fakePlayerVisible = true;
+  ecs::EntityId _fakePlayerEntity = ecs::INVALID_ENTITY;
+
+  // 共享碰撞监听器
+  cocos2d::EventListenerPhysicsContact *_sharedContactListener = nullptr;
+
+  // 按键状态
+  std::map<cocos2d::EventKeyboard::KeyCode, bool> _keysPressed;
+
+  void setupKeyboardListener();
+  void updateFakePlayerPosition(float delta);
+  void toggleFakePlayer();
+  void setupEcsSystems();
+  void createPhysicsEnvironment();
+  void createFakePlayerEntity();
+  void createDesertMonsters();
+  void setupSharedContactListener();
+};
+
+#endif // __DESERT_TEST_SCENE_H__

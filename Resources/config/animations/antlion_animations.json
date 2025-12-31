@@ -1,0 +1,27 @@
+{
+  "entity_type": "antlion",
+  "default_state": "idle",
+  "animations": {
+    "idle": {
+      "animation_set_id": "antlion_idle",
+      "frame_sequence": [1, 2],
+      "frame_time": 0.15,
+      "loop": true,
+      "priority": 0
+    },
+    "tracking": {
+      "animation_set_id": "antlion_tracking",
+      "frame_sequence": [1, 2],
+      "frame_time": 0.15,
+      "loop": true,
+      "priority": 1
+    },
+    "shooting": {
+      "animation_set_id": "antlion_shooting",
+      "frame_sequence": [5, 5, 4, 3],
+      "frame_time": 0.15,
+      "loop": false,
+      "priority": 2
+    }
+  }
+}

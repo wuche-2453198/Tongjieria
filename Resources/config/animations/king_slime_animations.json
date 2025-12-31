@@ -1,0 +1,34 @@
+{
+  "entity_type": "king_slime",
+  "default_state": "idle",
+  "animations": {
+    "idle": {
+      "animation_set_id": "king_slime_idle",
+      "frame_sequence": [1, 2, 3, 2],
+      "frame_time": 0.2,
+      "loop": true,
+      "priority": 0
+    },
+    "jumping": {
+      "animation_set_id": "king_slime_jump",
+      "frame_sequence": [1, 2, 3],
+      "frame_time": 0.15,
+      "loop": false,
+      "priority": 1
+    },
+    "teleport_out": {
+      "animation_set_id": "king_slime_teleport",
+      "frame_sequence": [1, 2, 3, 4],
+      "frame_time": 0.12,
+      "loop": false,
+      "priority": 3
+    },
+    "teleport_in": {
+      "animation_set_id": "king_slime_teleport",
+      "frame_sequence": [4, 3, 2, 1],
+      "frame_time": 0.12,
+      "loop": false,
+      "priority": 3
+    }
+  }
+}

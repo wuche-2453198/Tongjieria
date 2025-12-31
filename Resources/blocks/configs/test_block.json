@@ -1,0 +1,8 @@
+{
+  "id": "test_block",
+  "name": "Test Block",
+  "texture": "a_block.bmp",
+  "replacable": false,
+  "renderable": true,
+  "collision": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "air",
+  "name": "Air",
+  "origin": {
+    "base": {
+      "replaceable": true,
+      "behavior": "air_behavior",
+      "texture": "blocks\\textures\\air.png"
+    },
+    "collision": {
+      "enable": false
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "Bigger-BaldZombie",
+  "type": "Zombie",
+  "description": "大型秃头僵尸 - 体型较大的秃头僵尸，生命值和攻击力更高",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Bigger-BaldZombie",
+    "spritePrefix": "Bigger-Bald_Zombie",
+    "frameCount": 3,
+    "frameSequence": [ 1, 2, 3, 2 ],
+    "frameTime": 0.18,
+    "scale": 1.05
+  },
+
+  "physics": {
+    "bodyWidth": 34.0,
+    "bodyHeight": 40.0,
+    "bodyHeightOffset": -4,
+    "mass": 1.5,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "collisionGroup": -1
+  },
+  
+  "movement": {
+    "type": "walk",
+    "walkSpeed": 70.0,
+    "jumpForce": 480.0,
+    "obstacleJumpEnabled": true,
+    "targetJumpEnabled": true,
+    "targetJumpReactionTime": 0.12,
+    "patrolDirectionChangeInterval": 3.5,
+    "patrolDirectionChangeChance": 0.25
+  },
+  
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 380.0,
+    "deaggroRange": 480.0,
+    "targetTag": "Player"
+  },
+  
+  "stats": {
+    "maxHealth": 85.0,
+    "attackDamage": 16.0,
+    "attackRange": 35.0,
+    "attackCooldown": 1.15,
+    "defense": 3.5
+  },
+  
+  "loot": [
+    {
+      "itemId": "RottenFlesh",
+      "minCount": 1,
+      "maxCount": 3,
+      "dropChance": 0.85
+    },
+    {
+      "itemId": "ZombieArm",
+      "minCount": 1,
+      "maxCount": 1,
+      "dropChance": 0.035
+    }
+  ]
+}

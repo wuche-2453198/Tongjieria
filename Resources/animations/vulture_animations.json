@@ -1,0 +1,27 @@
+{
+  "entity_type": "vulture",
+  "default_state": "idle",
+  "animations": {
+    "idle": {
+      "animation_set_id": "vulture_idle",
+      "frame_sequence": [6],
+      "frame_time": 0.1,
+      "loop": true,
+      "priority": 0
+    },
+    "hovering": {
+      "animation_set_id": "vulture_fly",
+      "frame_sequence": [1, 2, 3, 4, 5],
+      "frame_time": 0.1,
+      "loop": true,
+      "priority": 1
+    },
+    "dashing": {
+      "animation_set_id": "vulture_fly",
+      "frame_sequence": [1, 2, 3, 4, 5],
+      "frame_time": 0.1,
+      "loop": true,
+      "priority": 2
+    }
+  }
+}

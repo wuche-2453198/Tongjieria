@@ -1,0 +1,52 @@
+{
+  "id": "Hell_Bat",
+  "type": "Bat",
+  "description": "Hell Bat - common flying enemy, intermittently swoops toward the player",
+
+  "display": {
+    "spriteFolder": "Picture/Minor_monster/Hell_Bat",
+    "spritePrefix": "Hell_Bat",
+    "frameCount": 4,
+    "frameTime": 0.08,
+    "scale": 1.0,
+    "anchorY": 0.5,
+    "zOrder": 1,
+    "frameSequence": [1, 2, 3, 4]
+  },
+
+  "physics": {
+    "bodyWidth": 28.0,
+    "bodyHeight": 24.0,
+    "bodyHeightOffset": 0.0,
+    "mass": 1.0,
+    "friction": 0.0,
+    "restitution": 0.9,
+    "collisionGroup": -1,
+    "useGravity": false
+  },
+
+  "movement": {
+    "type": "fly",
+    "flySpeed": 180.0,
+    "maxSpeed": 380.0,
+    "acceleration": 260.0,
+    "turnRate": 2.6,
+    "wobbleAmplitude": 0.25,
+    "wobbleFrequency": 3.0
+  },
+
+  "ai": {
+    "behavior": "aggressive",
+    "aggroRange": 850.0,
+    "deaggroRange": 1050.0,
+    "targetTag": "Player"
+  },
+
+  "stats": {
+    "maxHealth": 36.0,
+    "attackDamage": 12.0,
+    "attackRange": 25.0,
+    "attackCooldown": 1.0,
+    "defense": 0.0
+  }
+}
